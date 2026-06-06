@@ -7,8 +7,10 @@ from fieldforge.resolver import Model
 
 # Safe arithmetic evaluator — the ONLY place numbers are computed (Facts-from-Tools, ADR-0004).
 _OPS = {
-    ast.Add: operator.add, ast.Sub: operator.sub,
-    ast.Mult: operator.mul, ast.Div: operator.truediv,
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
     ast.USub: operator.neg,
 }
 
@@ -37,7 +39,12 @@ def lookup_price(item_key: str, catalog: Catalog) -> dict:
     hit = catalog.lookup(item_key)
     if hit is None:
         return {"found": False, "item": item_key}
-    return {"found": True, "description": hit["description"], "unit": hit["unit"], "rate": hit["rate"]}
+    return {
+        "found": True,
+        "description": hit["description"],
+        "unit": hit["unit"],
+        "rate": hit["rate"],
+    }
 
 
 def perceive(image_path: str, model: Model) -> list[Observation]:
@@ -49,8 +56,12 @@ def perceive(image_path: str, model: Model) -> list[Observation]:
     return [Observation(**o) for o in data]
 
 
-def draft_line_item(description: str, qty: float, unit: str, rate: float, source: str = "catalog") -> LineItem:
-    return LineItem(description=description, quantity=qty, unit=unit, rate=rate, price_source=source)
+def draft_line_item(
+    description: str, qty: float, unit: str, rate: float, source: str = "catalog"
+) -> LineItem:
+    return LineItem(
+        description=description, quantity=qty, unit=unit, rate=rate, price_source=source
+    )
 
 
 def flag_for_human(reason: str) -> dict:

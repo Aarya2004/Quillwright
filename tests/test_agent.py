@@ -8,18 +8,24 @@ from fieldforge.agent import build_agent
 
 def _run(agent, capture, thread="t1"):
     cfg = {"configurable": {"thread_id": thread}}
-    return agent.invoke({"capture": capture, "observations": [], "line_items": [],
-                         "trace": [], "estimate": None}, cfg)
+    return agent.invoke(
+        {"capture": capture, "observations": [], "line_items": [], "trace": [], "estimate": None},
+        cfg,
+    )
 
 
 def test_agent_builds_estimate_when_all_prices_found():
-    perception = StubModel(responses=[
-        '[{"kind":"part","text":"capacitor","confidence":0.9},'
-        ' {"kind":"part","text":"labor","confidence":0.9}]'
-    ])
+    perception = StubModel(
+        responses=[
+            '[{"kind":"part","text":"capacitor","confidence":0.9},'
+            ' {"kind":"part","text":"labor","confidence":0.9}]'
+        ]
+    )
     cat = Catalog.from_file("data/sample_catalog.json")
     agent = build_agent(perception_model=perception, catalog=cat, checkpointer=InMemorySaver())
-    cap = Capture(image_paths=["/tmp/a.jpg"], transcript="replaced capacitor, 1h labor", trade_hint="hvac")
+    cap = Capture(
+        image_paths=["/tmp/a.jpg"], transcript="replaced capacitor, 1h labor", trade_hint="hvac"
+    )
     out = _run(agent, cap)
     est = out["estimate"]
     assert est is not None
@@ -37,8 +43,9 @@ def test_agent_pauses_when_price_missing():
     agent = build_agent(perception_model=perception, catalog=cat, checkpointer=InMemorySaver())
     cap = Capture(image_paths=["/tmp/a.jpg"], transcript="installed unobtainium", trade_hint="hvac")
     cfg = {"configurable": {"thread_id": "t2"}}
-    out = agent.invoke({"capture": cap, "observations": [], "line_items": [],
-                        "trace": [], "estimate": None}, cfg)
+    out = agent.invoke(
+        {"capture": cap, "observations": [], "line_items": [], "trace": [], "estimate": None}, cfg
+    )
     # LangGraph surfaces an interrupt rather than finishing
     assert "__interrupt__" in out
 
@@ -49,9 +56,10 @@ def test_agent_resumes_after_human_supplies_price():
     agent = build_agent(perception_model=perception, catalog=cat, checkpointer=InMemorySaver())
     cap = Capture(image_paths=["/tmp/a.jpg"], transcript="installed unobtainium", trade_hint="hvac")
     cfg = {"configurable": {"thread_id": "t3"}}
-    agent.invoke({"capture": cap, "observations": [], "line_items": [],
-                  "trace": [], "estimate": None}, cfg)  # pauses
-    out = agent.invoke(Command(resume=55.0), cfg)        # human supplies $55
+    agent.invoke(
+        {"capture": cap, "observations": [], "line_items": [], "trace": [], "estimate": None}, cfg
+    )  # pauses
+    out = agent.invoke(Command(resume=55.0), cfg)  # human supplies $55
     est = out["estimate"]
     assert est is not None
     assert any(li.price_source == "user" and li.rate == 55.0 for li in est.line_items)

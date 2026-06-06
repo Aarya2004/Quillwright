@@ -22,6 +22,8 @@ def test_estimate_total_sums_subtotals_with_tax():
 
 def test_observation_and_capture_and_tracestep_construct():
     obs = Observation(kind="part", text="dual run capacitor 45/5 uF", confidence=0.82)
-    cap = Capture(image_paths=["/tmp/a.jpg"], transcript="replaced the capacitor", trade_hint="hvac")
+    cap = Capture(
+        image_paths=["/tmp/a.jpg"], transcript="replaced the capacitor", trade_hint="hvac"
+    )
     step = TraceStep(action="perceive", model="StubModel", detail="found 1 part", confidence=0.82)
     assert obs.kind == "part" and cap.trade_hint == "hvac" and step.action == "perceive"

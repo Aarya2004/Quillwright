@@ -14,8 +14,10 @@ def estimate_to_pdf(est: Estimate, path: str) -> None:
     c.drawString(inch, y - 14, "AI-generated draft — review before sending. Sample pricing.")
     y -= 48
     c.setFont("Helvetica-Bold", 10)
-    c.drawString(inch, y, "Description"); c.drawString(4.2 * inch, y, "Qty")
-    c.drawString(4.9 * inch, y, "Rate"); c.drawString(5.9 * inch, y, "Subtotal")
+    c.drawString(inch, y, "Description")
+    c.drawString(4.2 * inch, y, "Qty")
+    c.drawString(4.9 * inch, y, "Rate")
+    c.drawString(5.9 * inch, y, "Subtotal")
     y -= 16
     c.setFont("Helvetica", 10)
     for li in est.line_items:
@@ -26,8 +28,13 @@ def estimate_to_pdf(est: Estimate, path: str) -> None:
         y -= 14
     y -= 8
     c.setFont("Helvetica-Bold", 10)
-    c.drawString(4.9 * inch, y, "Subtotal:"); c.drawString(5.9 * inch, y, f"${est.subtotal:.2f}"); y -= 14
-    c.drawString(4.9 * inch, y, f"Tax ({est.tax_rate:.0%}):"); c.drawString(5.9 * inch, y, f"${est.tax:.2f}"); y -= 14
-    c.drawString(4.9 * inch, y, "Total:"); c.drawString(5.9 * inch, y, f"${est.total:.2f}")
+    c.drawString(4.9 * inch, y, "Subtotal:")
+    c.drawString(5.9 * inch, y, f"${est.subtotal:.2f}")
+    y -= 14
+    c.drawString(4.9 * inch, y, f"Tax ({est.tax_rate:.0%}):")
+    c.drawString(5.9 * inch, y, f"${est.tax:.2f}")
+    y -= 14
+    c.drawString(4.9 * inch, y, "Total:")
+    c.drawString(5.9 * inch, y, f"${est.total:.2f}")
     c.showPage()
     c.save()

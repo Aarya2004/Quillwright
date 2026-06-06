@@ -3,11 +3,13 @@ from typing import Protocol
 
 class Model(Protocol):
     name: str
+
     def generate(self, prompt: str) -> str: ...
 
 
 class StubModel:
     """Deterministic model for tests/dev. Pops scripted responses in order."""
+
     def __init__(self, responses: list[str], name: str = "StubModel"):
         self._responses = list(responses)
         self.name = name

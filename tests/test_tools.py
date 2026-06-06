@@ -30,9 +30,7 @@ def test_lookup_price_miss_flags_for_human():
 
 
 def test_perceive_parses_observations_from_model_json():
-    model = StubModel(responses=[
-        '[{"kind":"part","text":"dual run capacitor","confidence":0.8}]'
-    ])
+    model = StubModel(responses=['[{"kind":"part","text":"dual run capacitor","confidence":0.8}]'])
     obs = perceive("/tmp/a.jpg", model)
     assert len(obs) == 1 and isinstance(obs[0], Observation) and obs[0].kind == "part"
 
