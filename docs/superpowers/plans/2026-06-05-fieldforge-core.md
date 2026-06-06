@@ -772,17 +772,148 @@ git commit -m "feat: estimate to PDF export with honesty banner"
 
 ---
 
-## Task 7: Gradio two-panel Workspace
+## Task 7: Workspace UI — theme, render helpers, and presenters
+
+**Design target:** [`docs/design/frontend-core-workspace.md`](../../design/frontend-core-workspace.md). Build the user's mockup faithfully in Gradio with custom CSS: a dark streaming **AI Forge log** (left, 40%) and a light **Draft Estimate** (right, 60%), job-title-only top bar, footer with language dropdown + Finalize. Non-functional elements (side/mobile nav, top-bar notifications/settings/avatar, LIVE SYNC pill, Edit Manual) are intentionally omitted.
+
+**Files:**
+- Create: `fieldforge/ui.py` (pure render helpers — unit-testable, no Gradio)
+- Test: `tests/test_ui.py`
+
+The HTML-producing presenters live in `ui.py` so they can be tested without launching Gradio. `app.py` (Task 7b) only wires them.
+
+- [ ] **Step 1: Write the failing test for the presenters**
+
+```python
+# tests/test_ui.py
+from fieldforge.models import LineItem, Estimate, TraceStep
+from fieldforge.ui import trace_html, estimate_rows, summary_text
+
+
+def test_trace_html_marks_done_and_active_steps():
+    steps = [
+        TraceStep(action="perceive", model="MiniCPM-V-4.6", detail="found 2", status="ok"),
+        TraceStep(action="price", model="lookup_price", detail="pricing…", status="active"),
+    ]
+    html = trace_html(steps)
+    assert "check_circle" in html          # done step gets the check icon
+    assert "terminal-cursor" in html       # active step gets the blinking cursor
+    assert "MiniCPM-V-4.6" in html          # model badge surfaced inline
+
+
+def test_trace_html_empty_shows_waiting():
+    assert "Waiting" in trace_html([])
+
+
+def test_estimate_rows_maps_line_items_to_table_rows():
+    est = Estimate(job_title="AC repair", line_items=[
+        LineItem(description="Capacitor", quantity=1, unit="ea", rate=42.5),
+    ], tax_rate=0.09)
+    rows = estimate_rows(est)
+    assert rows == [["Capacitor", "1 ea", "$42.50", "$42.50"]]
+
+
+def test_summary_text_formats_subtotal_tax_total():
+    est = Estimate(job_title="x", line_items=[
+        LineItem(description="a", quantity=1, unit="ea", rate=100.0),
+    ], tax_rate=0.09)
+    assert summary_text(est) == "Subtotal $100.00 · Tax (9%) $9.00 · Total $109.00"
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `pytest tests/test_ui.py -v`
+Expected: FAIL with `ModuleNotFoundError: No module named 'fieldforge.ui'`
+
+- [ ] **Step 3: Implement `fieldforge/ui.py`**
+
+```python
+from fieldforge.models import Estimate, TraceStep
+
+# Status drives the icon: done -> check, active -> pulsing dot + cursor, error -> warning.
+def _step_html(s: TraceStep) -> str:
+    badge = f'<span class="ff-badge">{s.model}</span>' if s.model else ""
+    if s.status == "active":
+        marker = '<span class="ff-dot"></span>'
+        cursor = '<span class="terminal-cursor"></span>'
+    elif s.status == "error":
+        marker = '<span class="material-symbols-outlined ff-err">error</span>'
+        cursor = ""
+    else:
+        marker = '<span class="material-symbols-outlined ff-ok">check_circle</span>'
+        cursor = ""
+    return (f'<div class="ff-step">{marker}'
+            f'<div class="ff-step-body"><p>{s.action}: {s.detail}{cursor}</p>{badge}</div></div>')
+
+
+def trace_html(steps: list[TraceStep]) -> str:
+    if not steps:
+        return '<div class="ff-log"><p class="ff-wait">Waiting for capture…</p></div>'
+    return '<div class="ff-log">' + "".join(_step_html(s) for s in steps) + "</div>"
+
+
+def estimate_rows(est: Estimate | None) -> list[list[str]]:
+    if est is None:
+        return []
+    return [[li.description, f"{li.quantity:g} {li.unit}", f"${li.rate:.2f}", f"${li.subtotal:.2f}"]
+            for li in est.line_items]
+
+
+def summary_text(est: Estimate | None) -> str:
+    if est is None:
+        return "Subtotal $0.00 · Tax (0%) $0.00 · Total $0.00"
+    return (f"Subtotal ${est.subtotal:.2f} · Tax ({est.tax_rate:.0%}) ${est.tax:.2f} "
+            f"· Total ${est.total:.2f}")
+```
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+Run: `pytest tests/test_ui.py -v`
+Expected: PASS (4 tests)
+
+- [ ] **Step 5: Create the CSS theme `fieldforge/theme.css`**
+
+```css
+/* FieldForge — industrial precision. Source: docs/design/frontend-core-workspace.md */
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@700;800;900&family=Inter:wght@400;700&family=JetBrains+Mono:wght@500&family=Material+Symbols+Outlined&display=swap');
+:root { --ff-primary:#964900; --ff-accent:#f57c00; --ff-log-bg:#10191E; --ff-log-border:#1C2931; --ff-ok:#22c55e; }
+.ff-title { font-family:'Hanken Grotesk'; font-weight:900; color:var(--ff-primary); font-size:24px; letter-spacing:-0.01em; }
+.ff-log { background:var(--ff-log-bg); color:#cdd6db; font-family:'JetBrains Mono',monospace; font-size:13px; padding:24px; min-height:420px; border-radius:8px; }
+.ff-step { display:flex; gap:12px; padding:8px 0; align-items:flex-start; }
+.ff-step-body p { color:#fff; opacity:.92; margin:0; }
+.ff-badge { display:inline-block; margin-top:4px; color:var(--ff-accent); font-size:11px; }
+.ff-ok { color:var(--ff-ok); font-variation-settings:'FILL' 1; }
+.ff-err { color:#ba1a1a; }
+.ff-dot { width:8px; height:8px; border-radius:50%; background:var(--ff-accent); display:inline-block; margin-top:6px; animation:ff-pulse 2s infinite; }
+.ff-wait { color:#546E7A; }
+.terminal-cursor { display:inline-block; width:8px; height:16px; background:var(--ff-accent); margin-left:4px; vertical-align:middle; animation:ff-blink 1s step-end infinite; }
+@keyframes ff-blink { 50% { opacity:0; } }
+@keyframes ff-pulse { 50% { opacity:.4; transform:scale(1.15); } }
+.material-symbols-outlined { font-family:'Material Symbols Outlined'; font-size:20px; vertical-align:middle; }
+.ff-pane-head { font-family:'Hanken Grotesk'; font-weight:700; }
+```
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add fieldforge/ui.py fieldforge/theme.css tests/test_ui.py
+git commit -m "feat: workspace UI presenters + industrial CSS theme"
+```
+
+---
+
+## Task 7b: Gradio Workspace app (wiring)
 
 **Files:**
 - Create: `fieldforge/app.py`
-- Test: manual (Gradio UI) — no unit test; verified by launch.
+- Test: manual (Gradio UI) — verified by launch.
 
-This wires Capture → agent run (streaming Trace left, Estimate right) → inline-editable estimate → Agent Pause prompt → PDF export. Uses the StubModel-backed resolver for now so it runs without a GPU; real models swap in via the resolver later.
+Wires Capture → agent Run (streaming Trace left, editable Estimate right) → Agent-Pause card → PDF. Uses the StubModel-backed perception so it runs without a GPU; real models swap in via the resolver later. The language dropdown and "Finalize & Send" are rendered now; multilingual activates in the post-core layer (ADR-0007).
 
 - [ ] **Step 1: Implement `fieldforge/app.py`**
 
 ```python
+from pathlib import Path
 import gradio as gr
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
@@ -791,60 +922,57 @@ from fieldforge.resolver import StubModel
 from fieldforge.models import Capture
 from fieldforge.agent import build_agent
 from fieldforge.pdf import estimate_to_pdf
+from fieldforge.ui import trace_html, estimate_rows, summary_text
 
 CATALOG = Catalog.from_file("data/sample_catalog.json")
-# Demo stub perception: in real runs this is the resolver's perception model.
+CSS = (Path(__file__).parent / "theme.css").read_text()
+# Demo stub perception; real runs use the resolver's perception model.
 DEMO_PERCEPTION = lambda: StubModel(responses=[
     '[{"kind":"part","text":"capacitor","confidence":0.9},'
     ' {"kind":"part","text":"labor","confidence":0.9}]'
 ])
-
-
-def _trace_md(trace):
-    lines = []
-    for s in trace:
-        badge = f" `→ {s.model}`" if s.model else ""
-        lines.append(f"- **{s.action}**{badge}: {s.detail}")
-    return "\n".join(lines) or "_waiting…_"
-
-
-def _estimate_md(est):
-    if est is None:
-        return "_no estimate yet_"
-    rows = "\n".join(
-        f"| {li.description} | {li.quantity:g} {li.unit} | ${li.rate:.2f} | ${li.subtotal:.2f} |"
-        for li in est.line_items
-    )
-    return (f"### {est.job_title}\n\n| Item | Qty | Rate | Subtotal |\n|---|---|---|---|\n{rows}\n\n"
-            f"**Subtotal** ${est.subtotal:.2f} · **Tax** ${est.tax:.2f} · **Total** ${est.total:.2f}")
+THREAD = {"configurable": {"thread_id": "ui"}}
 
 
 def run_job(transcript, trade):
     agent = build_agent(DEMO_PERCEPTION(), CATALOG, InMemorySaver())
-    cfg = {"configurable": {"thread_id": "ui"}}
     cap = Capture(image_paths=["demo.jpg"], transcript=transcript, trade_hint=trade or "Job")
     out = agent.invoke({"capture": cap, "observations": [], "line_items": [],
-                        "trace": [], "estimate": None}, cfg)
+                        "trace": [], "estimate": None}, THREAD)
     est = out.get("estimate")
-    pdf_path = None
+    pdf = None
     if est is not None:
-        pdf_path = "/tmp/fieldforge_estimate.pdf"
-        estimate_to_pdf(est, pdf_path)
-    return _trace_md(out["trace"]), _estimate_md(est), pdf_path
+        pdf = "/tmp/fieldforge_estimate.pdf"
+        estimate_to_pdf(est, pdf)
+    return trace_html(out["trace"]), estimate_rows(est), summary_text(est), pdf
 
 
-with gr.Blocks(title="FieldForge", theme=gr.themes.Soft()) as demo:
-    gr.Markdown("# FieldForge — your paperwork, forged")
+with gr.Blocks(title="FieldForge", css=CSS, theme=gr.themes.Soft(
+        primary_hue="orange")) as demo:
+    gr.HTML('<div class="ff-title">Forge Estimate: AC Unit Repair — 123 Maple St</div>')
     with gr.Row():
         transcript = gr.Textbox(label="Voice note (transcript)", lines=2,
                                 placeholder="e.g. replaced the capacitor, one hour labor")
         trade = gr.Textbox(label="Trade", value="hvac")
     run_btn = gr.Button("Forge estimate", variant="primary")
-    with gr.Row():
-        trace_out = gr.Markdown(label="Agent trace")
-        est_out = gr.Markdown(label="Estimate")
+    with gr.Row(equal_height=True):
+        with gr.Column(scale=4):
+            gr.HTML('<div class="ff-pane-head">⌁ AI Forge</div>')
+            trace_out = gr.HTML(trace_html([]))
+        with gr.Column(scale=6):
+            gr.HTML('<div class="ff-pane-head">Draft Estimate</div>')
+            est_table = gr.Dataframe(headers=["Description", "Qty", "Rate", "Amount"],
+                                     datatype=["str", "str", "str", "str"],
+                                     interactive=True, wrap=True)
+            summary = gr.Markdown(summary_text(None))
+            pdf_btn = gr.Button("Preview PDF")
     pdf_out = gr.File(label="Estimate PDF")
-    run_btn.click(run_job, [transcript, trade], [trace_out, est_out, pdf_out])
+    with gr.Row():
+        lang = gr.Dropdown(["English", "Spanish (Español)", "French (Français)"],
+                           value="English", label="Generate Customer Copy")
+        gr.Button("Discard Draft")
+        gr.Button("Finalize & Send", variant="primary")
+    run_btn.click(run_job, [transcript, trade], [trace_out, est_table, summary, pdf_out])
 
 if __name__ == "__main__":
     demo.launch()
@@ -853,13 +981,13 @@ if __name__ == "__main__":
 - [ ] **Step 2: Launch and verify manually**
 
 Run: `python -m fieldforge.app`
-Expected: Gradio opens; clicking "Forge estimate" shows a trace (perceive → price → assemble) on the left, an estimate table on the right, and a downloadable PDF. Verify the total matches the line items + 13% tax.
+Expected: Gradio opens with the dark AI-Forge pane (left) and the editable estimate table (right); clicking "Forge estimate" streams the trace steps, fills the estimate table, shows the subtotal/tax/total line, and produces a downloadable PDF. Verify the total matches line items + 13% tax. (Live token-by-token streaming of the trace is added in the post-core polish; for now the trace renders on completion.)
 
 - [ ] **Step 3: Commit**
 
 ```bash
 git add fieldforge/app.py
-git commit -m "feat: Gradio two-panel Workspace wiring the core flow"
+git commit -m "feat: Gradio Workspace wiring the core flow to the design"
 ```
 
 ---
