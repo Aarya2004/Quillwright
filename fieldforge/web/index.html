@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FieldForge — proof</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 760px;
+        margin: 40px auto;
+        padding: 0 16px;
+      }
+      button {
+        background: #964900;
+        color: #fff;
+        border: 0;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      pre {
+        background: #10191e;
+        color: #cdd6db;
+        padding: 16px;
+        border-radius: 8px;
+        overflow: auto;
+      }
+      input {
+        width: 100%;
+        padding: 8px;
+        margin: 8px 0;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>FieldForge — gr.Server proof</h1>
+    <input id="transcript" value="replaced the capacitor, one hour labor" />
+    <button id="forge">Forge estimate</button>
+    <h3>Trace</h3>
+    <pre id="trace">—</pre>
+    <h3>Estimate</h3>
+    <pre id="estimate">—</pre>
+
+    <script>
+      document.getElementById("forge").addEventListener("click", async () => {
+        const transcript = document.getElementById("transcript").value;
+        document.getElementById("trace").textContent = "running…";
+        const res = await fetch("/api/forge_estimate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transcript, trade: "hvac" }),
+        });
+        const data = await res.json();
+        document.getElementById("trace").textContent = JSON.stringify(data.trace, null, 2);
+        document.getElementById("estimate").textContent = JSON.stringify(data.estimate, null, 2);
+      });
+    </script>
+  </body>
+</html>
