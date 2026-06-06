@@ -45,17 +45,41 @@
     <pre id="estimate">—</pre>
 
     <script>
+      // Stream the agent's trace step-by-step via SSE, then show the estimate.
       document.getElementById("forge").addEventListener("click", async () => {
         const transcript = document.getElementById("transcript").value;
-        document.getElementById("trace").textContent = "running…";
-        const res = await fetch("/api/forge_estimate", {
+        const traceEl = document.getElementById("trace");
+        const estEl = document.getElementById("estimate");
+        traceEl.textContent = "";
+        estEl.textContent = "—";
+
+        const res = await fetch("/api/forge_estimate_stream", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ transcript, trade: "hvac" }),
         });
-        const data = await res.json();
-        document.getElementById("trace").textContent = JSON.stringify(data.trace, null, 2);
-        document.getElementById("estimate").textContent = JSON.stringify(data.estimate, null, 2);
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const frames = buffer.split("\n\n");
+          buffer = frames.pop(); // keep incomplete frame
+          for (const frame of frames) {
+            const line = frame.replace(/^data: /, "").trim();
+            if (!line) continue;
+            const event = JSON.parse(line);
+            if (event.type === "trace") {
+              const s = event.step;
+              traceEl.textContent += `• ${s.action}: ${s.detail}` + (s.model ? `  [${s.model}]` : "") + "\n";
+            } else if (event.type === "estimate") {
+              estEl.textContent = JSON.stringify(event.estimate, null, 2);
+            }
+          }
+        }
       });
     </script>
   </body>

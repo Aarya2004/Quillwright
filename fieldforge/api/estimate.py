@@ -64,3 +64,39 @@ def forge_estimate(transcript: str, trade: str = "hvac") -> dict:
         "trace": _trace_payload(out["trace"]),
         "estimate": _estimate_payload(est) if est is not None else None,
     }
+
+
+def forge_estimate_stream(transcript: str, trade: str = "hvac"):
+    """Run the agent, yielding each new trace step as it happens, then the estimate.
+
+    Events: {"type":"trace","step":{...}} per new step, then {"type":"estimate","estimate":{...}}.
+    """
+    agent = build_agent(_demo_perception(), CATALOG, InMemorySaver())
+    cap = Capture(image_paths=["demo.jpg"], transcript=transcript, trade_hint=trade or "Job")
+    init = {"capture": cap, "observations": [], "line_items": [], "trace": [], "estimate": None}
+    cfg = {"configurable": {"thread_id": "ui"}}
+
+    emitted = 0  # how many trace steps already sent
+    estimate = None
+    for chunk in agent.stream(init, cfg, stream_mode="updates"):
+        for _node, update in chunk.items():
+            trace = update.get("trace")
+            if trace is not None:
+                for step in trace[emitted:]:
+                    yield {
+                        "type": "trace",
+                        "step": {
+                            "action": step.action,
+                            "model": step.model,
+                            "detail": step.detail,
+                            "status": step.status,
+                        },
+                    }
+                emitted = len(trace)
+            if update.get("estimate") is not None:
+                estimate = update["estimate"]
+
+    yield {
+        "type": "estimate",
+        "estimate": _estimate_payload(estimate) if estimate is not None else None,
+    }
