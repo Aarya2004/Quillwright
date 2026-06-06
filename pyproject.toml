@@ -1,0 +1,18 @@
+[project]
+name = "fieldforge"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "gradio>=4.44",
+  "langgraph>=0.2",
+  "langchain-core>=0.3",
+  "pydantic>=2.7",
+  "reportlab>=4.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
