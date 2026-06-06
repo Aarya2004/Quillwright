@@ -1,0 +1,52 @@
+/* FieldForge design tokens — from the mockup's Tailwind config. */
+:root {
+  --primary: #964900;
+  --primary-container: #f57c00;
+  --on-primary: #ffffff;
+  --primary-fixed: #ffdcc6;
+  --on-primary-fixed-variant: #723600;
+
+  --background: #f7fafc;
+  --surface: #f7fafc;
+  --surface-container-low: #f1f4f6;
+  --surface-container: #ebeef0;
+  --surface-container-high: #e5e9eb;
+  --on-surface: #181c1e;
+  --on-surface-variant: #574235;
+  --secondary: #546067;
+  --outline: #8b7263;
+  --outline-variant: #dec1af;
+
+  --tertiary-fixed: #d4e5ef;
+  --tertiary-container: #8fa0a9;
+  --on-tertiary-container: #27373f;
+
+  --log-bg: #10191e;
+  --log-border: #1c2931;
+  --log-line: #2c3e47;
+  --log-muted: #546e7a;
+  --ok: #22c55e;
+
+  --font-head: "Hanken Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--on-surface);
+  background: var(--background);
+}
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+  vertical-align: middle;
+}

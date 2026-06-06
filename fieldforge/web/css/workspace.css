@@ -1,0 +1,323 @@
+/* Forge Estimate workspace — two-pane layout. */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Top bar — job title only. */
+.topbar {
+  height: 64px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--outline-variant);
+}
+.topbar h1 {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--primary);
+  margin: 0;
+}
+
+/* Panes. */
+.panes {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.pane--log {
+  flex: 0 0 40%;
+  background: var(--log-bg);
+  border-right: 1px solid var(--log-border);
+}
+.pane--estimate {
+  flex: 1 1 60%;
+  background: var(--surface);
+}
+.pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+}
+.pane--log .pane-head {
+  border-bottom: 1px solid var(--log-border);
+}
+.pane--estimate .pane-head {
+  border-bottom: 1px solid var(--outline-variant);
+}
+.pane-head h2 {
+  font-family: var(--font-head);
+  margin: 0;
+  font-size: 22px;
+}
+.pane--log .pane-head h2 {
+  color: #fff;
+}
+.pane-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* AI Forge log. */
+.forge-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.forge-status .material-symbols-outlined {
+  color: var(--primary-container);
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+  animation: pulse 2s infinite;
+}
+.log {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: #cdd6db;
+}
+.log-step {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 20px;
+}
+.log-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.log-rail .material-symbols-outlined {
+  font-size: 20px;
+  color: var(--ok);
+  font-variation-settings: "FILL" 1;
+}
+.log-rail .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary-container);
+  margin-top: 6px;
+  animation: pulse 1.4s infinite;
+}
+.log-rail .line {
+  width: 1px;
+  flex: 1;
+  background: var(--log-line);
+  margin: 8px 0;
+}
+.log-body p {
+  margin: 0;
+  color: #fff;
+  opacity: 0.92;
+}
+.log-body .badge {
+  color: var(--primary-container);
+  font-size: 11px;
+}
+.log-empty {
+  color: var(--log-muted);
+}
+.terminal-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 15px;
+  background: var(--primary-container);
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+}
+
+/* Estimate table. */
+.est-actions {
+  display: flex;
+  gap: 8px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--outline);
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  color: var(--on-surface);
+}
+.btn:hover {
+  background: var(--surface-container);
+}
+.btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  border: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.btn--primary:hover {
+  opacity: 0.92;
+}
+.btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+}
+thead tr {
+  background: var(--secondary);
+  color: #fff;
+  font-family: var(--font-head);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: left;
+}
+th,
+td {
+  padding: 14px 16px;
+}
+tbody tr {
+  border-bottom: 1px solid var(--outline-variant);
+}
+tbody tr:nth-child(odd) {
+  background: var(--surface-container-low);
+}
+td.num {
+  text-align: right;
+}
+td.desc {
+  font-weight: 700;
+}
+td[contenteditable]:focus {
+  outline: 2px solid var(--primary-container);
+  background: #fff;
+}
+
+/* Agent-Pause card. */
+.pause-card {
+  margin-top: 24px;
+  background: var(--tertiary-fixed);
+  border: 1px solid var(--tertiary-container);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  gap: 16px;
+}
+.pause-card .bot {
+  background: var(--on-tertiary-container);
+  color: #fff;
+  padding: 8px;
+  border-radius: 8px;
+  height: fit-content;
+}
+.pause-card p {
+  font-weight: 700;
+  color: var(--on-tertiary-container);
+  margin: 0 0 16px;
+}
+.pause-card .opts {
+  display: flex;
+  gap: 12px;
+}
+
+/* Financial summary. */
+.summary {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+}
+.summary .rows {
+  width: 256px;
+}
+.summary .row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--secondary);
+  padding: 4px 0;
+}
+.summary .row--total {
+  color: var(--on-surface);
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 22px;
+  border-top: 1px solid var(--outline-variant);
+  padding-top: 12px;
+  margin-top: 8px;
+}
+
+/* Footer action bar. */
+.footer {
+  height: 80px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  background: var(--surface);
+  border-top: 1px solid var(--outline-variant);
+}
+.footer .right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.link-btn {
+  background: none;
+  border: 0;
+  color: var(--secondary);
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.link-btn:hover {
+  color: var(--primary);
+}
+select {
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-weight: 700;
+  font-size: 14px;
+  background: var(--surface);
+  font-family: var(--font-body);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
