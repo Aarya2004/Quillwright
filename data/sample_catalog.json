@@ -1,0 +1,9 @@
+{
+  "_note": "SAMPLE pricing for demo only. Not real market prices.",
+  "items": [
+    {"key": "capacitor", "description": "Dual run capacitor", "unit": "ea", "rate": 24.0},
+    {"key": "contactor", "description": "Compressor contactor", "unit": "ea", "rate": 38.0},
+    {"key": "refrigerant_r410a", "description": "R-410A refrigerant", "unit": "lb", "rate": 30.0},
+    {"key": "labor", "description": "Labor", "unit": "hr", "rate": 90.0}
+  ]
+}
