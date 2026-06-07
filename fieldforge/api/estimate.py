@@ -5,6 +5,7 @@ for the frontend. Kept testable without a running server.
 """
 
 import json
+import os
 
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
@@ -12,12 +13,15 @@ from langgraph.types import Command
 from fieldforge.agent import build_agent
 from fieldforge.catalog import Catalog
 from fieldforge.models import Capture
-from fieldforge.resolver import StubModel
+from fieldforge.resolver import ModelResolver, StubModel
 
 CATALOG = Catalog.from_file("data/sample_catalog.json")
 
-# Demo-only keyword -> observation map. Honest scaffolding until a real vision
-# model is wired via the resolver; lets the transcript drive what's "seen".
+# FF_REAL_MODELS=1 uses real local models via Ollama; otherwise the demo stub.
+REAL_MODELS = os.environ.get("FF_REAL_MODELS") == "1"
+
+# Demo-only keyword -> observation map. Honest scaffolding for when there is no
+# photo (transcript only) or real models are off; lets the note drive what's "seen".
 _DEMO_VOCAB = {
     "capacitor": {"kind": "part", "text": "capacitor", "confidence": 0.9},
     "contactor": {"kind": "part", "text": "contactor", "confidence": 0.9},
@@ -27,16 +31,20 @@ _DEMO_VOCAB = {
 }
 
 
-def _demo_perception(transcript: str) -> StubModel:
-    """Transcript-aware stub: returns observations for keywords found in the note.
-
-    Demo scaffolding only; a real vision model replaces this via the resolver.
-    """
+def _stub_perception(transcript: str) -> StubModel:
+    """Transcript-aware stub used when there's no real photo or real models are off."""
     low = transcript.lower()
     obs = [v for k, v in _DEMO_VOCAB.items() if k in low]
     if not obs:  # always produce something so the demo never dead-ends
         obs = [_DEMO_VOCAB["capacitor"], _DEMO_VOCAB["labor"]]
     return StubModel(responses=[json.dumps(obs)])
+
+
+def _perception(transcript: str, has_real_image: bool):
+    """Real MiniCPM-V via Ollama when enabled AND a real photo exists; else the stub."""
+    if REAL_MODELS and has_real_image:
+        return ModelResolver(mode="private", backend="ollama").for_role("perception")
+    return _stub_perception(transcript)
 
 
 def _estimate_payload(est) -> dict:
@@ -66,10 +74,13 @@ def _trace_payload(trace) -> list[dict]:
     ]
 
 
-def forge_estimate(transcript: str, trade: str = "hvac") -> dict:
+def forge_estimate(transcript: str, trade: str = "hvac", image_paths: list[str] | None = None) -> dict:
     """Run the agent once (non-streaming) and return trace + estimate as JSON."""
-    agent = build_agent(_demo_perception(transcript), CATALOG, InMemorySaver())
-    cap = Capture(image_paths=["demo.jpg"], transcript=transcript, trade_hint=trade or "Job")
+    images = [p for p in (image_paths or []) if os.path.isfile(p)]
+    agent = build_agent(_perception(transcript, bool(images)), CATALOG, InMemorySaver())
+    cap = Capture(
+        image_paths=images or ["demo.jpg"], transcript=transcript, trade_hint=trade or "Job"
+    )
     out = agent.invoke(
         {"capture": cap, "observations": [], "line_items": [], "trace": [], "estimate": None},
         {"configurable": {"thread_id": "ui"}},
@@ -133,14 +144,19 @@ def _drive(agent, payload, thread_id: str):
     _RUNS.pop(thread_id, None)
 
 
-def forge_estimate_stream(transcript: str, trade: str = "hvac", thread_id: str = "ui"):
+def forge_estimate_stream(
+    transcript: str, trade: str = "hvac", thread_id: str = "ui", image_paths: list[str] | None = None
+):
     """Run the agent, yielding each new trace step, then a pause OR the estimate.
 
     Events: {"type":"trace",...} per step, then {"type":"pause",...} or {"type":"estimate",...}.
     """
-    agent = build_agent(_demo_perception(transcript), CATALOG, InMemorySaver())
+    images = [p for p in (image_paths or []) if os.path.isfile(p)]
+    agent = build_agent(_perception(transcript, bool(images)), CATALOG, InMemorySaver())
     _RUNS[thread_id] = {"agent": agent, "emitted": 0}
-    cap = Capture(image_paths=["demo.jpg"], transcript=transcript, trade_hint=trade or "Job")
+    cap = Capture(
+        image_paths=images or ["demo.jpg"], transcript=transcript, trade_hint=trade or "Job"
+    )
     init = {"capture": cap, "observations": [], "line_items": [], "trace": [], "estimate": None}
     yield from _drive(agent, init, thread_id)
 
