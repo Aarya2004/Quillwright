@@ -217,6 +217,15 @@
   color: var(--secondary);
   margin: 2px 0 0;
 }
+.step-items {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 14px;
+  color: var(--secondary);
+}
+.step-items li {
+  margin: 2px 0;
+}
 .step-empty {
   color: var(--secondary);
   font-size: 14px;
