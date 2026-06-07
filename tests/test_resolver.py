@@ -19,3 +19,15 @@ def test_resolver_unknown_role_raises():
         assert False, "expected KeyError"
     except KeyError:
         pass
+
+
+def test_ollama_backend_returns_real_model_with_local_tag():
+    from fieldforge.backends.ollama import OllamaModel
+
+    resolver = ModelResolver(mode="private", backend="ollama")
+    brain = resolver.for_role("brain")
+    vision = resolver.for_role("perception")
+    assert isinstance(brain, OllamaModel) and isinstance(vision, OllamaModel)
+    # maps to the actual local Ollama tags
+    assert brain.name == "nemotron-3-nano:4b"
+    assert vision.name == "minicpm-v"

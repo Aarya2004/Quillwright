@@ -35,6 +35,20 @@ def test_perceive_parses_observations_from_model_json():
     assert len(obs) == 1 and isinstance(obs[0], Observation) and obs[0].kind == "part"
 
 
+def test_perceive_passes_image_path_to_vision_capable_model():
+    seen = {}
+
+    class VisionStub:
+        name = "vision"
+
+        def generate(self, prompt, image_path=None):
+            seen["image_path"] = image_path
+            return "[]"
+
+    perceive("/tmp/unit.png", VisionStub())
+    assert seen["image_path"] == "/tmp/unit.png"
+
+
 def test_draft_line_item_marks_source_and_computes_subtotal():
     item = draft_line_item("Capacitor", qty=2, unit="ea", rate=24.0, source="catalog")
     assert isinstance(item, LineItem) and item.subtotal == 48.0 and item.price_source == "catalog"

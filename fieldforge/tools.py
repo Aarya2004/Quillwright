@@ -47,8 +47,20 @@ def lookup_price(item_key: str, catalog: Catalog) -> dict:
     }
 
 
+_PERCEIVE_PROMPT = (
+    "You are a field-service vision assistant. Look at the image and list the "
+    "equipment, parts, and damage you see as a JSON array of objects with keys "
+    '"kind" (one of equipment/part/damage/text/other), "text" (short name), and '
+    '"confidence" (0-1). Respond with ONLY the JSON array.'
+)
+
+
 def perceive(image_path: str, model: Model) -> list[Observation]:
-    raw = model.generate(f"List observations as JSON for image: {image_path}")
+    # Vision-capable backends accept image_path; text stubs ignore the kwarg.
+    try:
+        raw = model.generate(_PERCEIVE_PROMPT, image_path=image_path)
+    except TypeError:
+        raw = model.generate(f"List observations as JSON for image: {image_path}")
     try:
         data = json.loads(raw)
     except json.JSONDecodeError:
