@@ -1,17 +1,42 @@
 # FieldForge
 
-Capture a job (photos + voice) → a supervised small-model agent forges an itemized estimate. Build Small Hackathon entry. See `docs/superpowers/specs/` and `docs/adr/`.
+A human-supervised, small-model agent for tradespeople: snap a job photo + voice note → a team of **local** small models forges a finished, itemized **estimate**. No cloud, runs on your machine. Build Small Hackathon entry.
+
+See `docs/superpowers/specs/` and `docs/adr/` for the design.
+
+## What's real
+
+- **Vision** — MiniCPM-V (OpenBMB) reads job photos → observations, locally via Ollama.
+- **Brain** — Nemotron-3-Nano (NVIDIA) drives the tool-calling agent loop (which items, quantities, when done), locally via Ollama. Tuned to ~0.97 item-F1 on the eval set (`scripts/run_brain_eval.py`).
+- **Facts-from-Tools** — every price/total comes from the catalog + deterministic `compute`, never the LLM. Holds even for human edits.
+- **Human-in-the-loop** — the agent pauses to ask when a price is missing; you answer and it resumes.
+- **Frontend** — a bespoke web UI served by `gradio.Server` (FastAPI under the hood): streaming "Digital Apprentice" trace, editable estimate, PDF export.
 
 ## Run
+
 ```
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-python -m fieldforge.app
+python -m fieldforge.server          # http://127.0.0.1:7860
+```
+
+By default the models are stubbed (fast, no GPU). For the **real local models**, install [Ollama](https://ollama.com), pull the models, and set the flag:
+
+```
+ollama pull minicpm-v
+ollama pull nemotron-3-nano:4b
+FF_REAL_MODELS=1 python -m fieldforge.server
 ```
 
 ## Test
+
 ```
 pytest -v
+ruff check . && ruff format --check .       # Python lint/format
+npx prettier --check "fieldforge/web/**/*"  # web lint/format
+
+# brain accuracy against the eval set (needs Ollama + FF_REAL_MODELS=1)
+FF_REAL_MODELS=1 PYTHONPATH=. python scripts/run_brain_eval.py
 ```
 
-Models are stubbed in the core build; real Private/Best stacks wire in via `fieldforge/resolver.py`. Pricing is clearly-labeled sample data.
+Models resolve per role via `fieldforge/resolver.py` (stub ↔ Ollama). Pricing is clearly-labeled sample data.

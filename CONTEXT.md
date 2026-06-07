@@ -103,3 +103,9 @@ _Avoid_: lookup, query, retrieval (use "Recall" for this specific agent-facing c
 ## Scope note
 
 The **Irreducible Core** (ADR-0007) is the must-ship, polished slice: Capture → supervised agent builds a correct Estimate live → one Agent Pause + one Interrupt → editable Estimate → PDF, Private Stack only. All other designed features (second Mode, memory, multilingual, fine-tune, service report, video, FLUX) are layered on after the core is flawless and are cut from the end under time pressure.
+
+## Implementation reality (as built)
+
+- **Frontend** is a bespoke HTML/CSS/JS app served by `gradio.Server` (FastAPI), not Gradio components — the rule-compliant way to a smooth custom UI (the 🎨 Off-Brand path).
+- **Private Stack runs genuinely locally via Ollama** (llama.cpp) on the dev machine — Perception = MiniCPM-V, Agent Brain = nemotron-3-nano:4b — gated by `FF_REAL_MODELS=1`; otherwise a deterministic/keyword stub. This realizes the "no cloud" claim directly on-device; Modal (ADR-0005) remains the option for hosted-Space compute.
+- The **Agent Brain is LLM-driven tool-calling** over a narrow surface (`add_priced_item` + `finish`); deterministic tools still own all numbers (Facts-from-Tools). Accuracy is tracked by an eval set (`data/brain_evalset.json`, `scripts/run_brain_eval.py`).
