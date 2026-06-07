@@ -46,7 +46,16 @@ async function forge() {
   });
 }
 
+function newEstimate() {
+  resetTrace($("log"));
+  renderEstimate(null);
+  $("forge-state").textContent = "Idle";
+  $("transcript").value = "";
+  $("transcript").focus();
+}
+
 $("forge-btn").addEventListener("click", forge);
+$("new-estimate-btn").addEventListener("click", newEstimate);
 $("transcript").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) forge();
 });

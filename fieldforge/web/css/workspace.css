@@ -1,9 +1,65 @@
-/* Forge Estimate workspace — two-pane layout. */
+/* Forge Estimate workspace — sidebar + two-pane layout. */
 
-.app {
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* Sidebar. */
+.sidebar {
+  flex: 0 0 256px;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  padding: 32px 16px;
+  background: var(--surface-container);
+  border-right: 1px solid var(--outline-variant);
+}
+.sidebar .brand {
+  padding: 0 8px;
+  margin-bottom: 40px;
+}
+.sidebar .brand h2 {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--on-surface);
+}
+.sidebar .brand p {
+  margin: 2px 0 0;
+  color: var(--secondary);
+  font-size: 14px;
+}
+.sidebar nav {
+  flex: 1;
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--secondary);
+  font-weight: 400;
+}
+.nav-link.active {
+  color: var(--primary);
+  font-weight: 700;
+  background: var(--surface-container-high);
+}
+.sidebar .new-estimate {
+  width: 100%;
+  margin-top: 24px;
+}
+
+/* Main column. */
+.main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 /* Top bar — job title only. */
@@ -25,6 +81,21 @@
   margin: 0;
 }
 
+/* Capture row. */
+.capture {
+  padding: 16px 32px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.capture input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  font-family: var(--font-body);
+}
+
 /* Panes. */
 .panes {
   flex: 1 1 auto;
@@ -38,8 +109,8 @@
 }
 .pane--log {
   flex: 0 0 40%;
-  background: var(--log-bg);
-  border-right: 1px solid var(--log-border);
+  background: var(--surface-container-low);
+  border-right: 1px solid var(--outline-variant);
 }
 .pane--estimate {
   flex: 1 1 60%;
@@ -50,20 +121,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-}
-.pane--log .pane-head {
-  border-bottom: 1px solid var(--log-border);
-}
-.pane--estimate .pane-head {
   border-bottom: 1px solid var(--outline-variant);
 }
 .pane-head h2 {
   font-family: var(--font-head);
   margin: 0;
   font-size: 22px;
-}
-.pane--log .pane-head h2 {
-  color: #fff;
+  color: var(--on-surface);
 }
 .pane-body {
   flex: 1 1 auto;
@@ -71,77 +135,91 @@
   padding: 24px;
 }
 
-/* AI Forge log. */
-.forge-status {
+/* Digital Apprentice header. */
+.apprentice {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.forge-status .material-symbols-outlined {
-  color: var(--primary-container);
+.apprentice .material-symbols-outlined {
+  color: var(--primary);
+  animation: pulse 2s infinite;
+}
+.live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--secondary);
+  font-size: 14px;
 }
 .live-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--ok);
+  background: #22c55e;
   box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
-  animation: pulse 2s infinite;
 }
-.log {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: #cdd6db;
+
+/* Apprentice step cards. */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
-.log-step {
+.step-card {
   display: flex;
   gap: 14px;
-  padding-bottom: 20px;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
-.log-rail {
+.step-card.working {
+  background: #fff8f2;
+  border-color: rgba(150, 73, 0, 0.2);
+}
+.step-rail {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.log-rail .material-symbols-outlined {
-  font-size: 20px;
-  color: var(--ok);
+.step-rail .material-symbols-outlined {
+  color: #22c55e;
   font-variation-settings: "FILL" 1;
 }
-.log-rail .dot {
+.step-rail .working-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.step-rail .working-dot::after {
+  content: "";
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--primary-container);
-  margin-top: 6px;
-  animation: pulse 1.4s infinite;
+  background: #fff;
 }
-.log-rail .line {
-  width: 1px;
-  flex: 1;
-  background: var(--log-line);
-  margin: 8px 0;
-}
-.log-body p {
+.step-body .title {
+  font-weight: 700;
+  color: var(--on-surface);
   margin: 0;
-  color: #fff;
-  opacity: 0.92;
 }
-.log-body .badge {
-  color: var(--primary-container);
-  font-size: 11px;
+.step-card.working .title {
+  color: var(--primary);
 }
-.log-empty {
-  color: var(--log-muted);
+.step-body .detail {
+  font-size: 14px;
+  color: var(--secondary);
+  margin: 2px 0 0;
 }
-.terminal-cursor {
-  display: inline-block;
-  width: 8px;
-  height: 15px;
-  background: var(--primary-container);
-  margin-left: 4px;
-  vertical-align: middle;
-  animation: blink 1s step-end infinite;
+.step-empty {
+  color: var(--secondary);
+  font-size: 14px;
 }
 
 /* Estimate table. */
@@ -314,10 +392,5 @@ select {
   50% {
     opacity: 0.5;
     transform: scale(1.1);
-  }
-}
-@keyframes blink {
-  50% {
-    opacity: 0;
   }
 }
