@@ -6,6 +6,20 @@ def test_stub_model_returns_scripted_response():
     assert stub.generate("anything") == "hello"
 
 
+def test_stub_model_chat_returns_scripted_messages():
+    stub = StubModel(
+        responses=[],
+        chats=[
+            {"tool_calls": [{"function": {"name": "add_priced_item", "arguments": {"item": "x"}}}]},
+            {"tool_calls": [{"function": {"name": "finish", "arguments": {}}}]},
+        ],
+    )
+    first = stub.chat([], tools=[])
+    second = stub.chat([], tools=[])
+    assert first["tool_calls"][0]["function"]["name"] == "add_priced_item"
+    assert second["tool_calls"][0]["function"]["name"] == "finish"
+
+
 def test_resolver_returns_model_for_role():
     resolver = ModelResolver(mode="private", overrides={"perception": StubModel(responses=["ok"])})
     model = resolver.for_role("perception")

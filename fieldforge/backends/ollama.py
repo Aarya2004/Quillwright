@@ -25,3 +25,10 @@ class OllamaModel:
         resp = requests.post(f"{self._host}/api/generate", json=payload, timeout=self._timeout)
         resp.raise_for_status()
         return resp.json().get("response", "")
+
+    def chat(self, messages: list[dict], tools: list[dict]) -> dict:
+        """Native tool-calling chat. Returns the assistant message (may hold tool_calls)."""
+        payload = {"model": self.name, "messages": messages, "tools": tools, "stream": False}
+        resp = requests.post(f"{self._host}/api/chat", json=payload, timeout=self._timeout)
+        resp.raise_for_status()
+        return resp.json().get("message", {})

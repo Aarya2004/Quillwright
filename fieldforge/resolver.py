@@ -8,16 +8,27 @@ class Model(Protocol):
 
 
 class StubModel:
-    """Deterministic model for tests/dev. Pops scripted responses in order."""
+    """Deterministic model for tests/dev. Pops scripted responses/chats in order."""
 
-    def __init__(self, responses: list[str], name: str = "StubModel"):
+    def __init__(
+        self,
+        responses: list[str],
+        name: str = "StubModel",
+        chats: list[dict] | None = None,
+    ):
         self._responses = list(responses)
+        self._chats = list(chats or [])
         self.name = name
 
     def generate(self, prompt: str, image_path: str | None = None) -> str:
         if not self._responses:
             return ""
         return self._responses.pop(0)
+
+    def chat(self, messages: list[dict], tools: list[dict]) -> dict:
+        if not self._chats:
+            return {"content": ""}
+        return self._chats.pop(0)
 
 
 # Which concrete model fills each role per Mode. Real backends wired later (ADR-0005).

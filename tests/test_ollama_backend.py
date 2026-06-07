@@ -48,3 +48,21 @@ def test_generate_with_image_path_attaches_base64(monkeypatch, tmp_path):
 
 def test_name_is_the_model_id():
     assert OllamaModel("minicpm-v").name == "minicpm-v"
+
+
+def test_chat_sends_messages_and_tools_and_returns_message(monkeypatch):
+    captured = {}
+
+    def fake_post(url, json, timeout):
+        captured["url"] = url
+        captured["json"] = json
+        return _FakeResp(
+            {"message": {"role": "assistant", "tool_calls": [{"function": {"name": "finish"}}]}}
+        )
+
+    monkeypatch.setattr("fieldforge.backends.ollama.requests.post", fake_post)
+    m = OllamaModel("nemotron-3-nano:4b")
+    msg = m.chat([{"role": "user", "content": "hi"}], tools=[{"type": "function"}])
+    assert captured["url"].endswith("/api/chat")
+    assert captured["json"]["tools"] == [{"type": "function"}]
+    assert msg["tool_calls"][0]["function"]["name"] == "finish"
