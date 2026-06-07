@@ -12,10 +12,28 @@ from langgraph.types import Command
 
 from fieldforge.agent import build_agent
 from fieldforge.catalog import Catalog
+from fieldforge.memory import Memory
 from fieldforge.models import Capture
 from fieldforge.resolver import ModelResolver, StubModel
 
 CATALOG = Catalog.from_file("data/sample_catalog.json")
+
+# On-device memory of past jobs (private JSON file).
+MEMORY_PATH = "/tmp/fieldforge_memory.json"
+_MEMORY: Memory | None = None
+
+
+def _memory() -> Memory:
+    global _MEMORY
+    if _MEMORY is None:
+        _MEMORY = Memory(MEMORY_PATH)
+    return _MEMORY
+
+
+def reset_memory() -> None:
+    """Drop the in-process memory (re-reads MEMORY_PATH next use). For tests."""
+    global _MEMORY
+    _MEMORY = None
 
 # FF_REAL_MODELS=1 uses real local models via Ollama; otherwise the demo stub.
 REAL_MODELS = os.environ.get("FF_REAL_MODELS") == "1"
@@ -148,6 +166,13 @@ def _drive(agent, payload, thread_id: str):
             if update.get("estimate") is not None:
                 estimate = update["estimate"]
 
+    # Record the finished job to Episodic memory.
+    if estimate is not None:
+        _memory().record_run(
+            run.get("transcript", ""),
+            [li.description for li in estimate.line_items],
+        )
+
     yield {
         "type": "estimate",
         "estimate": _estimate_payload(estimate) if estimate is not None else None,
@@ -169,12 +194,38 @@ def forge_estimate_stream(
     agent = build_agent(
         _perception(transcript, bool(images)), CATALOG, InMemorySaver(), brain_model=_brain()
     )
-    _RUNS[thread_id] = {"agent": agent, "emitted": 0}
+    _RUNS[thread_id] = {"agent": agent, "emitted": 0, "transcript": transcript}
     cap = Capture(
         image_paths=images or ["demo.jpg"], transcript=transcript, trade_hint=trade or "Job"
     )
+
+    # Surface a recall of similar past jobs before estimating ("it learns").
+    recalled = _recall_similar(transcript)
+    if recalled:
+        yield {
+            "type": "trace",
+            "step": {
+                "action": "recall",
+                "model": "memory",
+                "detail": recalled,
+                "status": "ok",
+            },
+        }
+
     init = {"capture": cap, "observations": [], "line_items": [], "trace": [], "estimate": None}
     yield from _drive(agent, init, thread_id)
+
+
+def _recall_similar(transcript: str) -> str:
+    """Find the most relevant past job; return a short human description, or ''."""
+    for word in sorted(set(transcript.lower().split()), key=len, reverse=True):
+        if len(word) < 4:
+            continue
+        runs = _memory().recall(word)
+        if runs:
+            items = ", ".join(runs[0]["line_items"][:3])
+            return f"Similar past job: “{runs[0]['transcript']}” ({items})"
+    return ""
 
 
 def resume_estimate_stream(value, thread_id: str = "ui"):

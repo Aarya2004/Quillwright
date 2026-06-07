@@ -6,8 +6,11 @@ const steps = [];
 
 // Friendly card titles + lead-in text for each agent action.
 const CARDS = {
+  recall: { title: "Memory", lead: "Checked your past jobs for anything similar." },
   perceive: { title: "Site Analysis", lead: "Reviewed the job and noted what's needed." },
   price: { title: "Market Pricing", lead: "Pulled current prices for each part." },
+  add_priced_item: { title: "Market Pricing", lead: "Pulled current prices for each part." },
+  finish: { title: "Estimate Assembled", lead: "" },
   assemble: { title: "Estimate Assembled", lead: "" },
 };
 
