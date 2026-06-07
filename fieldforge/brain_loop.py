@@ -11,10 +11,20 @@ from fieldforge.catalog import Catalog
 from fieldforge.models import LineItem, TraceStep
 
 SYSTEM = (
-    "You are a field-service estimator. You are given the parts and labor observed on a "
-    "job. Add EACH distinct item to the estimate by calling add_priced_item(item) exactly "
-    "once. Do not invent prices — the tool applies the catalog price. When every item has "
-    "been added, call finish(). Use the exact item names given."
+    "You are a field-service estimator. You are given a tech's note about a job. Add EACH "
+    "distinct part and the labor to the estimate by calling add_priced_item(item, quantity). "
+    "Rules:\n"
+    "- Call add_priced_item ONCE per distinct item. Do not repeat an item.\n"
+    "- quantity = how many units or hours. Read it from the note: 'two hours'/'2 hrs' -> 2, "
+    "'both'/'a pair' -> 2, '4 pounds' -> 4. If no count is stated, use 1.\n"
+    "- Labor is an item too: add it with the number of hours as the quantity.\n"
+    "- Never invent prices — the tool applies the catalog price.\n"
+    "- When every part and the labor have been added, call finish().\n"
+    "Examples:\n"
+    "Note: 'replaced the capacitor and did 2 hours labor' -> add_priced_item('capacitor', 1), "
+    "add_priced_item('labor', 2), finish()\n"
+    "Note: 'replaced both contactors' -> add_priced_item('contactor', 2), finish()\n"
+    "Note: 'added 4 lbs refrigerant' -> add_priced_item('refrigerant', 4), finish()"
 )
 
 
