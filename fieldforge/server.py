@@ -16,6 +16,7 @@ from fieldforge.api.estimate import (
     forge_estimate_stream,
     resume_estimate_stream,
 )
+from fieldforge.api.upload import save_upload
 
 WEB = Path(__file__).parent / "web"
 
@@ -37,13 +38,21 @@ def _sse(events):
         yield f"data: {json.dumps(event)}\n\n"
 
 
+@app.post("/api/upload")
+def api_upload(payload: dict = Body(...)) -> dict:
+    """Save a base64 image; returns its server path for the next forge call."""
+    path = save_upload(payload["data"], payload.get("filename", "photo.png"))
+    return {"path": path}
+
+
 @app.post("/api/forge_estimate_stream")
 def api_forge_estimate_stream(payload: dict = Body(...)) -> StreamingResponse:
     transcript = payload.get("transcript", "")
     trade = payload.get("trade", "hvac")
     thread_id = payload.get("thread_id", "ui")
+    image_paths = payload.get("image_paths", [])
     return StreamingResponse(
-        _sse(forge_estimate_stream(transcript, trade, thread_id)),
+        _sse(forge_estimate_stream(transcript, trade, thread_id, image_paths)),
         media_type="text/event-stream",
     )
 

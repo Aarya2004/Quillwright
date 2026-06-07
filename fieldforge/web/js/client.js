@@ -24,9 +24,24 @@ async function consumeStream(url, body, onEvent) {
   }
 }
 
+// Upload one image (base64 data URL); returns the server-side path.
+export async function uploadImage(dataUrl, filename) {
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data: dataUrl, filename }),
+  });
+  const out = await res.json();
+  return out.path;
+}
+
 // Stream a run; onEvent({type:"trace"|"pause"|"estimate", ...}) per SSE frame.
-export function forgeEstimateStream(transcript, trade, onEvent) {
-  return consumeStream("/api/forge_estimate_stream", { transcript, trade }, onEvent);
+export function forgeEstimateStream(transcript, trade, imagePaths, onEvent) {
+  return consumeStream(
+    "/api/forge_estimate_stream",
+    { transcript, trade, image_paths: imagePaths },
+    onEvent,
+  );
 }
 
 // Resume a paused run with the human-supplied value; continues streaming.

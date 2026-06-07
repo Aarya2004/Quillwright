@@ -1,8 +1,31 @@
 // Page logic: wire the Forge button, render the estimate, handle events.
-import { forgeEstimateStream, resumeEstimateStream } from "./client.js";
+import { forgeEstimateStream, resumeEstimateStream, uploadImage } from "./client.js";
 import { resetTrace, addStep } from "./trace.js";
 
 const $ = (id) => document.getElementById(id);
+
+// Photos picked for this job: server-side paths (after upload).
+let imagePaths = [];
+
+function readAsDataURL(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+async function onPhotos(e) {
+  const files = Array.from(e.target.files || []);
+  for (const file of files) {
+    const dataUrl = await readAsDataURL(file);
+    const img = document.createElement("img");
+    img.src = dataUrl;
+    $("thumbs").appendChild(img);
+    const path = await uploadImage(dataUrl, file.name);
+    imagePaths.push(path);
+  }
+}
 
 function money(n) {
   return `$${Number(n).toFixed(2)}`;
@@ -79,7 +102,7 @@ async function forge() {
   renderEstimate(null);
   $("pause").style.display = "none";
   $("forge-state").textContent = "Working…";
-  await forgeEstimateStream(transcript, "hvac", handleEvent);
+  await forgeEstimateStream(transcript, "hvac", imagePaths, handleEvent);
 }
 
 function newEstimate() {
@@ -88,11 +111,14 @@ function newEstimate() {
   $("pause").style.display = "none";
   $("forge-state").textContent = "Idle";
   $("transcript").value = "";
+  $("thumbs").innerHTML = "";
+  imagePaths = [];
   $("transcript").focus();
 }
 
 $("forge-btn").addEventListener("click", forge);
 $("new-estimate-btn").addEventListener("click", newEstimate);
+$("photo-input").addEventListener("change", onPhotos);
 $("transcript").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) forge();
 });

@@ -88,12 +88,26 @@
   gap: 12px;
   align-items: center;
 }
-.capture input {
+.capture input[type="text"],
+.capture input#transcript {
   flex: 1;
   padding: 10px;
   border: 1px solid var(--outline);
   border-radius: 8px;
   font-family: var(--font-body);
+}
+.thumbs {
+  display: flex;
+  gap: 8px;
+  padding: 0 32px 8px;
+  flex-wrap: wrap;
+}
+.thumbs img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--outline-variant);
 }
 
 /* Panes. */

@@ -41,10 +41,15 @@
         <!-- Capture input -->
         <div class="capture">
           <input id="transcript" value="replaced the capacitor and contactor, one hour labor" />
+          <label class="btn" for="photo-input" title="Add job photos">
+            <span class="material-symbols-outlined">add_a_photo</span>
+          </label>
+          <input id="photo-input" type="file" accept="image/*" multiple hidden />
           <button id="forge-btn" class="btn btn--primary">
             <span class="material-symbols-outlined">bolt</span> Forge estimate
           </button>
         </div>
+        <div id="thumbs" class="thumbs"></div>
 
         <div class="panes">
           <!-- Left: Digital Apprentice -->
