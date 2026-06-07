@@ -14,7 +14,22 @@ def test_lookup_is_case_insensitive_and_trims():
 
 def test_lookup_miss_returns_none():
     cat = Catalog.from_file("data/sample_catalog.json")
-    assert cat.lookup("flux capacitor") is None
+    assert cat.lookup("widget gizmo") is None
+
+
+def test_lookup_matches_natural_phrasing_via_keywords():
+    cat = Catalog.from_file("data/sample_catalog.json")
+    # natural names the LLM emits should resolve to the catalog entry
+    assert cat.lookup("refrigerant")["key"] == "refrigerant_r410a"
+    assert cat.lookup("refrigerant top-up")["key"] == "refrigerant_r410a"
+    assert cat.lookup("run capacitor")["key"] == "capacitor"
+    assert cat.lookup("dual run capacitor")["key"] == "capacitor"
+    assert cat.lookup("compressor contactor")["key"] == "contactor"
+
+
+def test_lookup_still_misses_truly_unknown():
+    cat = Catalog.from_file("data/sample_catalog.json")
+    assert cat.lookup("thingamajig") is None
 
 
 def test_add_makes_an_item_findable():

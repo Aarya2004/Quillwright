@@ -1,0 +1,67 @@
+{
+  "_note": "Eval cases for the brain: job note -> expected line items (catalog descriptions + quantities). Used to score brain accuracy and as the GEPA training set.",
+  "cases": [
+    {
+      "transcript": "replaced the capacitor and contactor, one hour labor",
+      "expected": [
+        {"description": "Dual run capacitor", "quantity": 1},
+        {"description": "Compressor contactor", "quantity": 1},
+        {"description": "Labor", "quantity": 1}
+      ]
+    },
+    {
+      "transcript": "just topped up the refrigerant",
+      "expected": [{"description": "R-410A refrigerant", "quantity": 1}]
+    },
+    {
+      "transcript": "swapped a capacitor and did 3 hours of labor",
+      "expected": [
+        {"description": "Dual run capacitor", "quantity": 1},
+        {"description": "Labor", "quantity": 3}
+      ]
+    },
+    {
+      "transcript": "new contactor plus two hours of work",
+      "expected": [
+        {"description": "Compressor contactor", "quantity": 1},
+        {"description": "Labor", "quantity": 2}
+      ]
+    },
+    {
+      "transcript": "added 4 pounds of refrigerant and replaced the capacitor",
+      "expected": [
+        {"description": "R-410A refrigerant", "quantity": 4},
+        {"description": "Dual run capacitor", "quantity": 1}
+      ]
+    },
+    {
+      "transcript": "capacitor contactor refrigerant and labor",
+      "expected": [
+        {"description": "Dual run capacitor", "quantity": 1},
+        {"description": "Compressor contactor", "quantity": 1},
+        {"description": "R-410A refrigerant", "quantity": 1},
+        {"description": "Labor", "quantity": 1}
+      ]
+    },
+    {
+      "transcript": "replaced both capacitors",
+      "expected": [{"description": "Dual run capacitor", "quantity": 2}]
+    },
+    {
+      "transcript": "5 hours of labor today",
+      "expected": [{"description": "Labor", "quantity": 5}]
+    },
+    {
+      "transcript": "fixed the contactor",
+      "expected": [{"description": "Compressor contactor", "quantity": 1}]
+    },
+    {
+      "transcript": "topped off refrigerant, swapped contactor, 2 hrs labor",
+      "expected": [
+        {"description": "R-410A refrigerant", "quantity": 1},
+        {"description": "Compressor contactor", "quantity": 1},
+        {"description": "Labor", "quantity": 2}
+      ]
+    }
+  ]
+}
