@@ -50,6 +50,29 @@ def test_agent_pauses_when_price_missing():
     assert "__interrupt__" in out
 
 
+def _tc(name, **args):
+    return {"tool_calls": [{"function": {"name": name, "arguments": args}}]}
+
+
+def test_agent_uses_llm_brain_when_provided():
+    perception = StubModel(responses=['[{"kind":"part","text":"capacitor","confidence":0.9}]'])
+    brain = StubModel(
+        responses=[],
+        chats=[_tc("add_priced_item", item="capacitor"), _tc("finish")],
+        name="nemotron-test",
+    )
+    cat = Catalog.from_file("data/sample_catalog.json")
+    agent = build_agent(
+        perception_model=perception, catalog=cat, checkpointer=InMemorySaver(), brain_model=brain
+    )
+    cap = Capture(image_paths=["/tmp/a.jpg"], transcript="fixed capacitor", trade_hint="hvac")
+    out = _run(agent, cap, thread="brain1")
+    est = out["estimate"]
+    assert est is not None
+    assert any("capacitor" in li.description.lower() for li in est.line_items)
+    assert any(s.action == "add_priced_item" for s in out["trace"])
+
+
 def test_agent_resumes_after_human_supplies_price():
     perception = StubModel(responses=['[{"kind":"part","text":"unobtainium","confidence":0.9}]'])
     cat = Catalog.from_file("data/sample_catalog.json")

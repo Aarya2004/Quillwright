@@ -5,6 +5,7 @@ from fieldforge.models import Capture, Observation, LineItem, Estimate, TraceSte
 from fieldforge.catalog import Catalog
 from fieldforge.resolver import Model
 from fieldforge.tools import perceive, lookup_price, compute, draft_line_item
+from fieldforge.brain_loop import run_brain
 
 
 class AgentState(TypedDict):
@@ -15,7 +16,7 @@ class AgentState(TypedDict):
     estimate: Optional[Estimate]
 
 
-def build_agent(perception_model: Model, catalog: Catalog, checkpointer):
+def build_agent(perception_model: Model, catalog: Catalog, checkpointer, brain_model=None):
     def perceive_node(state: AgentState) -> dict:
         obs: list[Observation] = []
         for path in state["capture"].image_paths:
@@ -29,7 +30,7 @@ def build_agent(perception_model: Model, catalog: Catalog, checkpointer):
         ]
         return {"observations": obs, "trace": trace}
 
-    def price_node(state: AgentState) -> dict:
+    def deterministic_price(state: AgentState) -> dict:
         items = list(state["line_items"])
         trace = list(state["trace"])
         for ob in state["observations"]:
@@ -60,6 +61,31 @@ def build_agent(perception_model: Model, catalog: Catalog, checkpointer):
                 )
             )
         return {"line_items": items, "trace": trace}
+
+    def brain_price(state: AgentState) -> dict:
+        # The LLM brain decides which items to add; deterministic tools own the numbers.
+        obs_text = ", ".join(ob.text for ob in state["observations"])
+        priced_extra: list[LineItem] = []
+        while True:
+            items, brain_trace, pause = run_brain(
+                brain_model,
+                catalog,
+                observations_text=obs_text,
+                transcript=state["capture"].transcript,
+            )
+            if pause is None:
+                trace = state["trace"] + brain_trace
+                return {"line_items": list(state["line_items"]) + priced_extra + items, "trace": trace}
+            # Missing price -> ask the human, record it on the catalog, then re-run the brain.
+            human_rate = interrupt({"reason": f"No price for '{pause['item']}'", "item": pause["item"]})
+            priced_extra.append(
+                draft_line_item(
+                    pause["item"], qty=1, unit="ea", rate=float(human_rate), source="user"
+                )
+            )
+            catalog.add(pause["item"], pause["item"], "ea", float(human_rate))
+
+    price_node = brain_price if brain_model is not None else deterministic_price
 
     def assemble_node(state: AgentState) -> dict:
         est = Estimate(

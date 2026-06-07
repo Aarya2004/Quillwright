@@ -47,6 +47,13 @@ def _perception(transcript: str, has_real_image: bool):
     return _stub_perception(transcript)
 
 
+def _brain():
+    """Real Ollama tool-calling brain when FF_REAL_MODELS=1; else None (deterministic path)."""
+    if REAL_MODELS:
+        return ModelResolver(mode="private", backend="ollama").for_role("brain")
+    return None
+
+
 def _estimate_payload(est) -> dict:
     return {
         "job_title": est.job_title,
@@ -74,10 +81,14 @@ def _trace_payload(trace) -> list[dict]:
     ]
 
 
-def forge_estimate(transcript: str, trade: str = "hvac", image_paths: list[str] | None = None) -> dict:
+def forge_estimate(
+    transcript: str, trade: str = "hvac", image_paths: list[str] | None = None
+) -> dict:
     """Run the agent once (non-streaming) and return trace + estimate as JSON."""
     images = [p for p in (image_paths or []) if os.path.isfile(p)]
-    agent = build_agent(_perception(transcript, bool(images)), CATALOG, InMemorySaver())
+    agent = build_agent(
+        _perception(transcript, bool(images)), CATALOG, InMemorySaver(), brain_model=_brain()
+    )
     cap = Capture(
         image_paths=images or ["demo.jpg"], transcript=transcript, trade_hint=trade or "Job"
     )
@@ -145,14 +156,19 @@ def _drive(agent, payload, thread_id: str):
 
 
 def forge_estimate_stream(
-    transcript: str, trade: str = "hvac", thread_id: str = "ui", image_paths: list[str] | None = None
+    transcript: str,
+    trade: str = "hvac",
+    thread_id: str = "ui",
+    image_paths: list[str] | None = None,
 ):
     """Run the agent, yielding each new trace step, then a pause OR the estimate.
 
     Events: {"type":"trace",...} per step, then {"type":"pause",...} or {"type":"estimate",...}.
     """
     images = [p for p in (image_paths or []) if os.path.isfile(p)]
-    agent = build_agent(_perception(transcript, bool(images)), CATALOG, InMemorySaver())
+    agent = build_agent(
+        _perception(transcript, bool(images)), CATALOG, InMemorySaver(), brain_model=_brain()
+    )
     _RUNS[thread_id] = {"agent": agent, "emitted": 0}
     cap = Capture(
         image_paths=images or ["demo.jpg"], transcript=transcript, trade_hint=trade or "Job"

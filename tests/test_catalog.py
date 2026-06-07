@@ -15,3 +15,11 @@ def test_lookup_is_case_insensitive_and_trims():
 def test_lookup_miss_returns_none():
     cat = Catalog.from_file("data/sample_catalog.json")
     assert cat.lookup("flux capacitor") is None
+
+
+def test_add_makes_an_item_findable():
+    cat = Catalog.from_file("data/sample_catalog.json")
+    assert cat.lookup("widget") is None
+    cat.add("widget", "Custom widget", "ea", 12.5)
+    hit = cat.lookup("widget")
+    assert hit["rate"] == 12.5 and hit["description"] == "Custom widget"
