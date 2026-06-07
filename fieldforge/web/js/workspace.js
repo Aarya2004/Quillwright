@@ -1,11 +1,21 @@
 // Page logic: wire the Forge button, render the estimate, handle events.
-import { forgeEstimateStream, resumeEstimateStream, uploadImage } from "./client.js";
+import {
+  forgeEstimateStream,
+  resumeEstimateStream,
+  uploadImage,
+  recalc,
+  downloadPdf,
+} from "./client.js";
 import { resetTrace, addStep } from "./trace.js";
 
 const $ = (id) => document.getElementById(id);
+const TAX_RATE = 0.13;
+const JOB_TITLE = "AC Unit Repair — 123 Maple St";
 
 // Photos picked for this job: server-side paths (after upload).
 let imagePaths = [];
+// Current estimate rows (editable). [{description, quantity, unit, rate, subtotal}]
+let rows = [];
 
 function readAsDataURL(file) {
   return new Promise((resolve) => {
@@ -31,26 +41,60 @@ function money(n) {
   return `$${Number(n).toFixed(2)}`;
 }
 
-function renderEstimate(est) {
+// Render the editable estimate from `rows`. qty/rate cells edit -> recalc.
+function renderRows() {
   const tbody = $("est-rows");
-  if (!est) {
-    tbody.innerHTML = "";
-    return;
-  }
-  tbody.innerHTML = est.line_items
+  tbody.innerHTML = rows
     .map(
-      (li) => `<tr>
-        <td class="desc" contenteditable>${li.description}</td>
-        <td>${li.quantity} ${li.unit}</td>
-        <td class="num" contenteditable>${money(li.rate)}</td>
+      (li, i) => `<tr data-i="${i}">
+        <td class="desc" contenteditable data-field="description">${li.description}</td>
+        <td class="num" contenteditable data-field="quantity">${li.quantity}</td>
+        <td class="num" contenteditable data-field="rate">${money(li.rate)}</td>
         <td class="num">${money(li.subtotal)}</td>
       </tr>`,
     )
     .join("");
+}
+
+function renderTotals(est) {
   $("sum-subtotal").textContent = money(est.subtotal);
   $("sum-tax-rate").textContent = `${Math.round(est.tax_rate * 100)}%`;
   $("sum-tax").textContent = money(est.tax);
   $("sum-total").textContent = money(est.total);
+}
+
+// Adopt a server estimate as the editable working copy.
+function setEstimate(est) {
+  if (!est) {
+    rows = [];
+    $("est-rows").innerHTML = "";
+    renderTotals({ subtotal: 0, tax_rate: 0, tax: 0, total: 0 });
+    return;
+  }
+  rows = est.line_items.map((li) => ({ ...li }));
+  renderRows();
+  renderTotals(est);
+}
+
+// Recompute totals server-side after an edit (Facts-from-Tools).
+async function recalcFromRows() {
+  const est = await recalc(rows, JOB_TITLE, TAX_RATE);
+  rows = est.line_items.map((li) => ({ ...li }));
+  renderRows();
+  renderTotals(est);
+}
+
+// Read an edited cell back into `rows`.
+function onCellEdit(e) {
+  const td = e.target.closest("td[data-field]");
+  if (!td) return;
+  const tr = td.closest("tr");
+  const i = Number(tr.dataset.i);
+  const field = td.dataset.field;
+  let val = td.textContent.trim();
+  if (field === "quantity" || field === "rate") val = parseFloat(val.replace(/[^0-9.]/g, "")) || 0;
+  rows[i][field] = val;
+  recalcFromRows();
 }
 
 // The single event handler used by both the initial run and the resume.
@@ -60,7 +104,7 @@ function handleEvent(event) {
   } else if (event.type === "pause") {
     showPause(event);
   } else if (event.type === "estimate") {
-    renderEstimate(event.estimate);
+    setEstimate(event.estimate);
     $("forge-state").textContent = "Done";
   }
 }
@@ -99,7 +143,7 @@ function showPause(event) {
 async function forge() {
   const transcript = $("transcript").value;
   resetTrace($("log"));
-  renderEstimate(null);
+  setEstimate(null);
   $("pause").style.display = "none";
   $("forge-state").textContent = "Working…";
   await forgeEstimateStream(transcript, "hvac", imagePaths, handleEvent);
@@ -107,7 +151,7 @@ async function forge() {
 
 function newEstimate() {
   resetTrace($("log"));
-  renderEstimate(null);
+  setEstimate(null);
   $("pause").style.display = "none";
   $("forge-state").textContent = "Idle";
   $("transcript").value = "";
@@ -116,9 +160,21 @@ function newEstimate() {
   $("transcript").focus();
 }
 
+function addItem() {
+  rows.push({ description: "New item", quantity: 1, unit: "ea", rate: 0, subtotal: 0 });
+  renderRows();
+  recalcFromRows();
+}
+
 $("forge-btn").addEventListener("click", forge);
 $("new-estimate-btn").addEventListener("click", newEstimate);
 $("photo-input").addEventListener("change", onPhotos);
+$("add-item-btn").addEventListener("click", addItem);
+$("pdf-btn").addEventListener("click", () => downloadPdf(rows, JOB_TITLE, TAX_RATE));
+$("discard-btn").addEventListener("click", newEstimate);
+$("finalize-btn").addEventListener("click", () => downloadPdf(rows, JOB_TITLE, TAX_RATE));
+// Edits commit on blur (after the user leaves the cell).
+$("est-rows").addEventListener("focusout", onCellEdit);
 $("transcript").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) forge();
 });

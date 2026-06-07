@@ -16,7 +16,10 @@ from fieldforge.api.estimate import (
     forge_estimate_stream,
     resume_estimate_stream,
 )
+from fieldforge.api.recalc import recalc_estimate
 from fieldforge.api.upload import save_upload
+from fieldforge.models import Estimate, LineItem
+from fieldforge.pdf import estimate_to_pdf
 
 WEB = Path(__file__).parent / "web"
 
@@ -43,6 +46,38 @@ def api_upload(payload: dict = Body(...)) -> dict:
     """Save a base64 image; returns its server path for the next forge call."""
     path = save_upload(payload["data"], payload.get("filename", "photo.png"))
     return {"path": path}
+
+
+@app.post("/api/recalc")
+def api_recalc(payload: dict = Body(...)) -> dict:
+    """Recompute totals from edited rows (server-authoritative math)."""
+    return recalc_estimate(
+        payload.get("rows", []),
+        job_title=payload.get("job_title", "Job"),
+        tax_rate=payload.get("tax_rate", 0.13),
+    )
+
+
+@app.post("/api/pdf")
+def api_pdf(payload: dict = Body(...)) -> FileResponse:
+    """Render the (possibly edited) estimate to a PDF and return it."""
+    est = Estimate(
+        job_title=payload.get("job_title", "Estimate"),
+        line_items=[
+            LineItem(
+                description=str(r.get("description", "")),
+                quantity=float(r.get("quantity", 1) or 0),
+                unit=str(r.get("unit", "ea")),
+                rate=float(r.get("rate", 0) or 0),
+                price_source="user",
+            )
+            for r in payload.get("rows", [])
+        ],
+        tax_rate=payload.get("tax_rate", 0.13),
+    )
+    path = "/tmp/fieldforge_estimate.pdf"
+    estimate_to_pdf(est, path)
+    return FileResponse(path, media_type="application/pdf", filename="estimate.pdf")
 
 
 @app.post("/api/forge_estimate_stream")

@@ -48,3 +48,29 @@ export function forgeEstimateStream(transcript, trade, imagePaths, onEvent) {
 export function resumeEstimateStream(value, onEvent) {
   return consumeStream("/api/resume_estimate_stream", { value }, onEvent);
 }
+
+// Server-authoritative recompute of an edited estimate.
+export async function recalc(rows, jobTitle, taxRate) {
+  const res = await fetch("/api/recalc", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rows, job_title: jobTitle, tax_rate: taxRate }),
+  });
+  return res.json();
+}
+
+// Download a PDF of the current (edited) estimate.
+export async function downloadPdf(rows, jobTitle, taxRate) {
+  const res = await fetch("/api/pdf", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rows, job_title: jobTitle, tax_rate: taxRate }),
+  });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "estimate.pdf";
+  a.click();
+  URL.revokeObjectURL(url);
+}
