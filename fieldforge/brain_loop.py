@@ -59,12 +59,12 @@ def run_brain(
                 break
             if result["status"] == "added":
                 line_items.append(result["line_item"])
+                li = result["line_item"]
                 trace.append(
                     TraceStep(
                         action="add_priced_item",
                         model="brain",
-                        detail=f"{result['line_item'].description} "
-                        f"-> {result['line_item'].rate}",
+                        detail=f"{li.quantity:g} x {li.description} -> {li.subtotal}",
                     )
                 )
                 _tool_reply(messages, call, f"added {result['line_item'].description}")

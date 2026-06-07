@@ -15,14 +15,18 @@ BRAIN_TOOLS = [
         "function": {
             "name": "add_priced_item",
             "description": (
-                "Add one line item to the estimate. Provide the item name; the catalog "
-                "price is applied automatically. Call once per distinct item observed or "
-                "mentioned (parts and labor)."
+                "Add one line item to the estimate. Provide the item name and how many "
+                "units/hours (quantity); the catalog price is applied automatically. Call "
+                "once per distinct item observed or mentioned (parts and labor)."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "item": {"type": "string", "description": "item or labor name"}
+                    "item": {"type": "string", "description": "item or labor name"},
+                    "quantity": {
+                        "type": "number",
+                        "description": "how many units or hours (default 1)",
+                    },
                 },
                 "required": ["item"],
             },
@@ -48,10 +52,20 @@ def dispatch(name: str, args: dict, catalog: Catalog) -> dict:
         res = lookup_price(item, catalog)
         if not res["found"]:
             return {"status": "need_price", "item": item}
-        # Facts-from-Tools: qty defaults to 1 in the core; compute owns the math.
-        compute(f"1 * {res['rate']}")
+        qty = _coerce_qty((args or {}).get("quantity"))
+        # Facts-from-Tools: compute owns the math; the model only supplies the count.
+        compute(f"{qty} * {res['rate']}")
         line = draft_line_item(
-            res["description"], qty=1, unit=res["unit"], rate=res["rate"], source="catalog"
+            res["description"], qty=qty, unit=res["unit"], rate=res["rate"], source="catalog"
         )
         return {"status": "added", "line_item": line}
     return {"status": "error", "tool": name}
+
+
+def _coerce_qty(value) -> float:
+    """Quantity from possibly-noisy model output; fall back to 1 on anything invalid."""
+    try:
+        q = float(value)
+        return q if q > 0 else 1
+    except (TypeError, ValueError):
+        return 1
