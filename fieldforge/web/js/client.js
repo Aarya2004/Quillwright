@@ -59,6 +59,16 @@ export async function recalc(rows, jobTitle, taxRate) {
   return res.json();
 }
 
+// Translate the customer-facing estimate copy into a language (Cohere Aya).
+export async function translateEstimate(rows, jobTitle, taxRate, language) {
+  const res = await fetch("/api/translate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rows, job_title: jobTitle, tax_rate: taxRate, language }),
+  });
+  return res.json();
+}
+
 // Download a PDF of the current (edited) estimate.
 export async function downloadPdf(rows, jobTitle, taxRate) {
   const res = await fetch("/api/pdf", {

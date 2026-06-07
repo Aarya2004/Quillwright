@@ -48,6 +48,7 @@ BEST_STACK = {
 OLLAMA_TAGS = {
     "perception": "minicpm-v",
     "brain": "nemotron-3-nano:4b",
+    "multilingual": "aya",
 }
 
 

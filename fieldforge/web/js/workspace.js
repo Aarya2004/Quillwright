@@ -5,6 +5,7 @@ import {
   uploadImage,
   recalc,
   downloadPdf,
+  translateEstimate,
 } from "./client.js";
 import { resetTrace, addStep } from "./trace.js";
 
@@ -16,6 +17,8 @@ const JOB_TITLE = "AC Unit Repair — 123 Maple St";
 let imagePaths = [];
 // Current estimate rows (editable). [{description, quantity, unit, rate, subtotal}]
 let rows = [];
+// English source descriptions, so language switches re-translate from English.
+let sourceDescriptions = [];
 
 function readAsDataURL(file) {
   return new Promise((resolve) => {
@@ -71,6 +74,22 @@ function setEstimate(est) {
     renderTotals({ subtotal: 0, tax_rate: 0, tax: 0, total: 0 });
     return;
   }
+  rows = est.line_items.map((li) => ({ ...li }));
+  sourceDescriptions = rows.map((li) => li.description);
+  $("lang").value = "English";
+  renderRows();
+  renderTotals(est);
+}
+
+// Re-render the customer copy in the selected language (descriptions only).
+async function onLanguageChange() {
+  const language = $("lang").value;
+  // translate from the English source each time, not from a prior translation
+  const src = rows.map((li, i) => ({
+    ...li,
+    description: sourceDescriptions[i] ?? li.description,
+  }));
+  const est = await translateEstimate(src, JOB_TITLE, TAX_RATE, language);
   rows = est.line_items.map((li) => ({ ...li }));
   renderRows();
   renderTotals(est);
@@ -173,6 +192,7 @@ $("add-item-btn").addEventListener("click", addItem);
 $("pdf-btn").addEventListener("click", () => downloadPdf(rows, JOB_TITLE, TAX_RATE));
 $("discard-btn").addEventListener("click", newEstimate);
 $("finalize-btn").addEventListener("click", () => downloadPdf(rows, JOB_TITLE, TAX_RATE));
+$("lang").addEventListener("change", onLanguageChange);
 // Edits commit on blur (after the user leaves the cell).
 $("est-rows").addEventListener("focusout", onCellEdit);
 $("transcript").addEventListener("keydown", (e) => {

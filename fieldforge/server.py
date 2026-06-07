@@ -16,10 +16,16 @@ from fieldforge.api.estimate import (
     forge_estimate_stream,
     resume_estimate_stream,
 )
+import os
+
 from fieldforge.api.recalc import recalc_estimate
+from fieldforge.api.translate import translate_estimate
 from fieldforge.api.upload import save_upload
 from fieldforge.models import Estimate, LineItem
 from fieldforge.pdf import estimate_to_pdf
+from fieldforge.resolver import ModelResolver
+
+REAL_MODELS = os.environ.get("FF_REAL_MODELS") == "1"
 
 WEB = Path(__file__).parent / "web"
 
@@ -56,6 +62,21 @@ def api_recalc(payload: dict = Body(...)) -> dict:
         job_title=payload.get("job_title", "Job"),
         tax_rate=payload.get("tax_rate", 0.13),
     )
+
+
+@app.post("/api/translate")
+def api_translate(payload: dict = Body(...)) -> dict:
+    """Translate the customer-facing estimate copy into `language` (Cohere Aya)."""
+    est = recalc_estimate(
+        payload.get("rows", []),
+        job_title=payload.get("job_title", "Job"),
+        tax_rate=payload.get("tax_rate", 0.13),
+    )
+    language = payload.get("language", "English")
+    if REAL_MODELS and not language.lower().startswith("english"):
+        model = ModelResolver(mode="private", backend="ollama").for_role("multilingual")
+        est = translate_estimate(est, language, model)
+    return est
 
 
 @app.post("/api/pdf")
