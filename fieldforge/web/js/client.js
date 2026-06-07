@@ -1,11 +1,12 @@
 // The single place that knows the API URLs. Everything else calls these.
 
-// Stream the agent run; invokes onEvent({type:"trace"|"estimate", ...}) per SSE frame.
-export async function forgeEstimateStream(transcript, trade, onEvent) {
-  const res = await fetch("/api/forge_estimate_stream", {
+const THREAD_ID = "ui";
+
+async function consumeStream(url, body, onEvent) {
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ transcript, trade }),
+    body: JSON.stringify({ ...body, thread_id: THREAD_ID }),
   });
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -21,4 +22,14 @@ export async function forgeEstimateStream(transcript, trade, onEvent) {
       if (line) onEvent(JSON.parse(line));
     }
   }
+}
+
+// Stream a run; onEvent({type:"trace"|"pause"|"estimate", ...}) per SSE frame.
+export function forgeEstimateStream(transcript, trade, onEvent) {
+  return consumeStream("/api/forge_estimate_stream", { transcript, trade }, onEvent);
+}
+
+// Resume a paused run with the human-supplied value; continues streaming.
+export function resumeEstimateStream(value, onEvent) {
+  return consumeStream("/api/resume_estimate_stream", { value }, onEvent);
 }

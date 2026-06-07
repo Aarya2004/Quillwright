@@ -11,7 +11,11 @@ from fastapi import Body
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from gradio import Server
 
-from fieldforge.api.estimate import forge_estimate, forge_estimate_stream
+from fieldforge.api.estimate import (
+    forge_estimate,
+    forge_estimate_stream,
+    resume_estimate_stream,
+)
 
 WEB = Path(__file__).parent / "web"
 
@@ -28,16 +32,30 @@ def api_forge_estimate(payload: dict = Body(...)) -> dict:
     return forge_estimate(payload.get("transcript", ""), payload.get("trade", "hvac"))
 
 
+def _sse(events):
+    for event in events:
+        yield f"data: {json.dumps(event)}\n\n"
+
+
 @app.post("/api/forge_estimate_stream")
 def api_forge_estimate_stream(payload: dict = Body(...)) -> StreamingResponse:
     transcript = payload.get("transcript", "")
     trade = payload.get("trade", "hvac")
+    thread_id = payload.get("thread_id", "ui")
+    return StreamingResponse(
+        _sse(forge_estimate_stream(transcript, trade, thread_id)),
+        media_type="text/event-stream",
+    )
 
-    def sse():
-        for event in forge_estimate_stream(transcript, trade):
-            yield f"data: {json.dumps(event)}\n\n"
 
-    return StreamingResponse(sse(), media_type="text/event-stream")
+@app.post("/api/resume_estimate_stream")
+def api_resume_estimate_stream(payload: dict = Body(...)) -> StreamingResponse:
+    value = payload.get("value")
+    thread_id = payload.get("thread_id", "ui")
+    return StreamingResponse(
+        _sse(resume_estimate_stream(value, thread_id)),
+        media_type="text/event-stream",
+    )
 
 
 @app.get("/web/{path:path}")
