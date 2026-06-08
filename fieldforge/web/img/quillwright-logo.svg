@@ -1,0 +1,42 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Quillwright">
+  <defs>
+    <linearGradient id="qw-feather" x1="380" y1="70" x2="150" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f57c00"/>
+      <stop offset="0.55" stop-color="#c25e00"/>
+      <stop offset="1" stop-color="#964900"/>
+    </linearGradient>
+    <linearGradient id="qw-line" x1="96" y1="0" x2="380" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#964900"/>
+      <stop offset="1" stop-color="#f57c00"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ============ QUILL FEATHER (diagonal, nib pointing to lower-left) ============ -->
+  <g transform="rotate(45 256 230)">
+    <!-- Feather vane: a full pointed-oval leaf shape, wide in the middle -->
+    <path d="M256 70
+             C 322 130, 322 300, 256 392
+             C 190 300, 190 130, 256 70 Z"
+          fill="url(#qw-feather)"/>
+
+    <!-- Central shaft (rachis), light, splitting the vane -->
+    <path d="M256 84 L256 392" stroke="#ffe9d8" stroke-width="12" stroke-linecap="round" opacity="0.95"/>
+
+    <!-- Barb lines (the feather's herringbone), darker so they read on the orange -->
+    <g stroke="#7a3a00" stroke-width="6" opacity="0.5" stroke-linecap="round">
+      <path d="M256 130 L300 168"/>  <path d="M256 130 L212 168"/>
+      <path d="M256 190 L308 232"/>  <path d="M256 190 L204 232"/>
+      <path d="M256 252 L300 292"/>  <path d="M256 252 L212 292"/>
+      <path d="M256 312 L286 344"/>  <path d="M256 312 L226 344"/>
+    </g>
+
+    <!-- Nib: the shaft sharpens past the vane into a writing point -->
+    <path d="M256 392 L246 432 L266 432 Z" fill="#5e2f00"/>
+    <circle cx="256" cy="430" r="6" fill="#181c1e"/>
+  </g>
+
+  <!-- ============ THE DRAFTED ESTIMATE LINE the nib just wrote ============ -->
+  <!-- nib lands around (150,360) after rotation; line runs to the right, ends in a check -->
+  <line x1="150" y1="384" x2="372" y2="384" stroke="url(#qw-line)" stroke-width="22" stroke-linecap="round"/>
+  <path d="M398 374 l 18 22 l 34 -46" stroke="#22c55e" stroke-width="22" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
