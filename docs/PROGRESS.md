@@ -144,12 +144,11 @@ Order is the user's. Only pursue once committed scope (§6 deployment + §7 buil
 1. **S1 — Recall eval** (~15–20 seeded Runs + scorer; recall@1 keyword vs semantic). _Highest._ Answers "does semantic Recall improve accuracy" + a 2nd measured Field-Notes data point. Borderline-committed. (ADR-0003)
 2. **S3 / S4 / S5 — sponsor-model block (equal priority):**
    - **S3 Aya fine-tune** via `cohere-ai/cohere-finetune` (easiest tooling of any sponsor; trade-vocab translation; cheap 2nd 🎯 point).
-   - **S4 Nemotron Omni** as selectable Best-Stack Perception. **Coupled to S6:** Omni is too big to run locally via Ollama → it only runs _for real_ on the Modal backend, so "Omni working" inherits S6's effort. Cheap part (resolver dropdown) is high; running it = do S6.
+   - **S4 Nemotron Omni** as selectable Best-Stack Perception. **Coupled to the Modal backend (now committed §7.2):** Omni is too big to run locally via Ollama → it only runs _for real_ on Modal, so it rides the §7.2 backend once that exists. Cheap part (resolver dropdown) is high; running it = needs Modal.
    - **S5 Nemotron Parse** inference as an extraction tool (NVIDIA breadth; no fine-tune — no recipe).
 3. **S10 — Finalize & Send (real email/SMS).** _Medium._ User has a Twilio account → real send is feasible. **Constraint:** Twilio creds can't live in a public HF Space → real send runs in the local/demo path; the hosted Space falls back to a draft/shareable-link.
-4. **S6 / S7 (equal):**
-   - **S6 Modal-backed live Space** (real models hosted; $250 credits). Also unblocks S4.
-   - **S7 Agent-trace export** to the Hub (📡 Sharing-is-Caring). Trace is shown live, not yet exported.
+4. **S7 — Agent-trace export** to the Hub (📡 Sharing-is-Caring). Trace is shown live, not yet exported.
+   _(S6 Modal-backed live Space was PROMOTED to committed §7.2 on 2026-06-08 — no longer a stretch.)_
 5. **S2 — Inventory live-decrement** (finalize subtracts parts). Upgrades the read-only Inventory page (ADR-0010); only if core solid.
 6. **S8 — FLUX Klein** branded visuals (LoRA; delight/📡; off the core skill).
 7. **S9 — `gr.Workflow`** orchestra node-graph demo (separate artifact, goodwill only; NEVER the core app — ADR-0010).
@@ -202,14 +201,16 @@ A HF Space runs models **server-side**. Free HF tier has **no GPU**; ZeroGPU is 
 
 Phases in order. **Deployment de-risk jumps the queue ahead of all new feature work** (user-agreed): an undeployed app with 6 models is worth less than a deployed app with 3. Stretch ladder = §5; pursue only after this is solid.
 
-0. **Doc-reconcile** — purge stale gpt-oss from spec §3; fix ZeroGPU figure (40 min/day, not 3.5). Small, do first so we don't build on a lie. _(docs partly done in this grill)_
-1. **Deployment de-risk** — confirm `gr.Server` boots as a **Docker-SDK Space** (now _sanctioned_ per kickoff transcript). #1 risk; nothing jumps this.
-2. **Make it a valid HF Space** under the hackathon org — requirements, README front-matter (track/badge tags), bundle `data/` + `web/`.
+0. **Doc-reconcile** — purge stale gpt-oss from spec §3; fix ZeroGPU figure. Small, do first so we don't build on a lie. _(done in this grill)_
+1. **Stub Docker Space (deployment de-risk)** — confirm `gr.Server` boots as a **Docker-SDK Space** (now _sanctioned_ per kickoff transcript), `FF_REAL_MODELS` OFF → CPU/stub, no Ollama. **Test the container boots locally first** (`docker build` + `docker run`) to kill the unknown without HF build queues. #1 risk; nothing jumps this. Then make it a valid HF Space under the hackathon org (README front-matter + tags, bundle `data/` + `web/`). Structure the resolver so a Modal backend drops in via env flag (`FF_BACKEND=modal`) without touching the Dockerfile/frontend.
+2. **Modal backend — hosted Space runs REAL models** _(promoted from stretch S6, 2026-06-08: user wants the clickable Space to actually run models, not just stub)_. Write `fieldforge/backends/modal.py` (`ModalModel`, mirrors `OllamaModel`) + deploy the orchestra on Modal GPUs + wire the Modal token as a Space secret + handle cold starts. **Hardest single item on the board** — internal de-risk: get ONE model (the brain) working Space→Modal end-to-end before doing all three (MiniCPM-V, Nemotron, Aya). Why Modal not ZeroGPU: ZeroGPU is Gradio-SDK-only + breaks with FastAPI/`gr.Server` (verified, ADR-0005); Modal is an outbound HTTPS call that works with Docker SDK and keeps the 🎨 bespoke frontend.
 3. **Audio role — Cohere Transcribe local GGUF** (typed → real spoken note). De-risk the local serve first; D-fallback = typed note in Private Stack (ADR-0009).
 4. **Semantic Recall** — Llama-Nemotron-Embed (text) via sentence-transformers, record-time cached (ADR-0003).
 5. **Secondary pages** — Dashboard / Active Jobs / Inventory, **demoable-first → functional read-models** (Inventory read-only) (ADR-0010).
 6. **MiniCPM-V fine-tune on CORD/SROIE** (Modal) — the 🎯 artifact; parallelizable, doesn't block the app (ADR-0006).
 7. **Submission collateral** — demo video (~90s), social post (link in README), **Airplane-Mode Proof** clip.
+
+> **Trade-off noted (2026-06-08):** promoting Modal to #2 pushes the demo-visible feature work (spoken voice note, semantic Recall, the 3 pages) later. Conscious choice — a hosted Space that actually runs the models is a stronger submission spine than stub-Space + more features.
 
 **Also pending (from original handoff):** user manual end-to-end pass with `FF_REAL_MODELS=1` + real photo (vision → brain → edit → PDF → Spanish).
 
