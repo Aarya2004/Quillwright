@@ -1,0 +1,69 @@
+{
+  "_note": "SAMPLE inventory for the read-only Parts Catalog page (ADR-0010). Stock levels are illustrative; prices mirror data/sample_catalog.json. A part is 'low' when stock <= reorder_at. Live decrement on estimate finalize is an explicit stretch, NOT built.",
+  "parts": [
+    {
+      "key": "capacitor",
+      "description": "Dual run capacitor",
+      "category": "HVAC",
+      "unit": "ea",
+      "stock": 42,
+      "reorder_at": 15
+    },
+    {
+      "key": "contactor",
+      "description": "Compressor contactor",
+      "category": "HVAC",
+      "unit": "ea",
+      "stock": 9,
+      "reorder_at": 12
+    },
+    {
+      "key": "refrigerant_r410a",
+      "description": "R-410A refrigerant",
+      "category": "HVAC",
+      "unit": "lb",
+      "stock": 6,
+      "reorder_at": 20
+    },
+    {
+      "key": "labor",
+      "description": "Labor",
+      "category": "Service",
+      "unit": "hr",
+      "stock": 0,
+      "reorder_at": 0
+    },
+    {
+      "key": "condenser_fan_motor",
+      "description": "Condenser fan motor",
+      "category": "HVAC",
+      "unit": "ea",
+      "stock": 5,
+      "reorder_at": 3
+    },
+    {
+      "key": "thermostat",
+      "description": "Programmable thermostat",
+      "category": "Controls",
+      "unit": "ea",
+      "stock": 18,
+      "reorder_at": 8
+    },
+    {
+      "key": "air_filter",
+      "description": "Pleated air filter",
+      "category": "HVAC",
+      "unit": "ea",
+      "stock": 120,
+      "reorder_at": 40
+    },
+    {
+      "key": "hard_start_kit",
+      "description": "Hard start kit",
+      "category": "HVAC",
+      "unit": "ea",
+      "stock": 4,
+      "reorder_at": 6
+    }
+  ]
+}
