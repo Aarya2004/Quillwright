@@ -34,6 +34,40 @@ WEB = Path(__file__).parent / "web"
 app = Server()
 
 
+def _announce_mode() -> None:
+    """Print which model mode the server booted in — so 'is a model being hit?'
+    is answerable at a glance instead of a silent guess."""
+    from quillwright.resolver import OLLAMA_TAGS
+
+    line = "=" * 60
+    if not REAL_MODELS:
+        print(f"\n{line}\n[quillwright] STUB MODE — no models hit (deterministic / keyword).")
+        print("  Set FF_REAL_MODELS=1 to run the real local models via Ollama.")
+        print(f"{line}\n", flush=True)
+        return
+
+    # Real mode: name the models and check Ollama is actually reachable.
+    import requests
+
+    tags = ", ".join(f"{role}={tag}" for role, tag in OLLAMA_TAGS.items())
+    print(f"\n{line}\n[quillwright] REAL MODELS via Ollama — {tags}")
+    try:
+        r = requests.get("http://localhost:11434/api/tags", timeout=2)
+        have = {m["name"].split(":")[0] for m in r.json().get("models", [])}
+        missing = [t for t in OLLAMA_TAGS.values() if t.split(":")[0] not in have]
+        if missing:
+            print(f"  ⚠️  Ollama is up but these tags are NOT pulled: {missing}")
+        else:
+            print("  ✓ Ollama reachable; all role models are pulled.")
+    except Exception as exc:  # noqa: BLE001 — startup banner, surface any failure
+        print(f"  ⚠️  FF_REAL_MODELS=1 but Ollama is NOT reachable ({exc}).")
+        print("     The brain will ERROR (not silently stub) on the first real call.")
+    print(f"{line}\n", flush=True)
+
+
+_announce_mode()
+
+
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
     return (WEB / "index.html").read_text()

@@ -32,16 +32,18 @@ class StubModel:
 
 
 # Which concrete model fills each role per Mode. Real backends wired later (ADR-0005).
-# Display labels per role (used by the stub backend).
+# Display labels per role (used by the stub backend). These are LABELS ONLY — the
+# real on-device models are in OLLAMA_TAGS below (the brain is Nemotron, not gpt-oss;
+# ADR-0009 superseded the gpt-oss mapping).
 PRIVATE_STACK = {
-    "perception": "MiniCPM-V-4.6",
-    "audio": "whisper-local",
-    "brain": "gpt-oss-20b",
+    "perception": "MiniCPM-V",
+    "audio": "Cohere-Transcribe",
+    "brain": "Nemotron-3-Nano-4B",
 }
 BEST_STACK = {
     "perception": "Nemotron-3-Nano-Omni",
     "audio": "Nemotron-3-Nano-Omni",
-    "brain": "gpt-oss-20b",
+    "brain": "Nemotron-3-Nano-30B",
 }
 
 # Actual locally-available Ollama tags per role (what we really run on-device).

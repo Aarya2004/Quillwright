@@ -38,6 +38,9 @@ def run_brain(
     """Drive the model to build line items. Returns (line_items, trace, pause-or-None)."""
     line_items: list[LineItem] = []
     trace: list[TraceStep] = []
+    # The actual model name (e.g. "nemotron-3-nano:4b" or "StubModel") so the trace
+    # truthfully shows which model answered — no guessing whether a model was hit.
+    brain_name = getattr(model, "name", "brain")
     messages = [
         {"role": "system", "content": SYSTEM},
         {
@@ -65,7 +68,9 @@ def run_brain(
                 return line_items, trace, {"item": result["item"]}
             if result["status"] == "done":
                 done = True
-                trace.append(TraceStep(action="finish", model="brain", detail="estimate complete"))
+                trace.append(
+                    TraceStep(action="finish", model=brain_name, detail="estimate complete")
+                )
                 break
             if result["status"] == "added":
                 line_items.append(result["line_item"])
@@ -73,7 +78,7 @@ def run_brain(
                 trace.append(
                     TraceStep(
                         action="add_priced_item",
-                        model="brain",
+                        model=brain_name,
                         detail=f"{li.quantity:g} x {li.description} -> {li.subtotal}",
                     )
                 )
