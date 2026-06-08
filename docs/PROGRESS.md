@@ -1,6 +1,6 @@
 # Quillwright — Progress & Handoff
 
-_Last updated: 2026-06-08. Branch: `design/quillwright` (NOT pushed — all work is local commits)._
+_Last updated: 2026-06-08. Branch: `design/fieldforge` (project renamed to Quillwright, but the git BRANCH name is unchanged). PUSHED to GitHub `origin` (github.com/Aarya2004/Quillwright); deployed to HF Space `build-small-hackathon/Quillwright` via `hf upload`._
 
 Quillwright: a human-supervised, **local** small-model agent for tradespeople. Snap a job photo + voice note → an orchestra of small models (vision + tool-calling brain + multilingual) forges a finished, itemized **estimate**. No cloud. Built for the HuggingFace/Gradio "Build Small" hackathon (≤32B models, Gradio app, ends ~June 15).
 
@@ -156,9 +156,24 @@ Order is the user's. Only pursue once committed scope (§6 deployment + §7 buil
 
 ---
 
-## 6. DEPLOYMENT — NOT DONE YET (required for submission)
+## 6. DEPLOYMENT — STUB SPACE LIVE (de-risk done); collateral + Modal pending
 
 The hackathon requires: **a Gradio app hosted as a Hugging Face Space** + a demo video + a social post.
+
+### ✅ Deployment status (2026-06-08) — phase 1 DONE
+
+The #1 unknown is killed: **the bespoke `gr.Server`/FastAPI app runs as a Docker-SDK HF Space.**
+
+- ✅ Space exists: **`build-small-hackathon/Quillwright`** (Docker SDK, `cpu-basic`), org membership confirmed. App domain: `https://build-small-hackathon-quillwright.hf.space`.
+- ✅ `Dockerfile` + `requirements.txt` + `.dockerignore` + README front-matter (`sdk: docker`, `app_port: 7860`, hackathon tags). `server.py` honors `$FF_HOST`/`$PORT` (binds `0.0.0.0` in container; local dev unchanged).
+- ✅ Verified locally (Docker build + run: serves Workspace + stub forge total $128.82) AND on HF (build succeeded, stage `RUNNING`, runtime logs show `GET / → 200` + all assets internally).
+- ✅ Deployed via `hf upload` (commit 76a2f92) — NOT git push (HF git protocol failed on git 2.51 `expected 'acknowledgments'`; force-push correctly blocked by guardrails). Code also on GitHub `origin` = github.com/Aarya2004/Quillwright.
+
+### ⚠️ OPEN LOOSE ENDS (do before submission)
+
+- ⚠️ **Space is PRIVATE** → the public `*.hf.space` URL serves HF's 404/login wrapper to anonymous visitors (judges can't open it). **MUST flip to Public before submission** (Settings → Change visibility, or `hf repo settings ... --private false`). User will do this pre-submission, NOT at the last minute.
+- ⚠️ **Public-serving path UNVERIFIED.** We proved the app serves _internally_ (authed/signed requests in runtime logs), but never tested an anonymous visitor hitting the live URL (private blocks it). **When flipped public, immediately re-smoke-test** with buffer before the deadline: `curl -s -o /dev/null -w "%{http_code}\n" https://build-small-hackathon-quillwright.hf.space/` → expect 200 (+ a stub forge POST). If it still 404s public, that's a new issue to chase.
+- ℹ️ To update the Space after edits: `hf upload build-small-hackathon/Quillwright . --repo-type=space --exclude=...` (git push to `hf` remote is broken on this git version — use `hf upload`).
 
 ### The core deployment problem (see ADR-0005)
 
@@ -168,20 +183,18 @@ A HF Space runs models **server-side**. Free HF tier has **no GPU**; ZeroGPU is 
 2. **Hosted Space backed by Modal GPU** (contest gives $250 Modal credits) — wire a `ModalModel` resolver backend (mirrors `OllamaModel`) calling Modal-hosted models. More work; gives a live real-model Space.
 3. **Ollama inside the Space container** on CPU — works but slow.
 
-### Deployment checklist (TODO)
+### Deployment checklist
 
-- ◻️ Decide hosting strategy (1/2/3 above). Recommend #1 for the deadline + #2 if time.
-- ◻️ Make the app a valid HF Space:
-  - ◻️ `requirements.txt` (or keep pyproject) the Space build understands.
-  - ◻️ A Space entry that Gradio recognizes. **Caveat: `gradio.Server` + custom frontend may need a specific Space SDK config (`sdk: gradio`, `app_file`)** — VERIFY a `gr.Server` app boots as a Space (this is untested; may need an `app.py` that exposes the Server, or run via the Space's uvicorn). This is the #1 deployment unknown to de-risk early.
-  - ◻️ HF Space metadata (`README.md` front-matter: title, sdk, app_file, etc.).
-- ◻️ Bundle `data/` (catalog + evalset) and `web/` into the Space.
-- ◻️ Ensure stub mode works with zero external deps on the Space (it should — stub needs no GPU).
-- ◻️ If Modal: implement `quillwright/backends/modal.py` + resolver `backend="modal"`, deploy model endpoints, set env.
-- ◻️ Test the deployed Space end-to-end (stub path at minimum).
+- ✅ Hosting strategy decided: **#1 stub Docker Space now** (done) + **#2 Modal-backed live models** (committed §7.2, user priority). NOT ZeroGPU (Gradio-SDK-only, breaks gr.Server — ADR-0005).
+- ✅ Valid HF Space: `requirements.txt`, **Docker SDK** (resolved the gr.Server SDK caveat — Docker is sanctioned, no `app.py`/`sdk: gradio` needed), README front-matter (`sdk: docker`, `app_port: 7860`).
+- ✅ Bundle `data/` (catalog + evalset) and `web/` into the Space.
+- ✅ Stub mode works with zero external deps on the Space (verified — no GPU/Ollama needed).
+- ✅ Test the deployed Space (stub path) — internally verified; ⚠️ public-anon path pending the Public flip (see loose ends above).
+- ◻️ **Flip Space to Public + re-verify the public URL** (see ⚠️ loose ends).
+- ◻️ **Modal**: implement `quillwright/backends/modal.py` + resolver `backend="modal"`, deploy model endpoints, set Space secret (= committed §7.2; de-risk one model first).
 - ◻️ **Airplane-Mode Proof clip** — record the local real-model run with wifi off (🦙 + 🔌 quests).
-- ◻️ Demo video (~90s; script is in this repo's wrap-up / Field Notes outline below).
-- ◻️ Social post.
+- ◻️ Demo video (~90s; script in the Field Notes outline below).
+- ◻️ Social post (link in Space README).
 - ◻️ Submit Space link + video + post by the deadline.
 
 ### Submission collateral (TODO)
@@ -202,8 +215,8 @@ A HF Space runs models **server-side**. Free HF tier has **no GPU**; ZeroGPU is 
 Phases in order. **Deployment de-risk jumps the queue ahead of all new feature work** (user-agreed): an undeployed app with 6 models is worth less than a deployed app with 3. Stretch ladder = §5; pursue only after this is solid.
 
 0. **Doc-reconcile** — purge stale gpt-oss from spec §3; fix ZeroGPU figure. Small, do first so we don't build on a lie. _(done in this grill)_
-1. **Stub Docker Space (deployment de-risk)** — confirm `gr.Server` boots as a **Docker-SDK Space** (now _sanctioned_ per kickoff transcript), `FF_REAL_MODELS` OFF → CPU/stub, no Ollama. **Test the container boots locally first** (`docker build` + `docker run`) to kill the unknown without HF build queues. #1 risk; nothing jumps this. Then make it a valid HF Space under the hackathon org (README front-matter + tags, bundle `data/` + `web/`). Structure the resolver so a Modal backend drops in via env flag (`FF_BACKEND=modal`) without touching the Dockerfile/frontend.
-2. **Modal backend — hosted Space runs REAL models** _(promoted from stretch S6, 2026-06-08: user wants the clickable Space to actually run models, not just stub)_. Write `quillwright/backends/modal.py` (`ModalModel`, mirrors `OllamaModel`) + deploy the orchestra on Modal GPUs + wire the Modal token as a Space secret + handle cold starts. **Hardest single item on the board** — internal de-risk: get ONE model (the brain) working Space→Modal end-to-end before doing all three (MiniCPM-V, Nemotron, Aya). Why Modal not ZeroGPU: ZeroGPU is Gradio-SDK-only + breaks with FastAPI/`gr.Server` (verified, ADR-0005); Modal is an outbound HTTPS call that works with Docker SDK and keeps the 🎨 bespoke frontend.
+1. ✅ **DONE (2026-06-08) — Stub Docker Space (deployment de-risk).** `gr.Server` confirmed booting as a Docker-SDK Space; built + run locally AND deployed live (stage RUNNING). Only remaining: flip Public + verify the public URL (see §6 loose ends). Resolver Modal-readiness (env-flag backend) deferred to phase 2 itself.
+2. ⬅️ **NEXT — Modal backend — hosted Space runs REAL models** _(promoted from stretch S6, 2026-06-08: user wants the clickable Space to actually run models, not just stub)_. Write `quillwright/backends/modal.py` (`ModalModel`, mirrors `OllamaModel`) + deploy the orchestra on Modal GPUs + wire the Modal token as a Space secret + handle cold starts. **Hardest single item on the board** — internal de-risk: get ONE model (the brain) working Space→Modal end-to-end before doing all three (MiniCPM-V, Nemotron, Aya). Why Modal not ZeroGPU: ZeroGPU is Gradio-SDK-only + breaks with FastAPI/`gr.Server` (verified, ADR-0005); Modal is an outbound HTTPS call that works with Docker SDK and keeps the 🎨 bespoke frontend.
 3. **Audio role — Cohere Transcribe local GGUF** (typed → real spoken note). De-risk the local serve first; D-fallback = typed note in Private Stack (ADR-0009).
 4. **Semantic Recall** — Llama-Nemotron-Embed (text) via sentence-transformers, record-time cached (ADR-0003).
 5. **Secondary pages** — Dashboard / Active Jobs / Inventory, **demoable-first → functional read-models** (Inventory read-only) (ADR-0010).
@@ -218,6 +231,6 @@ Phases in order. **Deployment de-risk jumps the queue ahead of all new feature w
 
 ## 8. Git state
 
-- Branch `design/quillwright`, ~30+ commits, **NOT pushed**. Working tree clean.
+- Branch `design/fieldforge` (BRANCH name unchanged despite the Quillwright project rename), ~40 commits. **Pushed** to GitHub `origin` (github.com/Aarya2004/Quillwright). HF Space deployed via `hf upload` (not git — HF git push broken on git 2.51). Remotes: `origin` (GitHub) + `hf` (Space). Working tree clean.
 - Per user's CLAUDE.md: break changes into commits; ASK before committing (or user commits); NEVER push/PR without asking; TDD; fix lint at root cause (no suppression); verify before claiming done.
 - Models pulled in Ollama on this machine: `minicpm-v` (5.5GB), `nemotron-3-nano:4b` (2.8GB), `aya` (4.8GB). Disk was tight (~11GB free) — removed gemma4/deepseek to make room; watch disk before pulling more.
