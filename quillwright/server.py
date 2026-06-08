@@ -5,6 +5,7 @@ all business logic lives in quillwright.agent and is adapted in quillwright.api.
 """
 
 import json
+import os
 from pathlib import Path
 
 from fastapi import Body
@@ -16,8 +17,9 @@ from quillwright.api.estimate import (
     forge_estimate_stream,
     resume_estimate_stream,
 )
-import os
-
+from quillwright.api.chat import chat_about_estimate
+from quillwright.api.export import estimate_to_json_payload
+from quillwright.api.pages import dashboard_data, inventory_data, jobs_data
 from quillwright.api.recalc import recalc_estimate
 from quillwright.api.translate import translate_estimate
 from quillwright.api.upload import save_upload
@@ -101,6 +103,26 @@ def api_pdf(payload: dict = Body(...)) -> FileResponse:
     return FileResponse(path, media_type="application/pdf", filename="estimate.pdf")
 
 
+@app.post("/api/export_json")
+def api_export_json(payload: dict = Body(...)) -> dict:
+    """Machine-readable JSON of the (edited) estimate — the 'no lock-in' export."""
+    return estimate_to_json_payload(
+        payload.get("rows", []),
+        job_title=payload.get("job_title", "Estimate"),
+        tax_rate=payload.get("tax_rate", 0.13),
+    )
+
+
+@app.post("/api/chat")
+def api_chat(payload: dict = Body(...)) -> dict:
+    """Conversational refinement of the current estimate (Facts-from-Tools holds)."""
+    return chat_about_estimate(
+        payload.get("message", ""),
+        payload.get("rows", []),
+        tax_rate=payload.get("tax_rate", 0.13),
+    )
+
+
 @app.post("/api/forge_estimate_stream")
 def api_forge_estimate_stream(payload: dict = Body(...)) -> StreamingResponse:
     transcript = payload.get("transcript", "")
@@ -121,6 +143,42 @@ def api_resume_estimate_stream(payload: dict = Body(...)) -> StreamingResponse:
         _sse(resume_estimate_stream(value, thread_id)),
         media_type="text/event-stream",
     )
+
+
+# --- Secondary pages (ADR-0010): demoable-first read-models over real data. ---
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard_page() -> str:
+    return (WEB / "dashboard.html").read_text()
+
+
+@app.get("/jobs", response_class=HTMLResponse)
+def jobs_page() -> str:
+    return (WEB / "jobs.html").read_text()
+
+
+@app.get("/inventory", response_class=HTMLResponse)
+def inventory_page() -> str:
+    return (WEB / "inventory.html").read_text()
+
+
+@app.get("/api/dashboard")
+def api_dashboard() -> dict:
+    """KPIs + recent jobs aggregated over the real on-device memory store."""
+    return dashboard_data()
+
+
+@app.get("/api/jobs")
+def api_jobs() -> dict:
+    """Past Runs from the real memory store, newest first."""
+    return jobs_data()
+
+
+@app.get("/api/inventory")
+def api_inventory() -> dict:
+    """Read-only stock view over the seeded inventory JSON (low-stock reads are real)."""
+    return inventory_data()
 
 
 @app.get("/web/{path:path}")
