@@ -20,9 +20,23 @@ class Memory:
             with open(self._path) as f:
                 self._runs = json.load(f).get("runs", [])
 
-    def record_run(self, transcript: str, line_items: list[str]) -> None:
-        self._runs.append({"transcript": transcript, "line_items": list(line_items)})
+    def record_run(
+        self, transcript: str, line_items: list[str], total: float | None = None
+    ) -> None:
+        self._runs.append(
+            {"transcript": transcript, "line_items": list(line_items), "total": total}
+        )
         self._save()
+
+    def recent(self, limit: int | None = None) -> list[dict]:
+        """Past runs newest-first, each tagged with a 1-based sequence id.
+
+        The id is the record order (not a wall-clock time) so it is deterministic
+        and offline-friendly. `total` is None for runs recorded before totals existed.
+        """
+        tagged = [{"id": i + 1, "total": r.get("total"), **r} for i, r in enumerate(self._runs)]
+        tagged.reverse()  # newest first
+        return tagged[:limit] if limit is not None else tagged
 
     def _save(self) -> None:
         os.makedirs(os.path.dirname(self._path) or ".", exist_ok=True)
@@ -44,4 +58,9 @@ class Memory:
         """Learned per-tech defaults derived from recorded runs."""
         counts = Counter(item for r in self._runs for item in r["line_items"])
         common = [item for item, _ in counts.most_common()]
-        return {"common_items": common, "job_count": len(self._runs)}
+        revenue_total = round(sum(r["total"] for r in self._runs if r.get("total")), 2)
+        return {
+            "common_items": common,
+            "job_count": len(self._runs),
+            "revenue_total": revenue_total,
+        }

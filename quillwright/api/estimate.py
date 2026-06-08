@@ -172,6 +172,7 @@ def _drive(agent, payload, thread_id: str):
         _memory().record_run(
             run.get("transcript", ""),
             [li.description for li in estimate.line_items],
+            total=estimate.total,
         )
 
     yield {
