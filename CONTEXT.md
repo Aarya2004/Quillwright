@@ -94,7 +94,7 @@ _Avoid_: lookup, query, retrieval (use "Recall" for this specific agent-facing c
 
 ## Flagged ambiguities
 
-- "voice handling" was unspecified — resolved: the **Audio** Model Role transcribes the voice note (whisper-class small model in Private Stack; Nemotron Omni audio in Best Stack).
+- "voice handling" was unspecified — resolved: the **Audio** Model Role transcribes the voice note (Cohere Transcribe 2B in Private Stack; Nemotron 3 ASR / Nemotron Omni audio in Best Stack — see ADR-0009).
 - "online/offline" was overloaded — resolved into the single term **Mode** (Private Stack vs Best Stack), an endpoint swap only. "Local Mode" was retired because a hosted Gradio Space runs models server-side (see ADR-0005); the true-offline claim lives in the **Airplane-Mode Proof**.
 - "adapt prices" was ambiguous — resolved: deterministic learning from user-confirmed edits/prefs only; novel items are flagged, never LLM-guessed (**Facts-from-Tools**).
 - "translate tool vs language toggle" overlapped — resolved: one underlying translate function, two entry points (human toggle + autonomous agent call).
@@ -107,5 +107,6 @@ The **Irreducible Core** (ADR-0007) is the must-ship, polished slice: Capture �
 ## Implementation reality (as built)
 
 - **Frontend** is a bespoke HTML/CSS/JS app served by `gradio.Server` (FastAPI), not Gradio components — the rule-compliant way to a smooth custom UI (the 🎨 Off-Brand path).
-- **Private Stack runs genuinely locally via Ollama** (llama.cpp) on the dev machine — Perception = MiniCPM-V, Agent Brain = nemotron-3-nano:4b — gated by `FF_REAL_MODELS=1`; otherwise a deterministic/keyword stub. This realizes the "no cloud" claim directly on-device; Modal (ADR-0005) remains the option for hosted-Space compute.
+- **Private Stack runs genuinely locally via Ollama** (llama.cpp) on the dev machine — Perception = MiniCPM-V, Agent Brain = nemotron-3-nano:4b (NVIDIA Nemotron — NOT gpt-oss; the spec's gpt-oss mapping is superseded by ADR-0009) — gated by `FF_REAL_MODELS=1`; otherwise a deterministic/keyword stub. This realizes the "no cloud" claim directly on-device; Modal (ADR-0005) remains the option for hosted-Space compute.
+- **Model orchestra (ADR-0009):** Perception = MiniCPM-V (protects the OpenBMB track; Nemotron Omni is a selectable Best-Stack alternative), Brain = Nemotron 3 Nano, Audio = Cohere Transcribe, Multilingual = Cohere Aya, Embedding = Llama-Nemotron-Embed-1B (un-tuned). The one shipped fine-tune is MiniCPM-V on CORD/SROIE (ADR-0006).
 - The **Agent Brain is LLM-driven tool-calling** over a narrow surface (`add_priced_item` + `finish`); deterministic tools still own all numbers (Facts-from-Tools). Accuracy is tracked by an eval set (`data/brain_evalset.json`, `scripts/run_brain_eval.py`).
