@@ -13,7 +13,6 @@ from fieldforge.resolver import ModelResolver
 
 def main():
     cases = load_cases("data/brain_evalset.json")
-    catalog = Catalog.from_file("data/sample_catalog.json")
     brain = ModelResolver(mode="private", backend="ollama").for_role("brain")
     print(f"Running {len(cases)} cases against {brain.name}\n")
 
@@ -29,7 +28,9 @@ def main():
         f1s.append(s["item_f1"])
         qtys.append(s["qty_accuracy"])
         flag = "" if (s["item_f1"] == 1.0 and s["qty_accuracy"] == 1.0) else "  <-- imperfect"
-        print(f"{i:2}. f1={s['item_f1']:.2f} qty={s['qty_accuracy']:.2f}  {case['transcript'][:55]}{flag}")
+        print(
+            f"{i:2}. f1={s['item_f1']:.2f} qty={s['qty_accuracy']:.2f}  {case['transcript'][:55]}{flag}"
+        )
 
     print(f"\nMean item F1:       {sum(f1s) / len(f1s):.3f}")
     print(f"Mean qty accuracy:  {sum(qtys) / len(qtys):.3f}")

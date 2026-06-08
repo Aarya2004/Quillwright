@@ -75,9 +75,14 @@ def build_agent(perception_model: Model, catalog: Catalog, checkpointer, brain_m
             )
             if pause is None:
                 trace = state["trace"] + brain_trace
-                return {"line_items": list(state["line_items"]) + priced_extra + items, "trace": trace}
+                return {
+                    "line_items": list(state["line_items"]) + priced_extra + items,
+                    "trace": trace,
+                }
             # Missing price -> ask the human, record it on the catalog, then re-run the brain.
-            human_rate = interrupt({"reason": f"No price for '{pause['item']}'", "item": pause["item"]})
+            human_rate = interrupt(
+                {"reason": f"No price for '{pause['item']}'", "item": pause["item"]}
+            )
             priced_extra.append(
                 draft_line_item(
                     pause["item"], qty=1, unit="ea", rate=float(human_rate), source="user"

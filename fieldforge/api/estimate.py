@@ -35,6 +35,7 @@ def reset_memory() -> None:
     global _MEMORY
     _MEMORY = None
 
+
 # FF_REAL_MODELS=1 uses real local models via Ollama; otherwise the demo stub.
 REAL_MODELS = os.environ.get("FF_REAL_MODELS") == "1"
 

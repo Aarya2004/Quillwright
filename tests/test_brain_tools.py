@@ -28,9 +28,10 @@ def test_dispatch_add_priced_item_with_quantity():
 def test_dispatch_quantity_defaults_to_one_and_handles_bad_values():
     # missing/invalid quantity falls back to 1 (never crash on model noise)
     assert dispatch("add_priced_item", {"item": "labor"}, CAT)["line_item"].quantity == 1
-    assert dispatch("add_priced_item", {"item": "labor", "quantity": "two"}, CAT)[
-        "line_item"
-    ].quantity == 1
+    assert (
+        dispatch("add_priced_item", {"item": "labor", "quantity": "two"}, CAT)["line_item"].quantity
+        == 1
+    )
 
 
 def test_dispatch_add_priced_item_miss_signals_need_price():

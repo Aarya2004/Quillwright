@@ -18,7 +18,13 @@ def test_translate_estimate_localizes_descriptions_and_labels():
     est = {
         "job_title": "AC repair",
         "line_items": [
-            {"description": "Dual run capacitor", "quantity": 1, "unit": "ea", "rate": 24.0, "subtotal": 24.0}
+            {
+                "description": "Dual run capacitor",
+                "quantity": 1,
+                "unit": "ea",
+                "rate": 24.0,
+                "subtotal": 24.0,
+            }
         ],
         "subtotal": 24.0,
         "tax_rate": 0.13,

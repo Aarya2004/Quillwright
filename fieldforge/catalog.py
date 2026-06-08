@@ -3,8 +3,25 @@ import re
 
 # Generic words that shouldn't drive a match on their own.
 _STOPWORDS = {
-    "the", "a", "an", "and", "of", "to", "up", "top", "new", "some", "duty",
-    "dual", "run", "compressor", "service", "replacement", "part", "ea", "lb",
+    "the",
+    "a",
+    "an",
+    "and",
+    "of",
+    "to",
+    "up",
+    "top",
+    "new",
+    "some",
+    "duty",
+    "dual",
+    "run",
+    "compressor",
+    "service",
+    "replacement",
+    "part",
+    "ea",
+    "lb",
 }
 
 
