@@ -1,9 +1,9 @@
 import ast
 import json
 import operator
-from fieldforge.models import Observation, LineItem
-from fieldforge.catalog import Catalog
-from fieldforge.resolver import Model
+from quillwright.models import Observation, LineItem
+from quillwright.catalog import Catalog
+from quillwright.resolver import Model
 
 # Safe arithmetic evaluator — the ONLY place numbers are computed (Facts-from-Tools, ADR-0004).
 _OPS = {

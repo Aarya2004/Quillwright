@@ -1,7 +1,7 @@
-from fieldforge.catalog import Catalog
-from fieldforge.resolver import StubModel
-from fieldforge.tools import compute, lookup_price, perceive, draft_line_item, flag_for_human
-from fieldforge.models import Observation, LineItem
+from quillwright.catalog import Catalog
+from quillwright.resolver import StubModel
+from quillwright.tools import compute, lookup_price, perceive, draft_line_item, flag_for_human
+from quillwright.models import Observation, LineItem
 
 
 def test_compute_evaluates_arithmetic_safely():

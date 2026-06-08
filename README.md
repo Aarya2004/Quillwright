@@ -14,7 +14,7 @@ tags:
   - off-the-grid
 ---
 
-# Quillwright (FieldForge)
+# Quillwright
 
 A human-supervised, small-model agent for tradespeople: snap a job photo + voice note → a team of **local** small models forges a finished, itemized **estimate**. No cloud, runs on your machine. Build Small Hackathon entry (Backyard AI track).
 
@@ -35,7 +35,7 @@ See `docs/superpowers/specs/` and `docs/adr/` for the design.
 ```
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-python -m fieldforge.server          # http://127.0.0.1:7860
+python -m quillwright.server          # http://127.0.0.1:7860
 ```
 
 By default the models are stubbed (fast, no GPU). For the **real local models**, install [Ollama](https://ollama.com), pull the models, and set the flag:
@@ -43,7 +43,7 @@ By default the models are stubbed (fast, no GPU). For the **real local models**,
 ```
 ollama pull minicpm-v
 ollama pull nemotron-3-nano:4b
-FF_REAL_MODELS=1 python -m fieldforge.server
+FF_REAL_MODELS=1 python -m quillwright.server
 ```
 
 ## Test
@@ -51,10 +51,10 @@ FF_REAL_MODELS=1 python -m fieldforge.server
 ```
 pytest -v
 ruff check . && ruff format --check .       # Python lint/format
-npx prettier --check "fieldforge/web/**/*"  # web lint/format
+npx prettier --check "quillwright/web/**/*"  # web lint/format
 
 # brain accuracy against the eval set (needs Ollama + FF_REAL_MODELS=1)
 FF_REAL_MODELS=1 PYTHONPATH=. python scripts/run_brain_eval.py
 ```
 
-Models resolve per role via `fieldforge/resolver.py` (stub ↔ Ollama). Pricing is clearly-labeled sample data.
+Models resolve per role via `quillwright/resolver.py` (stub ↔ Ollama). Pricing is clearly-labeled sample data.

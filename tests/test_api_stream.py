@@ -1,4 +1,4 @@
-from fieldforge.api.estimate import forge_estimate_stream
+from quillwright.api.estimate import forge_estimate_stream
 
 
 def test_stream_yields_trace_events_then_estimate():

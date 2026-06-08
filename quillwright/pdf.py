@@ -1,7 +1,7 @@
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
-from fieldforge.models import Estimate
+from quillwright.models import Estimate
 
 
 def estimate_to_pdf(est: Estimate, path: str) -> None:

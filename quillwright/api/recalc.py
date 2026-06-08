@@ -3,7 +3,7 @@ model's computed fields (qty*rate, tax, total) — Facts-from-Tools holds even f
 human edits; the UI never computes its own authoritative totals.
 """
 
-from fieldforge.models import Estimate, LineItem
+from quillwright.models import Estimate, LineItem
 
 
 def _num(value) -> float:

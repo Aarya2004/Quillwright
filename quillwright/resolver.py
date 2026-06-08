@@ -70,7 +70,7 @@ class ModelResolver:
         if self._backend == "ollama":
             if role not in OLLAMA_TAGS:
                 raise KeyError(f"no ollama tag for role: {role}")
-            from fieldforge.backends.ollama import OllamaModel
+            from quillwright.backends.ollama import OllamaModel
 
             return OllamaModel(OLLAMA_TAGS[role])
         if role not in self._roles:

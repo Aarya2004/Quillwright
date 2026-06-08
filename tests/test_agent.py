@@ -1,9 +1,9 @@
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
-from fieldforge.catalog import Catalog
-from fieldforge.resolver import StubModel
-from fieldforge.models import Capture
-from fieldforge.agent import build_agent
+from quillwright.catalog import Catalog
+from quillwright.resolver import StubModel
+from quillwright.models import Capture
+from quillwright.agent import build_agent
 
 
 def _run(agent, capture, thread="t1"):

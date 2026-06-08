@@ -1,6 +1,6 @@
-from fieldforge.brain_loop import run_brain
-from fieldforge.catalog import Catalog
-from fieldforge.resolver import StubModel
+from quillwright.brain_loop import run_brain
+from quillwright.catalog import Catalog
+from quillwright.resolver import StubModel
 
 CAT = Catalog.from_file("data/sample_catalog.json")
 

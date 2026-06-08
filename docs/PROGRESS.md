@@ -1,8 +1,8 @@
-# FieldForge — Progress & Handoff
+# Quillwright — Progress & Handoff
 
-_Last updated: 2026-06-08. Branch: `design/fieldforge` (NOT pushed — all work is local commits)._
+_Last updated: 2026-06-08. Branch: `design/quillwright` (NOT pushed — all work is local commits)._
 
-FieldForge: a human-supervised, **local** small-model agent for tradespeople. Snap a job photo + voice note → an orchestra of small models (vision + tool-calling brain + multilingual) forges a finished, itemized **estimate**. No cloud. Built for the HuggingFace/Gradio "Build Small" hackathon (≤32B models, Gradio app, ends ~June 15).
+Quillwright: a human-supervised, **local** small-model agent for tradespeople. Snap a job photo + voice note → an orchestra of small models (vision + tool-calling brain + multilingual) forges a finished, itemized **estimate**. No cloud. Built for the HuggingFace/Gradio "Build Small" hackathon (≤32B models, Gradio app, ends ~June 15).
 
 ---
 
@@ -13,29 +13,29 @@ cd /Users/aaryaprakash/Development/random_projs/small-hackathon
 source .venv/bin/activate
 
 # Stub mode (fast, no GPU/models needed):
-python -m fieldforge.server            # http://127.0.0.1:7860
+python -m quillwright.server            # http://127.0.0.1:7860
 
 # REAL local models (needs Ollama running + models pulled):
 ollama pull minicpm-v nemotron-3-nano:4b aya     # already pulled on this machine
-FF_REAL_MODELS=1 python -m fieldforge.server
+FF_REAL_MODELS=1 python -m quillwright.server
 
 # Tests + lint:
 pytest -q                                          # 67 tests
 ruff check . && ruff format --check .
-npx prettier --check "fieldforge/web/**/*"
+npx prettier --check "quillwright/web/**/*"
 
 # Brain accuracy eval (needs Ollama + FF_REAL_MODELS=1):
 FF_REAL_MODELS=1 PYTHONPATH=. python scripts/run_brain_eval.py
 ```
 
-**Run the server with `uvicorn`/`python -m fieldforge.server`, NOT `.launch()`** — `gradio.Server` is a FastAPI app; `.launch()` does not serve our routes.
+**Run the server with `uvicorn`/`python -m quillwright.server`, NOT `.launch()`** — `gradio.Server` is a FastAPI app; `.launch()` does not serve our routes.
 
 ---
 
 ## 2. Architecture (where things live)
 
 ```
-fieldforge/
+quillwright/
 ├── server.py          # gradio.Server (FastAPI): serves web/ + all /api endpoints. ENTRY POINT.
 ├── agent.py           # LangGraph graph: perceive -> price/brain -> assemble. interrupt/resume.
 ├── brain_loop.py      # LLM tool-calling loop (run_brain): the agentic brain. SYSTEM prompt here.
@@ -132,7 +132,7 @@ docs/
 - ⚠️ **Job title is hardcoded** ("AC Unit Repair — 123 Maple St") in the UI/recalc — not derived from the job.
 - ⚠️ **Quantity unit handling is loose** — qty applies but unit (ea/hr/lb) comes from catalog; "2 hours" labor works, but unusual units aren't validated.
 - ⚠️ **Real-models latency ~15–30s** for a full run (vision + brain + translate). Fine for recorded demo; warm models for live. Headless screenshots sometimes time out before completion.
-- ⚠️ **Memory is single global file** (`/tmp/fieldforge_memory.json`) — no per-user separation; `/tmp` clears on reboot. Fine for demo, not multi-user.
+- ⚠️ **Memory is single global file** (`/tmp/quillwright_memory.json`) — no per-user separation; `/tmp` clears on reboot. Fine for demo, not multi-user.
 - ⚠️ **Audio**: voice note is currently a TEXT transcript field — no real speech-to-text wired (Audio model role exists in resolver but unused). "Voice note" is typed, not spoken.
 
 ---
@@ -177,7 +177,7 @@ A HF Space runs models **server-side**. Free HF tier has **no GPU**; ZeroGPU is 
   - ◻️ HF Space metadata (`README.md` front-matter: title, sdk, app_file, etc.).
 - ◻️ Bundle `data/` (catalog + evalset) and `web/` into the Space.
 - ◻️ Ensure stub mode works with zero external deps on the Space (it should — stub needs no GPU).
-- ◻️ If Modal: implement `fieldforge/backends/modal.py` + resolver `backend="modal"`, deploy model endpoints, set env.
+- ◻️ If Modal: implement `quillwright/backends/modal.py` + resolver `backend="modal"`, deploy model endpoints, set env.
 - ◻️ Test the deployed Space end-to-end (stub path at minimum).
 - ◻️ **Airplane-Mode Proof clip** — record the local real-model run with wifi off (🦙 + 🔌 quests).
 - ◻️ Demo video (~90s; script is in this repo's wrap-up / Field Notes outline below).
@@ -203,7 +203,7 @@ Phases in order. **Deployment de-risk jumps the queue ahead of all new feature w
 
 0. **Doc-reconcile** — purge stale gpt-oss from spec §3; fix ZeroGPU figure. Small, do first so we don't build on a lie. _(done in this grill)_
 1. **Stub Docker Space (deployment de-risk)** — confirm `gr.Server` boots as a **Docker-SDK Space** (now _sanctioned_ per kickoff transcript), `FF_REAL_MODELS` OFF → CPU/stub, no Ollama. **Test the container boots locally first** (`docker build` + `docker run`) to kill the unknown without HF build queues. #1 risk; nothing jumps this. Then make it a valid HF Space under the hackathon org (README front-matter + tags, bundle `data/` + `web/`). Structure the resolver so a Modal backend drops in via env flag (`FF_BACKEND=modal`) without touching the Dockerfile/frontend.
-2. **Modal backend — hosted Space runs REAL models** _(promoted from stretch S6, 2026-06-08: user wants the clickable Space to actually run models, not just stub)_. Write `fieldforge/backends/modal.py` (`ModalModel`, mirrors `OllamaModel`) + deploy the orchestra on Modal GPUs + wire the Modal token as a Space secret + handle cold starts. **Hardest single item on the board** — internal de-risk: get ONE model (the brain) working Space→Modal end-to-end before doing all three (MiniCPM-V, Nemotron, Aya). Why Modal not ZeroGPU: ZeroGPU is Gradio-SDK-only + breaks with FastAPI/`gr.Server` (verified, ADR-0005); Modal is an outbound HTTPS call that works with Docker SDK and keeps the 🎨 bespoke frontend.
+2. **Modal backend — hosted Space runs REAL models** _(promoted from stretch S6, 2026-06-08: user wants the clickable Space to actually run models, not just stub)_. Write `quillwright/backends/modal.py` (`ModalModel`, mirrors `OllamaModel`) + deploy the orchestra on Modal GPUs + wire the Modal token as a Space secret + handle cold starts. **Hardest single item on the board** — internal de-risk: get ONE model (the brain) working Space→Modal end-to-end before doing all three (MiniCPM-V, Nemotron, Aya). Why Modal not ZeroGPU: ZeroGPU is Gradio-SDK-only + breaks with FastAPI/`gr.Server` (verified, ADR-0005); Modal is an outbound HTTPS call that works with Docker SDK and keeps the 🎨 bespoke frontend.
 3. **Audio role — Cohere Transcribe local GGUF** (typed → real spoken note). De-risk the local serve first; D-fallback = typed note in Private Stack (ADR-0009).
 4. **Semantic Recall** — Llama-Nemotron-Embed (text) via sentence-transformers, record-time cached (ADR-0003).
 5. **Secondary pages** — Dashboard / Active Jobs / Inventory, **demoable-first → functional read-models** (Inventory read-only) (ADR-0010).
@@ -218,6 +218,6 @@ Phases in order. **Deployment de-risk jumps the queue ahead of all new feature w
 
 ## 8. Git state
 
-- Branch `design/fieldforge`, ~30+ commits, **NOT pushed**. Working tree clean.
+- Branch `design/quillwright`, ~30+ commits, **NOT pushed**. Working tree clean.
 - Per user's CLAUDE.md: break changes into commits; ASK before committing (or user commits); NEVER push/PR without asking; TDD; fix lint at root cause (no suppression); verify before claiming done.
 - Models pulled in Ollama on this machine: `minicpm-v` (5.5GB), `nemotron-3-nano:4b` (2.8GB), `aya` (4.8GB). Disk was tight (~11GB free) — removed gemma4/deepseek to make room; watch disk before pulling more.

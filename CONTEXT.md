@@ -1,4 +1,4 @@
-# FieldForge
+# Quillwright
 
 An on-device, human-supervised AI agent for tradespeople that turns a field capture (photos + voice note) into a finished, editable estimate or service report — the paperwork techs otherwise hand-write after a job.
 

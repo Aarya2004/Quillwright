@@ -1,4 +1,4 @@
-from fieldforge.catalog import Catalog
+from quillwright.catalog import Catalog
 
 
 def test_lookup_exact_key():

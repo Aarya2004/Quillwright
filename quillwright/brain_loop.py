@@ -6,9 +6,9 @@ deterministic tools (Facts-from-Tools). A missing price is RETURNED as a pause
 signal; the graph node turns that into a LangGraph interrupt.
 """
 
-from fieldforge.brain_tools import BRAIN_TOOLS, dispatch
-from fieldforge.catalog import Catalog
-from fieldforge.models import LineItem, TraceStep
+from quillwright.brain_tools import BRAIN_TOOLS, dispatch
+from quillwright.catalog import Catalog
+from quillwright.models import LineItem, TraceStep
 
 SYSTEM = (
     "You are a field-service estimator. You are given a tech's note about a job. Add EACH "

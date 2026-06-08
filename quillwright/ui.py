@@ -1,4 +1,4 @@
-from fieldforge.models import Estimate, TraceStep
+from quillwright.models import Estimate, TraceStep
 
 
 # Status drives the icon: done -> check, active -> pulsing dot + cursor, error -> warning.

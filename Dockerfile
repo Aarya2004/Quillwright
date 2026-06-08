@@ -17,11 +17,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # App + bundled sample data (catalog + evalset) + the web frontend.
-COPY fieldforge/ ./fieldforge/
+COPY quillwright/ ./quillwright/
 COPY data/ ./data/
 
 EXPOSE 7860
 
 # gr.Server is a FastAPI app; launch via uvicorn (NOT .launch()). server.py's __main__
-# binds $FF_HOST:$PORT, so `python -m fieldforge.server` serves all routes.
-CMD ["python", "-m", "fieldforge.server"]
+# binds $FF_HOST:$PORT, so `python -m quillwright.server` serves all routes.
+CMD ["python", "-m", "quillwright.server"]

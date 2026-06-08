@@ -5,10 +5,10 @@ Usage: FF_REAL_MODELS=1 .venv/bin/python scripts/run_brain_eval.py
 
 import sys
 
-from fieldforge.brain_eval import load_cases, score_case
-from fieldforge.brain_loop import run_brain
-from fieldforge.catalog import Catalog
-from fieldforge.resolver import ModelResolver
+from quillwright.brain_eval import load_cases, score_case
+from quillwright.brain_loop import run_brain
+from quillwright.catalog import Catalog
+from quillwright.resolver import ModelResolver
 
 
 def main():

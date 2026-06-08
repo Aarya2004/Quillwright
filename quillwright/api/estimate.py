@@ -1,6 +1,6 @@
 """Thin adapter: HTTP request -> the tested agent backend -> JSON.
 
-Holds no business logic; it only drives fieldforge.agent and shapes the result
+Holds no business logic; it only drives quillwright.agent and shapes the result
 for the frontend. Kept testable without a running server.
 """
 
@@ -10,16 +10,16 @@ import os
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
-from fieldforge.agent import build_agent
-from fieldforge.catalog import Catalog
-from fieldforge.memory import Memory
-from fieldforge.models import Capture
-from fieldforge.resolver import ModelResolver, StubModel
+from quillwright.agent import build_agent
+from quillwright.catalog import Catalog
+from quillwright.memory import Memory
+from quillwright.models import Capture
+from quillwright.resolver import ModelResolver, StubModel
 
 CATALOG = Catalog.from_file("data/sample_catalog.json")
 
 # On-device memory of past jobs (private JSON file).
-MEMORY_PATH = "/tmp/fieldforge_memory.json"
+MEMORY_PATH = "/tmp/quillwright_memory.json"
 _MEMORY: Memory | None = None
 
 

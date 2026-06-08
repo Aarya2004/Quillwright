@@ -1,4 +1,4 @@
-from fieldforge.resolver import ModelResolver, StubModel
+from quillwright.resolver import ModelResolver, StubModel
 
 
 def test_stub_model_returns_scripted_response():
@@ -36,7 +36,7 @@ def test_resolver_unknown_role_raises():
 
 
 def test_ollama_backend_returns_real_model_with_local_tag():
-    from fieldforge.backends.ollama import OllamaModel
+    from quillwright.backends.ollama import OllamaModel
 
     resolver = ModelResolver(mode="private", backend="ollama")
     brain = resolver.for_role("brain")

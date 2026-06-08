@@ -5,8 +5,8 @@ in the deterministic tools (Facts-from-Tools, ADR-0004). The brain never emits
 numbers itself.
 """
 
-from fieldforge.catalog import Catalog
-from fieldforge.tools import compute, draft_line_item, lookup_price
+from quillwright.catalog import Catalog
+from quillwright.tools import compute, draft_line_item, lookup_price
 
 # JSON-schema tool definitions handed to the model.
 BRAIN_TOOLS = [

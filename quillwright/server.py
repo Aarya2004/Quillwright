@@ -1,7 +1,7 @@
-"""FieldForge frontend served by gradio.Server (a FastAPI app with Gradio's API engine).
+"""Quillwright frontend served by gradio.Server (a FastAPI app with Gradio's API engine).
 
 Serves the bespoke web/ frontend at / and exposes the agent as endpoints. Glue only:
-all business logic lives in fieldforge.agent and is adapted in fieldforge.api.
+all business logic lives in quillwright.agent and is adapted in quillwright.api.
 """
 
 import json
@@ -11,19 +11,19 @@ from fastapi import Body
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from gradio import Server
 
-from fieldforge.api.estimate import (
+from quillwright.api.estimate import (
     forge_estimate,
     forge_estimate_stream,
     resume_estimate_stream,
 )
 import os
 
-from fieldforge.api.recalc import recalc_estimate
-from fieldforge.api.translate import translate_estimate
-from fieldforge.api.upload import save_upload
-from fieldforge.models import Estimate, LineItem
-from fieldforge.pdf import estimate_to_pdf
-from fieldforge.resolver import ModelResolver
+from quillwright.api.recalc import recalc_estimate
+from quillwright.api.translate import translate_estimate
+from quillwright.api.upload import save_upload
+from quillwright.models import Estimate, LineItem
+from quillwright.pdf import estimate_to_pdf
+from quillwright.resolver import ModelResolver
 
 REAL_MODELS = os.environ.get("FF_REAL_MODELS") == "1"
 
@@ -96,7 +96,7 @@ def api_pdf(payload: dict = Body(...)) -> FileResponse:
         ],
         tax_rate=payload.get("tax_rate", 0.13),
     )
-    path = "/tmp/fieldforge_estimate.pdf"
+    path = "/tmp/quillwright_estimate.pdf"
     estimate_to_pdf(est, path)
     return FileResponse(path, media_type="application/pdf", filename="estimate.pdf")
 

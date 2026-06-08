@@ -1,4 +1,4 @@
-from fieldforge.brain_eval import load_cases, score_case
+from quillwright.brain_eval import load_cases, score_case
 
 
 def test_load_cases_reads_evalset():

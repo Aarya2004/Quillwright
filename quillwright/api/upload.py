@@ -4,7 +4,7 @@ import base64
 import hashlib
 import os
 
-UPLOAD_DIR = "/tmp/fieldforge_uploads"
+UPLOAD_DIR = "/tmp/quillwright_uploads"
 
 
 def save_upload(data: str, filename: str) -> str:
