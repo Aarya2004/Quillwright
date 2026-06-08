@@ -1,0 +1,133 @@
+{
+  "_note": "Recall eval for ADR-0003. Corpus = seeded past HVAC runs; queries point at the one 'gold' run a tech would want recalled. Several queries use words that DON'T appear literally in the gold run (coolant->refrigerant, AC unit->condenser) — those are where keyword recall fails and semantic recall should win. SAMPLE data.",
+  "corpus": [
+    {
+      "id": 1,
+      "transcript": "replaced the dual run capacitor on the rooftop unit",
+      "line_items": ["Dual run capacitor", "Labor"]
+    },
+    {
+      "id": 2,
+      "transcript": "topped up the refrigerant after finding a slow leak",
+      "line_items": ["R-410A refrigerant", "Labor"]
+    },
+    {
+      "id": 3,
+      "transcript": "swapped a burnt compressor contactor",
+      "line_items": ["Compressor contactor", "Labor"]
+    },
+    {
+      "id": 4,
+      "transcript": "condenser fan motor seized, installed a new one",
+      "line_items": ["Condenser fan motor", "Labor"]
+    },
+    {
+      "id": 5,
+      "transcript": "cleared a clogged condensate drain line",
+      "line_items": ["Drain cleaning", "Labor"]
+    },
+    {
+      "id": 6,
+      "transcript": "annual maintenance, replaced the air filter and checked charge",
+      "line_items": ["Air filter", "Labor"]
+    },
+    {
+      "id": 7,
+      "transcript": "thermostat reading wrong, installed a new programmable stat",
+      "line_items": ["Thermostat", "Labor"]
+    },
+    {
+      "id": 8,
+      "transcript": "blower motor was noisy, replaced bearings and belt",
+      "line_items": ["Blower motor", "Labor"]
+    },
+    {
+      "id": 9,
+      "transcript": "low on coolant, recovered and recharged the system",
+      "line_items": ["R-410A refrigerant", "Labor"]
+    },
+    {
+      "id": 10,
+      "transcript": "hard start kit added to a struggling compressor",
+      "line_items": ["Hard start kit", "Labor"]
+    },
+    {
+      "id": 11,
+      "transcript": "evaporator coil frozen over, thawed and fixed airflow",
+      "line_items": ["Coil cleaning", "Labor"]
+    },
+    {
+      "id": 12,
+      "transcript": "replaced a failed start capacitor on the furnace",
+      "line_items": ["Start capacitor", "Labor"]
+    },
+    {
+      "id": 13,
+      "transcript": "ductwork had a disconnected joint, resealed it",
+      "line_items": ["Duct sealing", "Labor"]
+    },
+    {
+      "id": 14,
+      "transcript": "gas furnace igniter cracked, installed a new hot surface igniter",
+      "line_items": ["Hot surface igniter", "Labor"]
+    },
+    {
+      "id": 15,
+      "transcript": "capacitor and contactor both replaced on an old AC unit",
+      "line_items": ["Dual run capacitor", "Compressor contactor", "Labor"]
+    },
+    {
+      "id": 16,
+      "transcript": "heat pump reversing valve stuck, replaced the valve",
+      "line_items": ["Reversing valve", "Labor"]
+    },
+    {
+      "id": 17,
+      "transcript": "outdoor disconnect was corroded, replaced the whip and breaker",
+      "line_items": ["Disconnect", "Labor"]
+    },
+    {
+      "id": 18,
+      "transcript": "mini split indoor head leaking, cleared the drain and pump",
+      "line_items": ["Condensate pump", "Labor"]
+    }
+  ],
+  "queries": [
+    {
+      "query": "coolant recharge",
+      "gold_id": 9,
+      "note": "synonym: 'coolant' never appears literally — gold run says 'refrigerant'. keyword should miss."
+    },
+    {
+      "query": "AC unit fan not spinning",
+      "gold_id": 4,
+      "note": "synonym: 'fan motor' is 'condenser fan motor'; 'AC unit' not literal in gold."
+    },
+    {
+      "query": "run capacitor replacement",
+      "gold_id": 1,
+      "note": "keyword-friendly: 'capacitor' is literal."
+    },
+    {
+      "query": "contactor burnt out",
+      "gold_id": 3,
+      "note": "keyword-friendly: 'contactor' literal."
+    },
+    { "query": "clogged drain", "gold_id": 5, "note": "keyword-friendly: 'drain' literal." },
+    {
+      "query": "system low on charge",
+      "gold_id": 2,
+      "note": "semantic: 'charge'/'low' map to the refrigerant leak run, not literal."
+    },
+    {
+      "query": "furnace won't ignite",
+      "gold_id": 14,
+      "note": "semantic: 'ignite' vs 'igniter'; furnace literal."
+    },
+    {
+      "query": "frozen evaporator",
+      "gold_id": 11,
+      "note": "keyword-friendly: 'evaporator'/'frozen' literal."
+    }
+  ]
+}
