@@ -28,6 +28,18 @@
             <span class="material-symbols-outlined">description</span>
             <span>Estimate Builder</span>
           </a>
+          <a class="nav-link" href="/dashboard">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+          <a class="nav-link" href="/jobs">
+            <span class="material-symbols-outlined">work</span>
+            <span>Active Jobs</span>
+          </a>
+          <a class="nav-link" href="/inventory">
+            <span class="material-symbols-outlined">inventory_2</span>
+            <span>Parts Catalog</span>
+          </a>
         </nav>
         <button class="btn btn--primary new-estimate" id="new-estimate-btn">New Estimate</button>
       </aside>
@@ -52,7 +64,8 @@
         <div id="thumbs" class="thumbs"></div>
 
         <div class="panes">
-          <!-- Left: Digital Apprentice -->
+          <!-- Left: Digital Apprentice — one continuous stream (trace + chat),
+               with the chat input docked at the bottom of the pane. -->
           <section class="pane pane--log">
             <div class="pane-head">
               <div class="apprentice">
@@ -63,9 +76,27 @@
                 <span id="forge-state">Idle</span><span class="live-dot"></span>
               </div>
             </div>
-            <div class="pane-body" id="log">
-              <p class="step-empty">Waiting for a job to forge…</p>
+
+            <!-- The stream: trace step cards, then chat turns, in one column. -->
+            <div class="stream" id="log">
+              <div class="steps">
+                <p class="step-empty">Waiting for a job to forge…</p>
+              </div>
             </div>
+
+            <!-- Docked chat input (disabled until an estimate exists). -->
+            <form class="chat-input" id="chat-form">
+              <input
+                id="chat-text"
+                type="text"
+                autocomplete="off"
+                disabled
+                placeholder="Forge an estimate, then refine it here…"
+              />
+              <button class="chat-send" id="chat-send" type="submit" disabled aria-label="Send">
+                <span class="material-symbols-outlined">arrow_upward</span>
+              </button>
+            </form>
           </section>
 
           <!-- Right: Draft Estimate -->
@@ -78,6 +109,9 @@
                 </button>
                 <button class="btn" id="pdf-btn">
                   <span class="material-symbols-outlined">picture_as_pdf</span> Preview PDF
+                </button>
+                <button class="btn" id="json-btn" title="Export machine-readable JSON (no lock-in)">
+                  <span class="material-symbols-outlined">data_object</span> Export JSON
                 </button>
               </div>
             </div>

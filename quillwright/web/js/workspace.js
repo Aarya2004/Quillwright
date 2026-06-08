@@ -5,7 +5,9 @@ import {
   uploadImage,
   recalc,
   downloadPdf,
+  downloadJson,
   translateEstimate,
+  chatAboutEstimate,
 } from "./client.js";
 import { resetTrace, addStep } from "./trace.js";
 
@@ -45,11 +47,15 @@ function money(n) {
 }
 
 // Render the editable estimate from `rows`. qty/rate cells edit -> recalc.
-function renderRows() {
+// `animate` staggers the rows in (used when a fresh estimate lands, not on edits).
+function renderRows(animate = false) {
   const tbody = $("est-rows");
   tbody.innerHTML = rows
     .map(
-      (li, i) => `<tr data-i="${i}">
+      (
+        li,
+        i,
+      ) => `<tr data-i="${i}"${animate ? ' class="row-enter" style="--row-delay:' + i * 55 + 'ms"' : ""}>
         <td class="desc" contenteditable data-field="description">${li.description}</td>
         <td class="num" contenteditable data-field="quantity">${li.quantity}</td>
         <td class="num" contenteditable data-field="rate">${money(li.rate)}</td>
@@ -59,26 +65,41 @@ function renderRows() {
     .join("");
 }
 
+// Flash the total when it changes (subtle "the number moved" cue).
+let lastTotal = null;
+function bumpTotal() {
+  const el = $("sum-total");
+  el.classList.remove("bump");
+  void el.offsetWidth; // restart the animation
+  el.classList.add("bump");
+}
+
 function renderTotals(est) {
   $("sum-subtotal").textContent = money(est.subtotal);
   $("sum-tax-rate").textContent = `${Math.round(est.tax_rate * 100)}%`;
   $("sum-tax").textContent = money(est.tax);
   $("sum-total").textContent = money(est.total);
+  if (lastTotal !== null && est.total !== lastTotal) bumpTotal();
+  lastTotal = est.total;
 }
 
 // Adopt a server estimate as the editable working copy.
-function setEstimate(est) {
+// `animate` staggers the rows in (true when a forge/chat just produced it).
+function setEstimate(est, animate = false) {
   if (!est) {
     rows = [];
+    lastTotal = null;
     $("est-rows").innerHTML = "";
     renderTotals({ subtotal: 0, tax_rate: 0, tax: 0, total: 0 });
+    setChatEnabled(false);
     return;
   }
   rows = est.line_items.map((li) => ({ ...li }));
   sourceDescriptions = rows.map((li) => li.description);
   $("lang").value = "English";
-  renderRows();
+  renderRows(animate);
   renderTotals(est);
+  setChatEnabled(rows.length > 0);
 }
 
 // Re-render the customer copy in the selected language (descriptions only).
@@ -123,7 +144,7 @@ function handleEvent(event) {
   } else if (event.type === "pause") {
     showPause(event);
   } else if (event.type === "estimate") {
-    setEstimate(event.estimate);
+    setEstimate(event.estimate, true);
     $("forge-state").textContent = "Done";
   }
 }
@@ -176,7 +197,82 @@ function newEstimate() {
   $("transcript").value = "";
   $("thumbs").innerHTML = "";
   imagePaths = [];
+  chatStarted = false;
   $("transcript").focus();
+}
+
+// --- Chat: refine the estimate, in the SAME stream as the trace ---
+// The input docks at the bottom of the Apprentice pane and only enables once an
+// estimate exists. The first chat turn drops a divider after the trace steps.
+let chatStarted = false;
+
+function setChatEnabled(on) {
+  $("chat-text").disabled = !on;
+  $("chat-send").disabled = !on;
+  $("chat-text").placeholder = on
+    ? "Ask the apprentice to refine the estimate…"
+    : "Forge an estimate, then refine it here…";
+}
+
+function appendToStream(node) {
+  const log = $("log");
+  log.appendChild(node);
+  log.scrollTo({ top: log.scrollHeight, behavior: "smooth" });
+}
+
+function ensureChatStarted() {
+  if (chatStarted) return;
+  chatStarted = true;
+  const divider = document.createElement("div");
+  divider.className = "chat-divider";
+  divider.textContent = "Refine";
+  $("log").appendChild(divider);
+}
+
+function appendMsg(role, text) {
+  ensureChatStarted();
+  const el = document.createElement("div");
+  el.className = `chat-msg ${role}`;
+  el.innerHTML = `<div class="bubble">${text}</div>`;
+  appendToStream(el);
+  return el;
+}
+
+function showTyping() {
+  ensureChatStarted();
+  const el = document.createElement("div");
+  el.className = "chat-msg bot typing";
+  el.innerHTML = `<div class="bubble"><i></i><i></i><i></i></div>`;
+  appendToStream(el);
+  return el;
+}
+
+let chatBusy = false;
+async function sendChat(e) {
+  e.preventDefault();
+  const text = $("chat-text").value.trim();
+  if (!text || chatBusy || $("chat-text").disabled) return;
+  chatBusy = true;
+  $("chat-send").disabled = true;
+  $("chat-text").value = "";
+  appendMsg("user", text);
+  const typing = showTyping();
+  try {
+    const out = await chatAboutEstimate(text, rows, TAX_RATE);
+    typing.remove();
+    appendMsg("bot", out.reply);
+    if (out.estimate) {
+      // Adopt the refined estimate; the right pane updates + total bumps.
+      setEstimate(out.estimate);
+    }
+  } catch (err) {
+    typing.remove();
+    appendMsg("bot", "Sorry — I couldn't process that just now. Try again?");
+  } finally {
+    chatBusy = false;
+    $("chat-send").disabled = $("chat-text").disabled;
+    $("chat-text").focus();
+  }
 }
 
 function addItem() {
@@ -190,9 +286,11 @@ $("new-estimate-btn").addEventListener("click", newEstimate);
 $("photo-input").addEventListener("change", onPhotos);
 $("add-item-btn").addEventListener("click", addItem);
 $("pdf-btn").addEventListener("click", () => downloadPdf(rows, JOB_TITLE, TAX_RATE));
+$("json-btn").addEventListener("click", () => downloadJson(rows, JOB_TITLE, TAX_RATE));
 $("discard-btn").addEventListener("click", newEstimate);
 $("finalize-btn").addEventListener("click", () => downloadPdf(rows, JOB_TITLE, TAX_RATE));
 $("lang").addEventListener("change", onLanguageChange);
+$("chat-form").addEventListener("submit", sendChat);
 // Edits commit on blur (after the user leaves the cell).
 $("est-rows").addEventListener("focusout", onCellEdit);
 $("transcript").addEventListener("keydown", (e) => {

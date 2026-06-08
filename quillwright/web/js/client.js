@@ -59,6 +59,17 @@ export async function recalc(rows, jobTitle, taxRate) {
   return res.json();
 }
 
+// Refine the current estimate conversationally (the Digital Apprentice chat).
+// Returns {estimate, reply, needs_price}.
+export async function chatAboutEstimate(message, rows, taxRate) {
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, rows, tax_rate: taxRate }),
+  });
+  return res.json();
+}
+
 // Translate the customer-facing estimate copy into a language (Cohere Aya).
 export async function translateEstimate(rows, jobTitle, taxRate, language) {
   const res = await fetch("/api/translate", {
@@ -81,6 +92,23 @@ export async function downloadPdf(rows, jobTitle, taxRate) {
   const a = document.createElement("a");
   a.href = url;
   a.download = "estimate.pdf";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Download a machine-readable JSON of the current estimate (the "no lock-in" export).
+export async function downloadJson(rows, jobTitle, taxRate) {
+  const res = await fetch("/api/export_json", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rows, job_title: jobTitle, tax_rate: taxRate }),
+  });
+  const payload = await res.json();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "estimate.json";
   a.click();
   URL.revokeObjectURL(url);
 }

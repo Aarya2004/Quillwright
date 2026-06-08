@@ -8,6 +8,7 @@
 
   --background: #f7fafc;
   --surface: #f7fafc;
+  --surface-container-lowest: #ffffff;
   --surface-container-low: #f1f4f6;
   --surface-container: #ebeef0;
   --surface-container-high: #e5e9eb;
@@ -16,6 +17,7 @@
   --secondary: #546067;
   --outline: #8b7263;
   --outline-variant: #dec1af;
+  --error: #ba1a1a;
 
   --tertiary-fixed: #d4e5ef;
   --tertiary-container: #8fa0a9;
