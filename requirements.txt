@@ -1,0 +1,10 @@
+# Runtime deps for the HF Space (Docker SDK). Mirrors pyproject.toml [project.dependencies].
+# Stub mode only — no torch/Ollama here; real-model backends (Modal, sentence-transformers)
+# are added in later build phases.
+gradio>=4.44
+langgraph>=0.2
+langchain-core>=0.3
+pydantic>=2.7
+reportlab>=4.2
+uvicorn>=0.30
+requests>=2.31

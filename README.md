@@ -1,6 +1,24 @@
-# FieldForge
+---
+title: Quillwright
+emoji: ⚡
+colorFrom: purple
+colorTo: purple
+sdk: docker
+app_port: 7860
+pinned: false
+short_description: Tell it about the job. It drafts the estimate.
+tags:
+  - backyard-ai
+  - agent
+  - small-models
+  - off-the-grid
+---
 
-A human-supervised, small-model agent for tradespeople: snap a job photo + voice note → a team of **local** small models forges a finished, itemized **estimate**. No cloud, runs on your machine. Build Small Hackathon entry.
+# Quillwright (FieldForge)
+
+A human-supervised, small-model agent for tradespeople: snap a job photo + voice note → a team of **local** small models forges a finished, itemized **estimate**. No cloud, runs on your machine. Build Small Hackathon entry (Backyard AI track).
+
+> **This hosted Space runs in stub mode** (CPU, no GPU): the agent flow, trace, editable estimate, and PDF all work, but the small models are stubbed. The real models (MiniCPM-V, Nemotron, Aya) run locally via Ollama — see the demo video / Airplane-Mode Proof for them in action. Live models reach the hosted Space via Modal (in progress).
 
 See `docs/superpowers/specs/` and `docs/adr/` for the design.
 

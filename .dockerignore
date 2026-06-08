@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+node_modules/
+.git/
+tests/
+docs/
+scripts/
+*.egg-info/
+.claude/
+tmp_*.png

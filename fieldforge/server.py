@@ -134,4 +134,8 @@ def static_files(path: str):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=7860)
+    # Bind 0.0.0.0 in containers/Spaces (reachable from outside); honor $PORT (HF Spaces
+    # set it). Defaults keep local dev on 127.0.0.1:7860 unchanged.
+    host = os.environ.get("FF_HOST", "127.0.0.1")
+    port = int(os.environ.get("PORT", "7860"))
+    uvicorn.run(app, host=host, port=port)
