@@ -1,6 +1,17 @@
 # Quillwright — Progress & Handoff
 
-_Last updated: 2026-06-08. Branch: `design/fieldforge` (project renamed to Quillwright, but the git BRANCH name is unchanged). PUSHED to GitHub `origin` (github.com/Aarya2004/Quillwright); deployed to HF Space `build-small-hackathon/Quillwright` via `hf upload`._
+_Last updated: 2026-06-08 (late). Branch: `design/fieldforge` (project renamed to Quillwright, but the git BRANCH name is unchanged). PUSHED to GitHub `origin` (github.com/Aarya2004/Quillwright); deployed to HF Space `build-small-hackathon/Quillwright` via `hf upload`. **NOTE: the 2026-06-08-late work below (pages, chat, JSON export, recall eval, UI redesign) is COMMITTED locally but NOT yet pushed to GitHub or re-uploaded to the Space.**_
+
+> **Shipped 2026-06-08 (late) — 6 commits, all assistant-verified offline, NOT yet user-verified live + NOT pushed/redeployed:**
+>
+> - **JSON export** (`api/export.py`, `/api/export_json`, "Export JSON" button) — the "no-lock-in" wedge; same server-authoritative totals as the PDF.
+> - **Conversational chat** (`api/chat.py`, `/api/chat`) — refine the estimate by talking to the Apprentice ("add a contactor", "change labor to 3 hrs", "drop the refrigerant"). Facts-from-Tools holds (catalog prices only); deterministic so the stub Space works with zero models. Real-brain wiring point noted for later.
+> - **Three secondary pages** (ADR-0010): Dashboard / Active Jobs (honest read-models over the real memory store) + Parts Catalog (read-only over a seeded inventory JSON joined with the catalog; computed low-stock flags). All four nav destinations now real.
+> - **Recall eval scaffold** (S1, ADR-0003): `data/recall_evalset.json` (18 runs, 8 queries) + `recall_eval.py` + `scripts/run_recall_eval.py`. **Keyword baseline measured recall@1 = 0.750**; semantic ranker has a drop-in wiring point.
+> - **Memory extension**: `record_run(total=)` + `recent()` + `revenue_total` (backward-compatible).
+> - **UI redesign**: the Digital Apprentice pane is now ONE continuous stream — JetBrains-Mono trace cards with a connector rail + staggered fade-in/working-pulse/check-pop, a "Refine" divider, then chat turns, above a permanently docked chat input. Tabs dropped. `prefers-reduced-motion` respected.
+> - **Tests: 67 → 89 pass** (+22). ruff + prettier clean.
+> - ⚠️ **Pending live eyeball:** assistant verified via populated previews + headless empty-state screenshots; a real `FF_REAL_MODELS=1` forge + chat turn is the final user check.
 
 Quillwright: a human-supervised, **local** small-model agent for tradespeople. Snap a job photo + voice note → an orchestra of small models (vision + tool-calling brain + multilingual) forges a finished, itemized **estimate**. No cloud. Built for the HuggingFace/Gradio "Build Small" hackathon (≤32B models, Gradio app, ends ~June 15).
 
@@ -100,9 +111,11 @@ docs/
 - ✅ Photo upload (camera button + thumbnails → /api/upload → real vision).
 - ✅ Agent-Pause question card (ask price → resume).
 - ✅ Inline-editable estimate (qty/rate) with server-authoritative recalc.
-- ✅ Preview PDF / Finalize (download PDF) / Add Item / Discard.
+- ✅ Preview PDF / **Export JSON** / Finalize (download PDF) / Add Item / Discard.
 - ✅ Language dropdown (English/Spanish/French/Mandarin) → live re-translate.
 - ✅ Industrial-orange theme (Hanken/Inter/JetBrains Mono), minimalist (no useless UI).
+- ✅ **(2026-06-08-late) Unified Apprentice stream**: mono trace cards + connector rail + staggered motion, docked conversational **chat** to refine the estimate (Facts-from-Tools), "Refine" divider between trace and chat.
+- ✅ **(2026-06-08-late) Three secondary pages**: Dashboard / Active Jobs / Parts Catalog — real read-models, demoable-first (ADR-0010); all four nav links live.
 
 ### Infra / housekeeping
 
@@ -112,7 +125,7 @@ docs/
 
 ### Test/verification status
 
-- ✅ **Automated: 67 pytest tests pass** (models, resolver, catalog, tools, agent incl. brain+pause+resume, pdf, ui presenters, api estimate/stream/pause/upload/recalc/translate, ollama backend, brain_tools, brain_loop, brain_eval, memory, memory_integration). ruff + prettier clean.
+- ✅ **Automated: 89 pytest tests pass** (was 67; +22 from 2026-06-08-late: api export/chat/pages, recall_eval, memory totals/recent). Covers models, resolver, catalog, tools, agent incl. brain+pause+resume, pdf, ui presenters, api estimate/stream/pause/upload/recalc/translate/export/chat/pages, ollama backend, brain_tools, brain_loop, brain_eval, recall_eval, memory, memory_integration. ruff + prettier clean.
 - ✅ **Verified by me (assistant) over HTTP / headless-Chrome screenshots:**
   - Real vision: photo → `model=minicpm-v` → observations ("RUN CAPACITOR" etc.).
   - Real brain: live forge → add×N + finish, total correct, no fabricated numbers (~15s).
@@ -141,7 +154,7 @@ docs/
 
 Order is the user's. Only pursue once committed scope (§6 deployment + §7 build order) is solid; cut from the bottom.
 
-1. **S1 — Recall eval** (~15–20 seeded Runs + scorer; recall@1 keyword vs semantic). _Highest._ Answers "does semantic Recall improve accuracy" + a 2nd measured Field-Notes data point. Borderline-committed. (ADR-0003)
+1. **S1 — Recall eval** ✅ **SCAFFOLDED (2026-06-08-late)** — `data/recall_evalset.json` (18 runs, 8 queries incl. synonym-gap cases) + scorer + runner. **Keyword baseline measured recall@1 = 0.750** (a real ceiling with visible synonym misses). _Remaining:_ wire the semantic ranker (needs the embedder, ADR-0003) and report the keyword-vs-semantic delta — that's the actual Field-Notes data point. The semantic half rides the embedding role (see §7.4).
 2. **S3 / S4 / S5 — sponsor-model block (equal priority):**
    - **S3 Aya fine-tune** via `cohere-ai/cohere-finetune` (easiest tooling of any sponsor; trade-vocab translation; cheap 2nd 🎯 point).
    - **S4 Nemotron Omni** as selectable Best-Stack Perception. **Coupled to the Modal backend (now committed §7.2):** Omni is too big to run locally via Ollama → it only runs _for real_ on Modal, so it rides the §7.2 backend once that exists. Cheap part (resolver dropdown) is high; running it = needs Modal.
@@ -149,7 +162,7 @@ Order is the user's. Only pursue once committed scope (§6 deployment + §7 buil
 3. **S10 — Finalize & Send (real email/SMS).** _Medium._ User has a Twilio account → real send is feasible. **Constraint:** Twilio creds can't live in a public HF Space → real send runs in the local/demo path; the hosted Space falls back to a draft/shareable-link.
 4. **S7 — Agent-trace export** to the Hub (📡 Sharing-is-Caring). Trace is shown live, not yet exported.
    _(S6 Modal-backed live Space was PROMOTED to committed §7.2 on 2026-06-08 — no longer a stretch.)_
-5. **S2 — Inventory live-decrement** (finalize subtracts parts). Upgrades the read-only Inventory page (ADR-0010); only if core solid.
+5. **S2 — Inventory live-decrement** (finalize subtracts parts). _The read-only Inventory page now EXISTS (2026-06-08-late)_; this stretch is only the live-decrement upgrade on top of it (ADR-0010); only if core solid.
 6. **S8 — FLUX Klein** branded visuals (LoRA; delight/📡; off the core skill).
 7. **S9 — `gr.Workflow`** orchestra node-graph demo (separate artifact, goodwill only; NEVER the core app — ADR-0010).
 8. **S11 — deferred grab-bag, REVISIT FLAG.** GEPA/DSPy auto prompt-opt, live video capture, service-report mode, Parse/embed fine-tunes, ambiguity-pause variant. Explicitly deferred; some parts may be promoted later — revisit, don't enumerate now.
@@ -219,7 +232,7 @@ Phases in order. **Deployment de-risk jumps the queue ahead of all new feature w
 2. ⬅️ **NEXT — Modal backend — hosted Space runs REAL models** _(promoted from stretch S6, 2026-06-08: user wants the clickable Space to actually run models, not just stub)_. Write `quillwright/backends/modal.py` (`ModalModel`, mirrors `OllamaModel`) + deploy the orchestra on Modal GPUs + wire the Modal token as a Space secret + handle cold starts. **Hardest single item on the board** — internal de-risk: get ONE model (the brain) working Space→Modal end-to-end before doing all three (MiniCPM-V, Nemotron, Aya). Why Modal not ZeroGPU: ZeroGPU is Gradio-SDK-only + breaks with FastAPI/`gr.Server` (verified, ADR-0005); Modal is an outbound HTTPS call that works with Docker SDK and keeps the 🎨 bespoke frontend.
 3. **Audio role — Cohere Transcribe local GGUF** (typed → real spoken note). De-risk the local serve first; D-fallback = typed note in Private Stack (ADR-0009).
 4. **Semantic Recall** — Llama-Nemotron-Embed (text) via sentence-transformers, record-time cached (ADR-0003).
-5. **Secondary pages** — Dashboard / Active Jobs / Inventory, **demoable-first → functional read-models** (Inventory read-only) (ADR-0010).
+5. ✅ **DONE (2026-06-08-late) — Secondary pages** — Dashboard / Active Jobs / Inventory shipped as honest read-models (Dashboard + Jobs over the real memory store; Inventory read-only over seeded JSON). Demoable-first satisfied (ADR-0010). _Only the live-inventory-decrement upgrade (S2) remains, and it's optional._
 6. **MiniCPM-V fine-tune on CORD/SROIE** (Modal) — the 🎯 artifact; parallelizable, doesn't block the app (ADR-0006).
 7. **Submission collateral** — demo video (~90s), social post (link in README), **Airplane-Mode Proof** clip.
 
@@ -231,6 +244,7 @@ Phases in order. **Deployment de-risk jumps the queue ahead of all new feature w
 
 ## 8. Git state
 
-- Branch `design/fieldforge` (BRANCH name unchanged despite the Quillwright project rename), ~40 commits. **Pushed** to GitHub `origin` (github.com/Aarya2004/Quillwright). HF Space deployed via `hf upload` (not git — HF git push broken on git 2.51). Remotes: `origin` (GitHub) + `hf` (Space). Working tree clean.
+- Branch `design/fieldforge` (BRANCH name unchanged despite the Quillwright project rename). **⚠️ The 6 commits from 2026-06-08-late (memory totals, pages, recall eval, export+chat, server routes, UI redesign) are LOCAL ONLY — not yet pushed to GitHub `origin` and the Space has NOT been re-uploaded.** Everything before them IS pushed to `origin` (github.com/Aarya2004/Quillwright) + deployed to the Space via `hf upload` (not git — HF git push broken on git 2.51). Remotes: `origin` (GitHub) + `hf` (Space).
+- **Working tree NOT clean:** uncommitted branding assets in `quillwright/web/img/` (favicons/logos — yours, mid-iteration) + `.claude/scheduled_tasks.lock` (ignored harness file). The 6 feature commits are clean of those.
 - Per user's CLAUDE.md: break changes into commits; ASK before committing (or user commits); NEVER push/PR without asking; TDD; fix lint at root cause (no suppression); verify before claiming done.
 - Models pulled in Ollama on this machine: `minicpm-v` (5.5GB), `nemotron-3-nano:4b` (2.8GB), `aya` (4.8GB). Disk was tight (~11GB free) — removed gemma4/deepseek to make room; watch disk before pulling more.
