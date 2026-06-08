@@ -71,6 +71,7 @@ docs/
 ```
 
 **Key invariants (do not break):**
+
 - **Facts-from-Tools**: every customer-facing number (price/qty/markup/tax/total) comes from a tool (`lookup_price`/`compute`) or user-confirmed edit — NEVER from an LLM. Holds on edits and translation.
 - **Resolver swap**: models resolve per role via `resolver.py`. Stub for tests (no GPU); Ollama for real. `FF_REAL_MODELS=1` flips perception+brain+multilingual to real.
 - **Narrow brain tool surface**: brain only calls `add_priced_item` + `finish`. This is WHY the 4B model is reliable — do not widen it casually.
@@ -80,6 +81,7 @@ docs/
 ## 3. DONE — built, committed, and verified
 
 ### Backend / agent
+
 - ✅ **LangGraph agent** (perceive → price/brain → assemble) with `interrupt`/resume.
 - ✅ **LLM-driven brain** — `nemotron-3-nano:4b` drives tool-calling (add items, set quantities, finish). Deterministic fallback when models off.
 - ✅ **Facts-from-Tools** enforced (catalog lookup + `compute`); quantities supported ("3 hours" → qty 3).
@@ -91,6 +93,7 @@ docs/
 - ✅ **Eval harness** — `data/brain_evalset.json` + scorer + runner. **Measured: item F1 0.367 → 0.880 (fuzzy lookup) → 0.967 (prompt tuning); qty accuracy 0.40 → 1.00.**
 
 ### Frontend (bespoke, via gr.Server)
+
 - ✅ Two-pane Workspace: light "Digital Apprentice" (streaming trace cards) + editable Draft Estimate.
 - ✅ Sidebar (brand + Estimate Builder + working New Estimate; no dead links).
 - ✅ Streaming trace (SSE) grouped into friendly cards (Memory / Site Analysis / Market Pricing / Estimate Assembled).
@@ -102,11 +105,13 @@ docs/
 - ✅ Industrial-orange theme (Hanken/Inter/JetBrains Mono), minimalist (no useless UI).
 
 ### Infra / housekeeping
+
 - ✅ Guardrail hooks in `.claude/` (ruff format-on-edit + block-lint-config). Verified firing.
 - ✅ Retired obsolete `gr.Blocks` `app.py`; docs updated.
 - ✅ ADRs 0001–0008 + CONTEXT.md glossary + problem-validation research (citable stats).
 
 ### Test/verification status
+
 - ✅ **Automated: 67 pytest tests pass** (models, resolver, catalog, tools, agent incl. brain+pause+resume, pdf, ui presenters, api estimate/stream/pause/upload/recalc/translate, ollama backend, brain_tools, brain_loop, brain_eval, memory, memory_integration). ruff + prettier clean.
 - ✅ **Verified by me (assistant) over HTTP / headless-Chrome screenshots:**
   - Real vision: photo → `model=minicpm-v` → observations ("RUN CAPACITOR" etc.).
@@ -132,15 +137,23 @@ docs/
 
 ---
 
-## 5. NOT STARTED (optional / stretch)
+## 5. STRETCH GOALS — ranked (set in the 2026-06-08 grill; this is the living priority list)
 
-- ◻️ **GEPA / DSPy auto prompt-optimization** — eval harness is READY for it; documented as future work. Would chase the last ~3% F1. Needs DSPy + a reflection model (cloud-ish). Decided: document as stretch, don't build now.
-- ◻️ **Semantic recall** (embeddings / Cohere Embed) — ADR-0003's hybrid recall; currently keyword-only. "Embedding" role stubbed in resolver.
-- ◻️ **Ambiguity pause** ("Standard or Silver Duty?") — the mockup's exact variant; we built the missing-price pause instead.
-- ◻️ **Real speech-to-text** for the voice note (whisper-class local model).
-- ◻️ **Live video capture** mode.
-- ◻️ **Black Forest Labs (FLUX)** visual generation — branded headers/diagrams (sponsor stretch).
-- ◻️ **Fine-tuned model published on HF** (🎯 Well-Tuned quest) — we did eval-driven prompt tuning instead; a published fine-tune is separate.
+Order is the user's. Only pursue once committed scope (§6 deployment + §7 build order) is solid; cut from the bottom.
+
+1. **S1 — Recall eval** (~15–20 seeded Runs + scorer; recall@1 keyword vs semantic). _Highest._ Answers "does semantic Recall improve accuracy" + a 2nd measured Field-Notes data point. Borderline-committed. (ADR-0003)
+2. **S3 / S4 / S5 — sponsor-model block (equal priority):**
+   - **S3 Aya fine-tune** via `cohere-ai/cohere-finetune` (easiest tooling of any sponsor; trade-vocab translation; cheap 2nd 🎯 point).
+   - **S4 Nemotron Omni** as selectable Best-Stack Perception. **Coupled to S6:** Omni is too big to run locally via Ollama → it only runs _for real_ on the Modal backend, so "Omni working" inherits S6's effort. Cheap part (resolver dropdown) is high; running it = do S6.
+   - **S5 Nemotron Parse** inference as an extraction tool (NVIDIA breadth; no fine-tune — no recipe).
+3. **S10 — Finalize & Send (real email/SMS).** _Medium._ User has a Twilio account → real send is feasible. **Constraint:** Twilio creds can't live in a public HF Space → real send runs in the local/demo path; the hosted Space falls back to a draft/shareable-link.
+4. **S6 / S7 (equal):**
+   - **S6 Modal-backed live Space** (real models hosted; $250 credits). Also unblocks S4.
+   - **S7 Agent-trace export** to the Hub (📡 Sharing-is-Caring). Trace is shown live, not yet exported.
+5. **S2 — Inventory live-decrement** (finalize subtracts parts). Upgrades the read-only Inventory page (ADR-0010); only if core solid.
+6. **S8 — FLUX Klein** branded visuals (LoRA; delight/📡; off the core skill).
+7. **S9 — `gr.Workflow`** orchestra node-graph demo (separate artifact, goodwill only; NEVER the core app — ADR-0010).
+8. **S11 — deferred grab-bag, REVISIT FLAG.** GEPA/DSPy auto prompt-opt, live video capture, service-report mode, Parse/embed fine-tunes, ambiguity-pause variant. Explicitly deferred; some parts may be promoted later — revisit, don't enumerate now.
 
 ---
 
@@ -149,6 +162,7 @@ docs/
 The hackathon requires: **a Gradio app hosted as a Hugging Face Space** + a demo video + a social post.
 
 ### The core deployment problem (see ADR-0005)
+
 A HF Space runs models **server-side**. Free HF tier has **no GPU**; ZeroGPU is quota-limited (~3.5min/day free). Our real models (minicpm-v, nemotron, aya via Ollama) run great **locally on the dev Mac** but won't fit/perform on a free Space. Options:
 
 1. **Hosted Space = stub/lightweight mode** (`FF_REAL_MODELS` off) so it runs on CPU, AND **film the real models running locally** as the demo video (the honest "airplane-mode / no-cloud" proof). ← simplest, recommended.
@@ -156,6 +170,7 @@ A HF Space runs models **server-side**. Free HF tier has **no GPU**; ZeroGPU is 
 3. **Ollama inside the Space container** on CPU — works but slow.
 
 ### Deployment checklist (TODO)
+
 - ◻️ Decide hosting strategy (1/2/3 above). Recommend #1 for the deadline + #2 if time.
 - ◻️ Make the app a valid HF Space:
   - ◻️ `requirements.txt` (or keep pyproject) the Space build understands.
@@ -171,26 +186,37 @@ A HF Space runs models **server-side**. Free HF tier has **no GPU**; ZeroGPU is 
 - ◻️ Submit Space link + video + post by the deadline.
 
 ### Submission collateral (TODO)
+
 - ◻️ **Field Notes blog post** (📓) — centerpiece: the eval story (manual test said "perfect", eval said 0.37, drove to 0.97 via fuzzy lookup + prompt tuning). Plus: small-model orchestra, gr.Server, Facts-from-Tools, on-device/no-cloud. Sponsor mapping below.
 - ◻️ **Demo video** (~90s): pain hook → capture (photo+note) → watch Digital Apprentice stream → pause/answer → edit a rate (recalc) → language toggle (Spanish) → "wifi off, still works". Lead with Spanish (not Punjabi). Warm models first.
 - ◻️ **Agent trace export / share on Hub** (📡 Sharing-is-Caring quest) — not yet built; the trace is shown live but not exported to the Hub.
 
 ### Sponsor / bonus-quest mapping (for submission)
-- OpenBMB → MiniCPM-V (vision) ✅ · NVIDIA → Nemotron-3-Nano (brain) ✅ · Cohere → Aya (multilingual) ✅ · Gradio → gr.Server custom frontend (🎨 Off-Brand) ✅ · llama.cpp via Ollama (🦙 Llama Champion) ✅ · no third-party APIs / on-device (🔌 Off the Grid) ✅ · Field Notes (📓) ◻️ · agent trace share (📡) ◻️ · fine-tune on HF (🎯) ◻️ (we did prompt-tuning, not a published fine-tune).
+
+- OpenBMB → MiniCPM-V (vision; **central part → $10k track**, do NOT swap away) ✅ · NVIDIA → Nemotron-3-Nano (brain) ✅ + Transcribe-alt/Omni/Parse/Embed (committed/stretch) · Cohere → Aya (multilingual) ✅ + **Transcribe (Audio, committed)** · Gradio → gr.Server custom frontend (🎨 Off-Brand) ✅ · llama.cpp via Ollama (🦙 Llama Champion) ✅ · no third-party APIs / on-device (🔌 Off the Grid) ✅ · Field Notes (📓) ◻️ · agent trace share (📡) ◻️ · fine-tune on HF (🎯) ◻️ → **MiniCPM-V on CORD/SROIE (committed, ADR-0006)**.
+- ⚠️ **OpenAI prize is OUT OF SCOPE** — won by Codex-attributed commits (we build with a different agent), NOT by running gpt-oss. The spec's "gpt-oss Agent Brain" mapping is stale; brain is Nemotron (ADR-0009). Do not write submission copy claiming the OpenAI prize.
 
 ---
 
-## 7. Immediate recommended next steps (priority order)
+## 7. Build order — committed scope (set in the 2026-06-08 grill)
 
-1. **De-risk deployment EARLY**: confirm a `gradio.Server` custom-frontend app actually boots as a HF Space (the big unknown). If it doesn't, may need a thin `app.py` Server-export or a different Space config.
-2. **User manual end-to-end pass** with `FF_REAL_MODELS=1` + a real photo (vision → brain → edit → PDF → Spanish). Flag anything broken.
-3. Decide hosting (stub-Space + filmed local proof vs Modal-backed).
-4. Record the demo video + write Field Notes (the eval story is the hook).
-5. (Optional) agent-trace export for 📡, semantic recall, "send" for Finalize.
+Phases in order. **Deployment de-risk jumps the queue ahead of all new feature work** (user-agreed): an undeployed app with 6 models is worth less than a deployed app with 3. Stretch ladder = §5; pursue only after this is solid.
+
+0. **Doc-reconcile** — purge stale gpt-oss from spec §3; fix ZeroGPU figure (40 min/day, not 3.5). Small, do first so we don't build on a lie. _(docs partly done in this grill)_
+1. **Deployment de-risk** — confirm `gr.Server` boots as a **Docker-SDK Space** (now _sanctioned_ per kickoff transcript). #1 risk; nothing jumps this.
+2. **Make it a valid HF Space** under the hackathon org — requirements, README front-matter (track/badge tags), bundle `data/` + `web/`.
+3. **Audio role — Cohere Transcribe local GGUF** (typed → real spoken note). De-risk the local serve first; D-fallback = typed note in Private Stack (ADR-0009).
+4. **Semantic Recall** — Llama-Nemotron-Embed (text) via sentence-transformers, record-time cached (ADR-0003).
+5. **Secondary pages** — Dashboard / Active Jobs / Inventory, **demoable-first → functional read-models** (Inventory read-only) (ADR-0010).
+6. **MiniCPM-V fine-tune on CORD/SROIE** (Modal) — the 🎯 artifact; parallelizable, doesn't block the app (ADR-0006).
+7. **Submission collateral** — demo video (~90s), social post (link in README), **Airplane-Mode Proof** clip.
+
+**Also pending (from original handoff):** user manual end-to-end pass with `FF_REAL_MODELS=1` + real photo (vision → brain → edit → PDF → Spanish).
 
 ---
 
 ## 8. Git state
+
 - Branch `design/fieldforge`, ~30+ commits, **NOT pushed**. Working tree clean.
 - Per user's CLAUDE.md: break changes into commits; ASK before committing (or user commits); NEVER push/PR without asking; TDD; fix lint at root cause (no suppression); verify before claiming done.
 - Models pulled in Ollama on this machine: `minicpm-v` (5.5GB), `nemotron-3-nano:4b` (2.8GB), `aya` (4.8GB). Disk was tight (~11GB free) — removed gemma4/deepseek to make room; watch disk before pulling more.
