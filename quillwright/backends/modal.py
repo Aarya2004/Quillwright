@@ -42,7 +42,7 @@ class ModalModel:
         """Tool-calling chat via vLLM's OpenAI API; adapt to our message contract."""
         body = {
             "model": self._served_model,
-            "messages": messages,
+            "messages": _to_openai_messages(messages),
             "tools": tools,
             "tool_choice": "auto",
             "stream": False,
@@ -75,3 +75,49 @@ def _adapt_tool_call(tc: dict) -> dict:
         except json.JSONDecodeError:
             args = {}
     return {"function": {"name": fn.get("name", ""), "arguments": args}}
+
+
+def _to_openai_messages(messages: list[dict]) -> list[dict]:
+    """Sanitize our internal message list into valid OpenAI chat format.
+
+    vLLM's OpenAI endpoint is stricter than Ollama, which our brain_loop targets:
+      - assistant tool_calls need a string `arguments` (we carry a dict) + an `id`;
+      - each `tool` reply needs a `tool_call_id` matching its assistant tool_call.
+    We assign deterministic ids and thread them to the following tool messages, so
+    brain_loop.py / the Ollama path stay untouched.
+    """
+    out: list[dict] = []
+    pending_ids: list[str] = []  # tool_call ids awaiting their tool replies, in order
+    counter = 0
+
+    for m in messages:
+        role = m.get("role")
+        # A message carrying tool_calls is an assistant turn — even if it has no
+        # `role` (our chat() return value is appended verbatim by brain_loop and
+        # lacks one). vLLM requires role + string args + ids; normalize all of it.
+        if m.get("tool_calls"):
+            calls = []
+            for tc in m["tool_calls"]:
+                fn = tc.get("function", {}) or {}
+                args = fn.get("arguments", {})
+                if not isinstance(args, str):
+                    args = json.dumps(args)
+                tc_id = tc.get("id") or f"call_{counter}"
+                counter += 1
+                pending_ids.append(tc_id)
+                calls.append(
+                    {
+                        "id": tc_id,
+                        "type": "function",
+                        "function": {"name": fn.get("name", ""), "arguments": args},
+                    }
+                )
+            out.append(
+                {"role": "assistant", "content": m.get("content") or None, "tool_calls": calls}
+            )
+        elif role == "tool":
+            tc_id = m.get("tool_call_id") or (pending_ids.pop(0) if pending_ids else "call_0")
+            out.append({"role": "tool", "tool_call_id": tc_id, "content": m.get("content", "")})
+        else:
+            out.append(m)
+    return out
