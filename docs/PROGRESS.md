@@ -1,8 +1,18 @@
 # Quillwright — Progress & Handoff
 
-_Last updated: 2026-06-08 (late). Branch: `design/fieldforge` (project renamed to Quillwright, but the git BRANCH name is unchanged). PUSHED to GitHub `origin` (github.com/Aarya2004/Quillwright); deployed to HF Space `build-small-hackathon/Quillwright` via `hf upload`. **NOTE: the 2026-06-08-late work below (pages, chat, JSON export, recall eval, UI redesign) is COMMITTED locally but NOT yet pushed to GitHub or re-uploaded to the Space.**_
+_Last updated: 2026-06-10. Branch: `design/fieldforge` (project renamed to Quillwright; git BRANCH name unchanged). PUSHED to GitHub `origin` (github.com/Aarya2004/Quillwright) through the Modal work. **HF Space NOT re-uploaded since the 2026-06-08-early stub** — the live Space is stale (no redesign/pages/chat/real-models). The 2026-06-09/10 model wiring (Modal Best-Stack brain, semantic Recall, spoken Audio) needs torch and is LOCAL-DEMO only — not in the stub Space._
 
-> **Shipped 2026-06-08 (late) — 6 commits, all assistant-verified offline, NOT yet user-verified live + NOT pushed/redeployed:**
+> **Shipped 2026-06-09/10 — model wiring (real models, assistant-verified end-to-end):**
+>
+> - **Modal Best-Stack brain (ADR-0005/0009):** Nemotron 3 Nano **30B-A3B** (FP8) served on Modal via vLLM (NVIDIA's tool-calling recipe), reachable over HTTPS from the GPU-less Space. `backends/modal_app.py` + `ModalModel` client (OpenAI→our-shape adapter) + resolver `backend="modal"` + `FF_BACKEND=modal`. Verified: `FF_BACKEND=modal` forge → 30B → correct $171.76 estimate, 3/3 runs. Cleared 5 infra blockers (wget, volume mount, nvcc/FP8-MoE, vLLM message-format). **⚠️ Cost lesson: de-risk session ran $4.16 (failed deploys each pay a full GPU cold-start); Modal app now STOPPED. Don't leave it serving the live Space.**
+> - **Semantic Recall (S1, ADR-0003):** `llama-nemotron-embed-1b-v2` via sentence-transformers (lazy torch); `Memory(embedder=)` caches vectors at record-time, cosine re-rank at recall-time. **Measured: keyword 0.750 → semantic 0.875 (+0.125)** — the 2nd Field-Notes data point, with one honest remaining miss.
+> - **Spoken Audio (ADR-0009):** `cohere-transcribe-03-2026` on-device via transformers (AutoProcessor + CohereAsrForConditionalGeneration — `pipeline()` errors; CrispASR/llama.cpp can't serve the Conformer arch). Mic button → record → `/api/transcribe` → fills the note. Verified: trade note transcribes cleanly. Gated repo (HF access + token).
+> - **Model honesty:** boot banner (STUB vs REAL + Ollama reachability check), real model name in the trace, stale gpt-oss label fixed → Nemotron.
+> - **Real-brain chat:** chat refinement routes through the tool-calling brain under `FF_REAL_MODELS=1`/Modal (was keyword-only).
+> - **Tests: 89 → 115 pass.** ruff + prettier clean. Embedding/Audio are opt-in `[embed]`/`[audio]` extras (heavy torch; NOT in the Space).
+> - **State:** all pushed to GitHub **except** the 2 commits being shipped now (semantic Recall + Audio). Live Space still stale.
+
+> **Shipped 2026-06-08 (late) — 6 commits, all assistant-verified offline, NOT yet user-verified live (now PUSHED):**
 >
 > - **JSON export** (`api/export.py`, `/api/export_json`, "Export JSON" button) — the "no-lock-in" wedge; same server-authoritative totals as the PDF.
 > - **Conversational chat** (`api/chat.py`, `/api/chat`) — refine the estimate by talking to the Apprentice ("add a contactor", "change labor to 3 hrs", "drop the refrigerant"). Facts-from-Tools holds (catalog prices only); deterministic so the stub Space works with zero models. Real-brain wiring point noted for later.
@@ -154,7 +164,7 @@ docs/
 
 Order is the user's. Only pursue once committed scope (§6 deployment + §7 build order) is solid; cut from the bottom.
 
-1. **S1 — Recall eval** ✅ **SCAFFOLDED (2026-06-08-late)** — `data/recall_evalset.json` (18 runs, 8 queries incl. synonym-gap cases) + scorer + runner. **Keyword baseline measured recall@1 = 0.750** (a real ceiling with visible synonym misses). _Remaining:_ wire the semantic ranker (needs the embedder, ADR-0003) and report the keyword-vs-semantic delta — that's the actual Field-Notes data point. The semantic half rides the embedding role (see §7.4).
+1. **S1 — Recall eval** ✅ **DONE & MEASURED (2026-06-10)** — semantic Recall wired (`llama-nemotron-embed-1b-v2`); **keyword 0.750 → semantic 0.875 (+0.125)** on the 18-run / 8-query set. The Field-Notes data point is in hand (one honest remaining miss keeps it credible). Embedder is an opt-in `[embed]` extra (torch; not in the Space).
 2. **S3 / S4 / S5 — sponsor-model block (equal priority):**
    - **S3 Aya fine-tune** via `cohere-ai/cohere-finetune` (easiest tooling of any sponsor; trade-vocab translation; cheap 2nd 🎯 point).
    - **S4 Nemotron Omni** as selectable Best-Stack Perception. **Coupled to the Modal backend (now committed §7.2):** Omni is too big to run locally via Ollama → it only runs _for real_ on Modal, so it rides the §7.2 backend once that exists. Cheap part (resolver dropdown) is high; running it = needs Modal.
@@ -229,8 +239,8 @@ Phases in order. **Deployment de-risk jumps the queue ahead of all new feature w
 
 0. **Doc-reconcile** — purge stale gpt-oss from spec §3; fix ZeroGPU figure. Small, do first so we don't build on a lie. _(done in this grill)_
 1. ✅ **DONE (2026-06-08) — Stub Docker Space (deployment de-risk).** `gr.Server` confirmed booting as a Docker-SDK Space; built + run locally AND deployed live (stage RUNNING). Only remaining: flip Public + verify the public URL (see §6 loose ends). Resolver Modal-readiness (env-flag backend) deferred to phase 2 itself.
-2. ⬅️ **NEXT — Modal backend — hosted Space runs REAL models** _(promoted from stretch S6, 2026-06-08: user wants the clickable Space to actually run models, not just stub)_. Write `quillwright/backends/modal.py` (`ModalModel`, mirrors `OllamaModel`) + deploy the orchestra on Modal GPUs + wire the Modal token as a Space secret + handle cold starts. **Hardest single item on the board** — internal de-risk: get ONE model (the brain) working Space→Modal end-to-end before doing all three (MiniCPM-V, Nemotron, Aya). Why Modal not ZeroGPU: ZeroGPU is Gradio-SDK-only + breaks with FastAPI/`gr.Server` (verified, ADR-0005); Modal is an outbound HTTPS call that works with Docker SDK and keeps the 🎨 bespoke frontend.
-3. **Audio role — Cohere Transcribe local GGUF** (typed → real spoken note). De-risk the local serve first; D-fallback = typed note in Private Stack (ADR-0009).
+2. ✅ **DONE (2026-06-10) — Modal Best-Stack BRAIN.** Nemotron 30B-A3B (FP8) on Modal via vLLM, proven end-to-end (`FF_BACKEND=modal` forge → correct estimate). De-risk scope satisfied (brain only). **Remaining for full Modal:** (a) vision (Omni) + multilingual still copy this pattern — NOT done; (b) the **live Space isn't wired to Modal** (needs `FF_BACKEND`/`FF_MODAL_BRAIN_URL` as Space secrets) — deferred given the $4.16 cost lesson + continuous-spend risk of a judge-clickable hosted GPU. Modal app currently STOPPED.
+3. ✅ **DONE (2026-06-10) — Audio role.** `cohere-transcribe-03-2026` on-device via transformers (NOT llama.cpp — Conformer arch unsupported; that ADR-0009 assumption was wrong, verified). Mic capture → `/api/transcribe` → note field. Opt-in `[audio]` extra; gated repo. Spoken voice note is now REAL (was typed).
 4. **Semantic Recall** — Llama-Nemotron-Embed (text) via sentence-transformers, record-time cached (ADR-0003).
 5. ✅ **DONE (2026-06-08-late) — Secondary pages** — Dashboard / Active Jobs / Inventory shipped as honest read-models (Dashboard + Jobs over the real memory store; Inventory read-only over seeded JSON). Demoable-first satisfied (ADR-0010). _Only the live-inventory-decrement upgrade (S2) remains, and it's optional._
 6. **MiniCPM-V fine-tune on CORD/SROIE** (Modal) — the 🎯 artifact; parallelizable, doesn't block the app (ADR-0006).
