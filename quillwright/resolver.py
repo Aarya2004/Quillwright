@@ -92,6 +92,12 @@ class ModelResolver:
     def for_role(self, role: str) -> Model:
         if role in self._overrides:
             return self._overrides[role]
+        # Embedding has ONE serving path (sentence-transformers, ADR-0003) regardless
+        # of mode/backend — it is not an Ollama/Modal model. Resolve it directly.
+        if role == "embedding" and self._backend != "stub":
+            from quillwright.backends.embedding import EmbeddingModel
+
+            return EmbeddingModel()
         if self._backend == "ollama":
             if role not in OLLAMA_TAGS:
                 raise KeyError(f"no ollama tag for role: {role}")

@@ -85,3 +85,43 @@ def test_profile_reports_revenue_total_over_recorded_runs(tmp_path):
     prof = mem.profile()
     assert prof["job_count"] == 3
     assert prof["revenue_total"] == 150.5
+
+
+class _FakeEmbedder:
+    """Synonym-aware fake: 'coolant' ~ 'refrigerant', far from 'capacitor'."""
+
+    name = "fake"
+    _V = {"coolant": [1.0, 0.9], "refrigerant": [1.0, 1.0], "capacitor": [0.0, 1.0]}
+
+    def encode(self, text):
+        t = text.lower()
+        for k, v in self._V.items():
+            if k in t:
+                return v
+        return [0.2, 0.2]
+
+
+def test_recall_without_embedder_is_keyword_only(tmp_path):
+    # default behavior unchanged — no embedder, literal match required.
+    mem = Memory(str(tmp_path / "m.json"))
+    mem.record_run("topped up the refrigerant", ["R-410A refrigerant"])
+    assert mem.recall("coolant") == []  # no literal overlap -> keyword miss
+
+
+def test_recall_with_embedder_finds_synonym(tmp_path):
+    emb = _FakeEmbedder()
+    mem = Memory(str(tmp_path / "m.json"), embedder=emb)
+    mem.record_run("topped up the refrigerant", ["R-410A refrigerant"])
+    mem.record_run("replaced the capacitor", ["Dual run capacitor"])
+    runs = mem.recall("coolant recharge")  # 'coolant' never literal; semantic hit
+    assert runs and "refrigerant" in runs[0]["line_items"][0].lower()
+
+
+def test_record_run_caches_embedding_in_json(tmp_path):
+    path = str(tmp_path / "m.json")
+    mem = Memory(path, embedder=_FakeEmbedder())
+    mem.record_run("topped up the refrigerant", ["R-410A refrigerant"])
+    import json
+
+    saved = json.load(open(path))["runs"][0]
+    assert "embedding" in saved and len(saved["embedding"]) == 2

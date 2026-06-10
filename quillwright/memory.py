@@ -10,8 +10,12 @@ from collections import Counter
 
 
 class Memory:
-    def __init__(self, path: str):
+    def __init__(self, path: str, embedder=None):
+        # `embedder` (anything with .encode(text)->vector) turns Recall semantic:
+        # run vectors are cached at record time, only the query is embedded at recall
+        # time (ADR-0003). Without one, Recall stays keyword-only (unchanged default).
         self._path = path
+        self._embedder = embedder
         self._runs: list[dict] = []
         self._load()
 
@@ -23,9 +27,11 @@ class Memory:
     def record_run(
         self, transcript: str, line_items: list[str], total: float | None = None
     ) -> None:
-        self._runs.append(
-            {"transcript": transcript, "line_items": list(line_items), "total": total}
-        )
+        run = {"transcript": transcript, "line_items": list(line_items), "total": total}
+        if self._embedder is not None:
+            # Cache the run's embedding now so recall only embeds the query.
+            run["embedding"] = list(self._embedder.encode(self._haystack(run)))
+        self._runs.append(run)
         self._save()
 
     def recent(self, limit: int | None = None) -> list[dict]:
@@ -44,11 +50,24 @@ class Memory:
             json.dump({"runs": self._runs}, f, indent=2)
 
     def recall(self, query: str) -> list[dict]:
+        if self._embedder is not None:
+            return self._semantic_recall(query)
         q = query.strip().lower()
         scored = [(self._haystack(r).count(q), r) for r in self._runs]
         matches = [(score, r) for score, r in scored if score > 0]
         matches.sort(key=lambda sr: sr[0], reverse=True)
         return [r for _score, r in matches]
+
+    def _semantic_recall(self, query: str) -> list[dict]:
+        """Rank past runs by embedding cosine similarity to the query (ADR-0003).
+
+        Reuses recall_eval's ranker so there is one cosine implementation. Runs
+        without a cached embedding (recorded before the embedder) fall to the bottom.
+        """
+        from quillwright.recall_eval import semantic_ranker
+
+        scored = [r for r in self._runs if r.get("embedding")]
+        return semantic_ranker(query, scored, self._embedder)
 
     @staticmethod
     def _haystack(run: dict) -> str:

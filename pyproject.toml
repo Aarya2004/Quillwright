@@ -13,6 +13,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.15"]
+# Semantic Recall embedder (ADR-0003): heavy (~2GB torch). Opt-in — NOT in the Space
+# requirements.txt (stub mode has no torch). Install with: pip install -e ".[embed]"
+embed = ["sentence-transformers>=3.0", "numpy>=1.26"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

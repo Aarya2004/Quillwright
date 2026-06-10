@@ -49,6 +49,36 @@ def recall_at_1(queries: list[dict], corpus: list[dict], ranker) -> float:
     return round(hits / len(queries), 3)
 
 
+def embed_corpus(corpus: list[dict], embedder) -> list[dict]:
+    """Attach a cached embedding to each run (mirrors record-time caching in prod).
+
+    `embedder` is anything with `.encode(text) -> vector`; we embed the same haystack
+    (transcript + line items) the keyword path searches.
+    """
+    out = []
+    for r in corpus:
+        out.append({**r, "embedding": list(embedder.encode(_haystack(r)))})
+    return out
+
+
+def _cosine(a, b) -> float:
+    import numpy as np
+
+    va, vb = np.asarray(a, dtype=float), np.asarray(b, dtype=float)
+    na, nb = np.linalg.norm(va), np.linalg.norm(vb)
+    if na == 0 or nb == 0:
+        return 0.0
+    return float(va @ vb / (na * nb))
+
+
+def semantic_ranker(query: str, runs: list[dict], embedder) -> list[dict]:
+    """Rank runs by cosine similarity between the query embedding and each run's
+    cached embedding. Only the query is embedded at call time (torch out of the hot
+    path); run embeddings come from embed_corpus / record-time caching (ADR-0003)."""
+    qv = embedder.encode(query)
+    return sorted(runs, key=lambda r: _cosine(qv, r.get("embedding", [])), reverse=True)
+
+
 def keyword_recall_at_1(queries: list[dict], corpus: list[dict]) -> float:
     """recall@1 using the keyword baseline ranker.
 
