@@ -43,6 +43,9 @@ image = (
             # FP8 MoE acceleration (FP8 variant only), per NVIDIA's recipe.
             "VLLM_USE_FLASHINFER_MOE_FP8": "1",
             "VLLM_FLASHINFER_MOE_BACKEND": "throughput",
+            # Download weights into the mounted cache volume (NOT ~/.cache, which the
+            # build populates — Modal refuses to mount a volume over a non-empty dir).
+            "HF_HOME": "/cache",
         }
     )
 )
@@ -56,7 +59,7 @@ app = modal.App("quillwright-brain")
 @app.function(
     image=image,
     gpu="L40S",  # FP8 needs ~32GB VRAM; L40S has 48GB (A10G's 24GB is too small).
-    volumes={"/root/.cache/huggingface": hf_cache},
+    volumes={"/cache": hf_cache},  # clean mount point; HF_HOME points here.
     timeout=1200,
     scaledown_window=300,  # stay warm 5 min after a request to mask cold starts.
 )
