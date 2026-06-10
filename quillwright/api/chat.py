@@ -19,7 +19,6 @@ import re
 
 from quillwright.api.recalc import recalc_estimate
 from quillwright.catalog import Catalog
-from quillwright.resolver import ModelResolver
 
 CATALOG = Catalog.from_file("data/sample_catalog.json")
 REAL_MODELS = os.environ.get("FF_REAL_MODELS") == "1"
@@ -241,9 +240,11 @@ def _keyword_chat(message: str, rows: list[dict], tax_rate: float) -> dict:
 
 
 def _resolve_brain():
-    """Real tool-calling model when FF_REAL_MODELS=1; else None (keyword path)."""
-    if REAL_MODELS:
-        return ModelResolver(mode="private", backend="ollama").for_role("brain")
+    """Real tool-calling model when enabled (local Ollama or hosted Modal); else None."""
+    if REAL_MODELS or os.environ.get("FF_BACKEND") == "modal":
+        from quillwright.resolver import brain_resolver
+
+        return brain_resolver().for_role("brain")
     return None
 
 

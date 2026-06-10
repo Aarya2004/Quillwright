@@ -45,3 +45,34 @@ def test_ollama_backend_returns_real_model_with_local_tag():
     # maps to the actual local Ollama tags
     assert brain.name == "nemotron-3-nano:4b"
     assert vision.name == "minicpm-v"
+
+
+def test_modal_backend_returns_modal_brain(monkeypatch):
+    from quillwright.backends.modal import ModalModel
+
+    monkeypatch.setenv("FF_MODAL_BRAIN_URL", "https://example--quillwright-brain-serve")
+    resolver = ModelResolver(mode="best", backend="modal")
+    brain = resolver.for_role("brain")
+    assert isinstance(brain, ModalModel)
+    assert brain.name == "nemotron-3-nano-30b-a3b"
+
+
+def test_modal_backend_rejects_roles_not_yet_hosted():
+    # de-risk scope = brain only; vision/multilingual must fail LOUD, not silently stub.
+    resolver = ModelResolver(mode="best", backend="modal")
+    for role in ("perception", "multilingual"):
+        try:
+            resolver.for_role(role)
+            assert False, f"expected KeyError for {role}"
+        except KeyError:
+            pass
+
+
+def test_modal_model_requires_url():
+    from quillwright.backends.modal import ModalModel
+
+    try:
+        ModalModel("brain", base_url="")
+        assert False, "expected RuntimeError when no URL configured"
+    except RuntimeError:
+        pass

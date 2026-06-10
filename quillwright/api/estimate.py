@@ -67,9 +67,15 @@ def _perception(transcript: str, has_real_image: bool):
 
 
 def _brain():
-    """Real Ollama tool-calling brain when FF_REAL_MODELS=1; else None (deterministic path)."""
-    if REAL_MODELS:
-        return ModelResolver(mode="private", backend="ollama").for_role("brain")
+    """Real tool-calling brain when enabled; else None (deterministic path).
+
+    Local Ollama (FF_REAL_MODELS=1) or hosted Modal Best-Stack (FF_BACKEND=modal);
+    brain_resolver() picks based on env.
+    """
+    if REAL_MODELS or os.environ.get("FF_BACKEND") == "modal":
+        from quillwright.resolver import brain_resolver
+
+        return brain_resolver().for_role("brain")
     return None
 
 

@@ -53,6 +53,29 @@ OLLAMA_TAGS = {
     "multilingual": "aya",
 }
 
+# Roles served on Modal (ADR-0005 hosted compute). De-risk scope = brain only for
+# now (ADR-0009 Best-Stack brain = Nemotron 30B-A3B); vision/multilingual follow
+# once the brain path is proven. The label is informational; modal_app.py pins the
+# real repo id.
+MODAL_ROLES = {
+    "brain": "nemotron-3-nano-30b-a3b",
+}
+
+
+def brain_resolver() -> "ModelResolver":
+    """The resolver for the agent brain, chosen by env (one source of truth).
+
+    FF_BACKEND=modal  -> Best-Stack brain (Nemotron 30B) hosted on Modal (ADR-0009).
+    otherwise         -> Private-Stack brain (Nemotron 4B) via local Ollama.
+
+    Perception + multilingual stay on Ollama for now (Modal de-risk = brain only).
+    """
+    import os
+
+    if os.environ.get("FF_BACKEND") == "modal":
+        return ModelResolver(mode="best", backend="modal")
+    return ModelResolver(mode="private", backend="ollama")
+
 
 class ModelResolver:
     def __init__(
@@ -75,6 +98,14 @@ class ModelResolver:
             from quillwright.backends.ollama import OllamaModel
 
             return OllamaModel(OLLAMA_TAGS[role])
+        if self._backend == "modal":
+            if role not in MODAL_ROLES:
+                raise KeyError(
+                    f"role '{role}' is not served on Modal yet (de-risk scope = brain only)"
+                )
+            from quillwright.backends.modal import ModalModel
+
+            return ModalModel(MODAL_ROLES[role])
         if role not in self._roles:
             raise KeyError(f"unknown role: {role}")
         return StubModel(responses=[""], name=self._roles[role])
