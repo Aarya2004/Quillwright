@@ -26,10 +26,11 @@ import modal
 MODEL = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8"  # ADR-0009 Best-Stack brain, FP8 (~32GB).
 VLLM_PORT = 8000
 image = (
-    modal.Image.debian_slim(python_version="3.12")
+    # CUDA *devel* base (includes nvcc): FlashInfer's FP8 MoE kernel JIT-compiles at
+    # runtime, so debian_slim (no nvcc) crashes engine init. This matches torch's cu12.
+    modal.Image.from_registry("nvidia/cuda:12.8.1-devel-ubuntu22.04", add_python="3.12")
     .pip_install("vllm==0.12.0", "huggingface_hub", "flashinfer-python")
-    # Fetch NVIDIA's custom reasoning-parser plugin via huggingface_hub (debian_slim
-    # has no wget; hf_hub_download also handles HF redirects/caching correctly).
+    # Fetch NVIDIA's custom reasoning-parser plugin via huggingface_hub.
     .run_commands(
         'python -c "'
         "from huggingface_hub import hf_hub_download; import shutil; "
