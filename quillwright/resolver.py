@@ -98,6 +98,12 @@ class ModelResolver:
             from quillwright.backends.embedding import EmbeddingModel
 
             return EmbeddingModel()
+        # Audio (Cohere Transcribe) likewise has ONE on-device path via transformers
+        # (ADR-0009) — not Ollama. Resolve it directly for any non-stub backend.
+        if role == "audio" and self._backend != "stub":
+            from quillwright.backends.audio import AudioModel
+
+            return AudioModel()
         if self._backend == "ollama":
             if role not in OLLAMA_TAGS:
                 raise KeyError(f"no ollama tag for role: {role}")

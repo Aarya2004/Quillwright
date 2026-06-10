@@ -16,6 +16,9 @@ dev = ["pytest>=8.0", "ruff>=0.15"]
 # Semantic Recall embedder (ADR-0003): heavy (~2GB torch). Opt-in — NOT in the Space
 # requirements.txt (stub mode has no torch). Install with: pip install -e ".[embed]"
 embed = ["sentence-transformers>=3.0", "numpy>=1.26"]
+# Spoken voice note via Cohere Transcribe (ADR-0009): on-device STT. Opt-in, heavy.
+# Gated model — needs HF access + token. Install with: pip install -e ".[audio]"
+audio = ["transformers>=5.4", "torch", "accelerate", "soundfile", "librosa", "sentencepiece", "protobuf"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

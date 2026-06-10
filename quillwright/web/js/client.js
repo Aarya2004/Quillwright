@@ -59,6 +59,17 @@ export async function recalc(rows, jobTitle, taxRate) {
   return res.json();
 }
 
+// Transcribe a recorded voice note (base64 data URL) into text (Cohere Transcribe).
+export async function transcribeNote(dataUrl, filename) {
+  const res = await fetch("/api/transcribe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data: dataUrl, filename }),
+  });
+  const out = await res.json();
+  return out.transcript || "";
+}
+
 // Refine the current estimate conversationally (the Digital Apprentice chat).
 // Returns {estimate, reply, needs_price}.
 export async function chatAboutEstimate(message, rows, taxRate) {

@@ -8,6 +8,7 @@ import {
   downloadJson,
   translateEstimate,
   chatAboutEstimate,
+  transcribeNote,
 } from "./client.js";
 import { resetTrace, addStep } from "./trace.js";
 
@@ -28,6 +29,42 @@ function readAsDataURL(file) {
     reader.onload = () => resolve(reader.result);
     reader.readAsDataURL(file);
   });
+}
+
+// --- Voice note: record via mic, transcribe (Cohere Transcribe), fill the note ---
+let mediaRecorder = null;
+let recordedChunks = [];
+
+async function toggleRecording() {
+  const btn = $("mic-btn");
+  // Stop if already recording.
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+    return;
+  }
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch {
+    btn.title = "Mic permission denied";
+    return;
+  }
+  recordedChunks = [];
+  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder.ondataavailable = (e) => e.data.size && recordedChunks.push(e.data);
+  mediaRecorder.onstop = async () => {
+    stream.getTracks().forEach((t) => t.stop());
+    btn.classList.remove("recording");
+    btn.innerHTML = '<span class="material-symbols-outlined">hourglass_top</span>';
+    const blob = new Blob(recordedChunks, { type: "audio/webm" });
+    const dataUrl = await readAsDataURL(blob);
+    const text = await transcribeNote(dataUrl, "note.webm");
+    if (text) $("transcript").value = text;
+    btn.innerHTML = '<span class="material-symbols-outlined">mic</span>';
+  };
+  mediaRecorder.start();
+  btn.classList.add("recording");
+  btn.innerHTML = '<span class="material-symbols-outlined">stop</span>';
 }
 
 async function onPhotos(e) {
@@ -284,6 +321,7 @@ function addItem() {
 $("forge-btn").addEventListener("click", forge);
 $("new-estimate-btn").addEventListener("click", newEstimate);
 $("photo-input").addEventListener("change", onPhotos);
+$("mic-btn").addEventListener("click", toggleRecording);
 $("add-item-btn").addEventListener("click", addItem);
 $("pdf-btn").addEventListener("click", () => downloadPdf(rows, JOB_TITLE, TAX_RATE));
 $("json-btn").addEventListener("click", () => downloadJson(rows, JOB_TITLE, TAX_RATE));

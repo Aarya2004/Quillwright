@@ -21,6 +21,7 @@ from quillwright.api.chat import chat_about_estimate
 from quillwright.api.export import estimate_to_json_payload
 from quillwright.api.pages import dashboard_data, inventory_data, jobs_data
 from quillwright.api.recalc import recalc_estimate
+from quillwright.api.transcribe import transcribe_audio
 from quillwright.api.translate import translate_estimate
 from quillwright.api.upload import save_upload
 from quillwright.models import Estimate, LineItem
@@ -88,6 +89,13 @@ def api_upload(payload: dict = Body(...)) -> dict:
     """Save a base64 image; returns its server path for the next forge call."""
     path = save_upload(payload["data"], payload.get("filename", "photo.png"))
     return {"path": path}
+
+
+@app.post("/api/transcribe")
+def api_transcribe(payload: dict = Body(...)) -> dict:
+    """Transcribe a base64 voice note into text (Cohere Transcribe, on-device)."""
+    path = save_upload(payload["data"], payload.get("filename", "note.wav"))
+    return transcribe_audio(path)
 
 
 @app.post("/api/recalc")
