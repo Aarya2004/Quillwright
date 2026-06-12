@@ -824,6 +824,21 @@ tbody tr.row-enter {
     transform: scale(1);
   }
 }
+/* A rate cell the apprentice just changed via chat: a brief highlight so the eye
+   lands on what moved (the table re-renders, so this draws attention to the new value). */
+td.cell-pulse {
+  animation: cell-pulse 1s ease;
+}
+@keyframes cell-pulse {
+  0% {
+    background: var(--primary-container);
+    box-shadow: inset 0 0 0 2px var(--primary);
+  }
+  100% {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px transparent;
+  }
+}
 @keyframes msg-in {
   from {
     opacity: 0;
@@ -858,6 +873,7 @@ tbody tr.row-enter {
   .pause-card,
   .doc-item,
   .live .live-dot,
+  td.cell-pulse,
   #forge-btn:disabled .material-symbols-outlined {
     animation: none !important;
   }

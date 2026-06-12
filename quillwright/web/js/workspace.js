@@ -200,6 +200,18 @@ function renderRows(animate = false) {
     .join("");
 }
 
+// Pulse the rate cell of the row matching `description` — used when the apprentice
+// applies a user-confirmed rate via chat, so the eye lands on what just changed.
+function pulseRateCell(description) {
+  const i = rows.findIndex((r) => r.description === description);
+  if (i < 0) return;
+  const cell = document.querySelector(`#est-rows tr[data-i="${i}"] td[data-field="rate"]`);
+  if (!cell) return;
+  cell.classList.remove("cell-pulse");
+  void cell.offsetWidth; // restart the animation if it was already applied
+  cell.classList.add("cell-pulse");
+}
+
 // Flash the total when it changes (subtle "the number moved" cue).
 let lastTotal = null;
 function bumpTotal() {
@@ -408,6 +420,8 @@ async function sendChat(e) {
     if (out.estimate) {
       // Adopt the refined estimate; the right pane updates + total bumps.
       setEstimate(out.estimate);
+      // If a rate changed via chat, pulse that cell so the eye lands on it.
+      if (out.changed) pulseRateCell(out.changed);
     }
   } catch (err) {
     typing.remove();
