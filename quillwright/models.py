@@ -19,12 +19,33 @@ class LineItem(BaseModel):
     quantity: float
     unit: str
     rate: float
-    price_source: Literal["catalog", "user", "computed"] = "catalog"
+    # "document" = a price Parse read from a Document Capture that the human has
+    # confirmed verbatim through the Agent Pause (ADR-0011). The document is the
+    # source, but the number is still user-gated — it never enters an Estimate
+    # straight from the model.
+    price_source: Literal["catalog", "user", "computed", "document"] = "catalog"
 
     @computed_field
     @property
     def subtotal(self) -> float:
         return round(self.quantity * self.rate, 2)
+
+
+class ProposedLineItem(BaseModel):
+    """A priced row Parse read from a Document Capture, awaiting human confirmation.
+
+    Not an Estimate line yet: per Facts-from-Tools (ADR-0004) + ADR-0011, a price
+    a model read off a document is *proposed*, not a fact. The human confirms or
+    edits it via the Agent Pause; on confirm it becomes a LineItem with
+    price_source="document". `source_text` is the raw cell the price came from, so
+    the human can spot an OCR slip (e.g. "$42.50" misread as "$425.0").
+    """
+
+    description: str
+    quantity: float = 1.0
+    unit: str = "ea"
+    rate: float
+    source_text: str = ""
 
 
 class Estimate(BaseModel):
