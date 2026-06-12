@@ -1,9 +1,9 @@
 name: CI
 
+# Manual-only to conserve GitHub Actions minutes — does NOT run on push/PR.
+# Launch from the Actions tab ("Run workflow") or: gh workflow run ci.yml
 on:
-  push:
-    branches: [main, "design/**"]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   test:

@@ -81,7 +81,8 @@ python scripts/check_deps_sync.py                      # pyproject ↔ requireme
 FF_REAL_MODELS=1 PYTHONPATH=. python scripts/run_brain_eval.py
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same gate on every push/PR: the
-dependency-sync check, ruff lint/format, pytest, and the web prettier check.
+CI (`.github/workflows/ci.yml`) runs the same gate — the dependency-sync check,
+ruff lint/format, pytest, and the web prettier check. It is **manual-only** (to
+conserve Actions minutes): trigger it from the Actions tab or `gh workflow run ci.yml`.
 
 Models resolve per role via `quillwright/resolver.py` (stub ↔ Ollama). Pricing is clearly-labeled sample data.
