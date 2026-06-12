@@ -66,7 +66,8 @@ app = modal.App("quillwright-parse")
     gpu="T4",  # Parse is ~1GB; a T4 is plenty (and the cheapest GPU).
     volumes={"/cache": hf_cache},
     timeout=600,
-    scaledown_window=240,
+    scaledown_window=240,  # cheap T4 — modest idle burn, kept warm a bit longer for multi-doc capture.
+    min_containers=0,  # true scale-to-zero: $0 when idle (open-ended judging window — never pre-warm-and-forget).
 )
 @modal.concurrent(max_inputs=4)
 class Parser:

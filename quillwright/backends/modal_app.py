@@ -62,7 +62,8 @@ app = modal.App("quillwright-brain")
     gpu="L40S",  # FP8 needs ~32GB VRAM; L40S has 48GB (A10G's 24GB is too small).
     volumes={"/cache": hf_cache},  # clean mount point; HF_HOME points here.
     timeout=1200,
-    scaledown_window=300,  # stay warm 5 min after a request to mask cold starts.
+    scaledown_window=120,  # warm 2 min after a request (masks cold starts; limits idle L40S burn).
+    min_containers=0,  # true scale-to-zero: $0 when idle (open-ended judging window — never pre-warm-and-forget).
 )
 @modal.concurrent(max_inputs=8)
 @modal.web_server(port=VLLM_PORT, startup_timeout=900)

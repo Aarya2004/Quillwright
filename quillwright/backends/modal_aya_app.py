@@ -41,7 +41,8 @@ app = modal.App("quillwright-aya")
     gpu="A10G",  # 8B BF16 ~16GB; A10G's 24GB fits with short-context headroom.
     volumes={"/cache": hf_cache},
     timeout=1200,
-    scaledown_window=300,  # stay warm 5 min after a request to mask cold starts.
+    scaledown_window=300,  # stay warm 5 min after a request to mask cold starts (cheap A10G — idle burn is low).
+    min_containers=0,  # true scale-to-zero: $0 when idle (open-ended judging window — never pre-warm-and-forget).
 )
 @modal.concurrent(max_inputs=8)
 @modal.web_server(port=VLLM_PORT, startup_timeout=900)

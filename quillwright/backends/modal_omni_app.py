@@ -58,7 +58,8 @@ app = modal.App("quillwright-omni")
     gpu="L40S",  # FP8 weights 32.8GB; encoders BF16. 48GB with a small context fits.
     volumes={"/cache": hf_cache},
     timeout=1200,
-    scaledown_window=300,  # stay warm 5 min after a request to mask cold starts.
+    scaledown_window=120,  # warm 2 min after a request (masks cold starts; limits idle L40S burn).
+    min_containers=0,  # true scale-to-zero: $0 when idle (open-ended judging window — never pre-warm-and-forget).
 )
 @modal.concurrent(max_inputs=8)
 @modal.web_server(port=VLLM_PORT, startup_timeout=900)
