@@ -13,6 +13,7 @@ dependencies = [
   "pydantic>=2.7",
   "reportlab>=4.2",
   "uvicorn>=0.30",
+  "requests>=2.31",
 ]
 
 [project.optional-dependencies]
