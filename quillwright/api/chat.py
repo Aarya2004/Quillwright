@@ -49,9 +49,23 @@ def _to_qty(text: str) -> float | None:
     return None
 
 
-def _finish(rows: list[dict], tax_rate: float, reply: str, needs_price: bool = False) -> dict:
+def _to_dollar_amount(text: str) -> float | None:
+    """An explicit dollar amount ($30, $30.50) -> float, or None. Requires the `$`
+    so a bare quantity number is never mistaken for a user-stated price."""
+    m = re.search(r"\$\s*(\d+(?:\.\d+)?)", text)
+    return float(m.group(1)) if m else None
+
+
+def _finish(
+    rows: list[dict],
+    tax_rate: float,
+    reply: str,
+    needs_price: bool = False,
+    changed: str | None = None,
+) -> dict:
     est = recalc_estimate(rows, job_title="Estimate", tax_rate=tax_rate)
-    return {"estimate": est, "reply": reply, "needs_price": needs_price}
+    # `changed` names the line whose rate just changed, so the UI can pulse that cell.
+    return {"estimate": est, "reply": reply, "needs_price": needs_price, "changed": changed}
 
 
 def _find_row(rows: list[dict], text: str) -> int | None:
@@ -113,6 +127,49 @@ def _op_change_qty(rows: list[dict], item: str, quantity: float | None) -> dict:
     return {"reply": f"Set {rows[i]['description']} to {quantity:g}. Recalculated the total."}
 
 
+def _op_change_rate(rows: list[dict], item: str, rate: float | None, scope: str | None) -> dict:
+    """Set a line's rate to a USER-SUPPLIED number (Facts-from-Tools: the number is
+    the user's, never the model's). Asks estimate-vs-catalog before applying when the
+    scope is unspecified.
+
+    scope="estimate" -> this row only (price_source="user").
+    scope="catalog"  -> also writes the in-session catalog so later adds use it.
+    """
+    i = _find_row(rows, item)
+    if i is None or rate is None:
+        return {
+            "reply": "Tell me which line and the exact rate — e.g. “set the capacitor rate to $30”."
+        }
+    if scope not in ("estimate", "catalog"):
+        # Numbers are user-confirmed, but we still ask WHERE it applies before changing.
+        return {
+            "reply": (
+                f"Should ${rate:.2f} for {rows[i]['description']} apply to just this "
+                "estimate, or update the catalog price for future jobs too? "
+                "Say “this estimate” or “the catalog”."
+            )
+        }
+    rows[i]["rate"] = rate
+    rows[i]["price_source"] = "user"  # a human-confirmed price, not catalog/computed
+    desc = rows[i]["description"]
+    if scope == "catalog":
+        # Update the in-session catalog so a later add of the same part picks it up.
+        existing = CATALOG.lookup(desc) or {}
+        CATALOG.add(
+            key=existing.get("key", desc.lower().replace(" ", "_")),
+            description=desc,
+            unit=rows[i].get("unit", existing.get("unit", "ea")),
+            rate=rate,
+        )
+        where = "this estimate and the catalog"
+    else:
+        where = "this estimate"
+    return {
+        "reply": f"Set {desc} to ${rate:.2f} for {where}. Recalculated the total.",
+        "changed": desc,
+    }
+
+
 # --- LLM tool surface: the model only PICKS the operation + item (+ quantity);
 #     execution + pricing stay in the deterministic ops above. ---
 
@@ -159,12 +216,49 @@ CHAT_TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "change_rate",
+            "description": (
+                "Set the rate (unit price) of an existing line item to a price the USER "
+                "EXPLICITLY STATED. Only call this when the user gave an exact number — "
+                "never choose or estimate a price yourself. `scope` says where it applies: "
+                "'estimate' (this estimate only) or 'catalog' (also the catalog, for future "
+                "jobs). If the user did not say which, OMIT scope — the assistant will ask."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "item": {"type": "string", "description": "the item whose rate to set"},
+                    "rate": {
+                        "type": "number",
+                        "description": "the exact unit price the user stated (e.g. 30 for $30)",
+                    },
+                    "scope": {
+                        "type": "string",
+                        "enum": ["estimate", "catalog"],
+                        "description": "'estimate' = this estimate only; 'catalog' = also "
+                        "the catalog. Omit if the user didn't specify.",
+                    },
+                },
+                "required": ["item", "rate"],
+            },
+        },
+    },
 ]
 
 _CHAT_SYSTEM = (
     "You are a field-service estimator's assistant. The user wants to refine the current "
     "estimate. Decide the single edit they're asking for and call ONE tool: add_item, "
-    "remove_item, or change_quantity. Never invent prices — the tool applies the catalog price. "
+    "remove_item, change_quantity, or change_rate. "
+    "Never invent prices. For add_item the catalog supplies the price. "
+    "change_rate is ONLY for a price the user STATED EXACTLY (e.g. “make it $30”): pass that "
+    "exact number as `rate`. If the user asks to change a price WITHOUT giving a number "
+    "(e.g. “make it cheaper”), do NOT call change_rate and do NOT pick a number — answer in "
+    "plain text asking what rate they want. When you do call change_rate, include `scope` "
+    "ONLY if the user said whether it applies to just this estimate or the catalog; if they "
+    "did not say, omit `scope` and the assistant will ask. "
     "If they're only asking a question (not requesting an edit), answer briefly in plain text "
     "and call no tool."
 )
@@ -180,7 +274,12 @@ def _apply_model_call(name: str, args: dict, rows: list[dict]) -> dict:
         return _op_remove(rows, item)
     if name == "change_quantity":
         return _op_change_qty(rows, item, qty)
-    return {"reply": "I'm not sure how to do that — try add, remove, or change a quantity."}
+    if name == "change_rate":
+        rate = args.get("rate")
+        rate = float(rate) if isinstance(rate, (int, float)) else None
+        scope = args.get("scope")
+        return _op_change_rate(rows, item, rate, scope)
+    return {"reply": "I'm not sure how to do that — try add, remove, or change a quantity or rate."}
 
 
 def _model_chat(message: str, rows: list[dict], tax_rate: float, model) -> dict:
@@ -201,7 +300,13 @@ def _model_chat(message: str, rows: list[dict], tax_rate: float, model) -> dict:
 
     fn = tool_calls[0].get("function", {})
     result = _apply_model_call(fn.get("name", ""), fn.get("arguments", {}) or {}, rows)
-    return _finish(rows, tax_rate, result["reply"], needs_price=result.get("needs_price", False))
+    return _finish(
+        rows,
+        tax_rate,
+        result["reply"],
+        needs_price=result.get("needs_price", False),
+        changed=result.get("changed"),
+    )
 
 
 def _keyword_chat(message: str, rows: list[dict], tax_rate: float) -> dict:
@@ -215,6 +320,17 @@ def _keyword_chat(message: str, rows: list[dict], tax_rate: float) -> dict:
     if re.search(r"\b(remove|delete|drop|take off|get rid of)\b", msg):
         result = _op_remove(rows, msg)
         return _finish(rows, tax_rate, result["reply"])
+
+    # An explicit dollar amount ("set the capacitor rate to $30") is a user-confirmed
+    # rate change. Checked BEFORE the quantity branch so the "$30" isn't read as a qty.
+    # The keyword path can't hold a follow-up turn, so it takes the conservative
+    # estimate-only scope (the model path is the one that asks catalog-vs-estimate).
+    rate_amount = _to_dollar_amount(msg)
+    if rate_amount is not None and re.search(r"\b(rate|price|charge|cost)\b", msg):
+        i = _find_row(rows, msg)
+        if i is not None:
+            result = _op_change_rate(rows, rows[i]["description"], rate_amount, scope="estimate")
+            return _finish(rows, tax_rate, result["reply"], changed=result.get("changed"))
 
     if re.search(r"\b(change|set|make|update)\b", msg) or re.search(
         r"\bto\b.*\b(hour|hr|unit|lb|pound)", msg

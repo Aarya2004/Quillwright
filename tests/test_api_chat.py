@@ -108,3 +108,86 @@ def test_model_plain_text_answer_leaves_estimate_unchanged():
     out = chat_about_estimate("why R-410A not R-22?", _rows(), tax_rate=0.13, model=model)
     assert len(out["estimate"]["line_items"]) == 2
     assert "R-410A" in out["reply"]
+
+
+# --- Rate edits: a user-confirmed price is allowed (Facts-from-Tools: the NUMBER
+#     comes from the user, never the model). The apprentice must ask whether the
+#     change is just this estimate or the whole catalog before applying. ---
+
+
+def test_change_rate_estimate_scope_updates_only_this_row():
+    # User gave an explicit number ($30) AND the scope (just this estimate).
+    model = StubModel(
+        responses=[],
+        chats=[_tc("change_rate", item="capacitor", rate=30.0, scope="estimate")],
+    )
+    out = chat_about_estimate("set the capacitor rate to $30 here", _rows(), model=model)
+    cap = next(r for r in out["estimate"]["line_items"] if r["description"] == "Dual run capacitor")
+    assert cap["rate"] == 30.0
+    # It is a user-confirmed edit, so provenance is "user" (not catalog/computed).
+    assert cap["price_source"] == "user"
+    # The UI is told which row changed so it can pulse that cell.
+    assert out["changed"] == "Dual run capacitor"
+    # totals recomputed server-side
+    assert out["estimate"]["subtotal"] == round(30.0 + 90.0, 2)
+
+
+def test_change_rate_without_scope_asks_and_does_not_apply():
+    # Model called change_rate but the user never said estimate-vs-catalog -> the
+    # apprentice ASKS and leaves the rate untouched until told.
+    model = StubModel(
+        responses=[],
+        chats=[_tc("change_rate", item="capacitor", rate=30.0)],  # no scope
+    )
+    out = chat_about_estimate("make the capacitor $30", _rows(), model=model)
+    cap = next(r for r in out["estimate"]["line_items"] if r["description"] == "Dual run capacitor")
+    assert cap["rate"] == 24.0  # UNCHANGED — waiting on the scope answer
+    assert "catalog" in out["reply"].lower() and "estimate" in out["reply"].lower()
+    assert out.get("changed") is None
+
+
+def test_change_rate_catalog_scope_updates_catalog_and_estimate():
+    # scope="catalog": the row changes AND the in-session catalog price changes, so a
+    # later add of the same part picks up the new rate.
+    rows = _rows()
+    set_model = StubModel(
+        responses=[],
+        chats=[_tc("change_rate", item="capacitor", rate=30.0, scope="catalog")],
+    )
+    out = chat_about_estimate("set the capacitor to $30 in the catalog", rows, model=set_model)
+    cap = next(r for r in out["estimate"]["line_items"] if r["description"] == "Dual run capacitor")
+    assert cap["rate"] == 30.0
+
+    # A subsequent add of "capacitor" now prices at the updated catalog rate.
+    add_model = StubModel(responses=[], chats=[_tc("add_item", item="capacitor")])
+    out2 = chat_about_estimate(
+        "add another capacitor", out["estimate"]["line_items"], model=add_model
+    )
+    added = [r for r in out2["estimate"]["line_items"] if r["description"] == "Dual run capacitor"]
+    assert any(r["rate"] == 30.0 for r in added)
+
+
+def test_change_rate_never_invents_a_number_when_user_is_vague():
+    # THE INVARIANT GUARD. The user asks vaguely ("make it cheaper") with NO number.
+    # The model must NOT pick a price; it answers (asks for a number) and changes
+    # nothing. We give a model that — correctly — returns a question, not a tool call.
+    model = StubModel(
+        responses=[],
+        chats=[{"content": "What rate would you like for the capacitor? I won't guess a price."}],
+    )
+    out = chat_about_estimate("make the capacitor cheaper", _rows(), model=model)
+    cap = next(r for r in out["estimate"]["line_items"] if r["description"] == "Dual run capacitor")
+    assert cap["rate"] == 24.0  # untouched — no LLM-invented number entered
+    assert out.get("changed") is None
+    assert "rate" in out["reply"].lower() or "price" in out["reply"].lower()
+
+
+def test_keyword_path_change_rate_applies_explicit_dollar_amount():
+    # Zero-model fallback (stub Space): "set the capacitor rate to $30" with an
+    # explicit $ amount applies it. No scope given in keyword mode -> estimate-only
+    # (the keyword path can't hold a follow-up turn; it takes the conservative scope).
+    out = chat_about_estimate("set the capacitor rate to $30", _rows(), tax_rate=0.13)
+    cap = next(r for r in out["estimate"]["line_items"] if r["description"] == "Dual run capacitor")
+    assert cap["rate"] == 30.0
+    assert cap["price_source"] == "user"
+    assert out["changed"] == "Dual run capacitor"
