@@ -15,7 +15,7 @@
 #          https://raw.githubusercontent.com/OpenBMB/MiniCPM-V/cd64150b5122f8ee8c677d481c97918485129b52/LICENSE
 #
 # Modifications from upstream are marked with `# QUILLWRIGHT EDIT:` comments.
-# `# ruff: noqa` above keeps this third-party file out of our lint/format pass
+# The noqa directive at the top of this file keeps this third-party file out of our lint pass
 # (RESEARCH.md / task rule: vendored style must not be rewritten).
 # ---------------------------------------------------------------------------
 import glob
@@ -31,6 +31,7 @@ from torchvision import transforms
 import torch
 import transformers
 from accelerate.utils import DistributedType
+
 # QUILLWRIGHT EDIT: deepspeed top-level imports guarded for the single-GPU,
 # no-DeepSpeed run (RESEARCH.md "Pinned environment"). `zero` / `ZeroParamStatus`
 # are imported by upstream but never referenced in this file; the DEEPSPEED code
@@ -44,6 +45,7 @@ except Exception:  # pragma: no cover - deepspeed intentionally absent single-GP
     ZeroParamStatus = None
 
 from transformers import AutoModel, AutoTokenizer
+
 # QUILLWRIGHT EDIT: transformers.integrations.deepspeed is only touched inside the
 # q_lora branch (unused here); guarded so a missing deepspeed integration shim
 # cannot break import on transformers==4.40.0.
@@ -58,6 +60,23 @@ from trainer import CPMTrainer
 
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
+# QUILLWRIGHT EDIT: MiniCPM-V-2_6's remote modeling file hard-imports flash_attn, and
+# transformers' check_imports() raises ImportError before the model is even built — even
+# though we use SDPA. Strip flash_attn from the import check globally for this process so
+# the modeling file loads; attn_implementation="sdpa" (set on from_pretrained below)
+# handles attention. We install flash_attn nowhere on purpose (RESEARCH.md flash_attn note).
+import transformers.dynamic_module_utils as _tdmu  # noqa: E402
+
+_orig_get_imports = _tdmu.get_imports
+
+
+def _get_imports_no_flash(filename):
+    return [imp for imp in _orig_get_imports(filename) if imp != "flash_attn"]
+
+
+_tdmu.get_imports = _get_imports_no_flash
+
+
 @dataclass
 class ModelArguments:
     model_name_or_path: Optional[str] = field(default="openbmb/MiniCPM-V-2")
@@ -65,12 +84,8 @@ class ModelArguments:
 
 @dataclass
 class DataArguments:
-    data_path: str = field(
-        default=None, metadata={"help": "Path to the training data."}
-    )
-    eval_data_path: str = field(
-        default=None, metadata={"help": "Path to the evaluation data."}
-    )
+    data_path: str = field(default=None, metadata={"help": "Path to the training data."})
+    eval_data_path: str = field(default=None, metadata={"help": "Path to the evaluation data."})
 
 
 @dataclass
@@ -104,7 +119,10 @@ class LoraArguments:
     lora_layers_to_transform: Optional[List[int]] = None
     lora_layers_pattern: Optional[str] = None
 
+
 local_rank = None
+
+
 def rank0_print(*args):
     if local_rank == 0:
         print(*args)
@@ -113,7 +131,9 @@ def rank0_print(*args):
 def safe_save_model_for_hf_trainer(trainer, output_dir: str, bias="none"):
     """Collects the state dict and dump to disk."""
     if trainer.args.should_save and trainer.args.local_rank == 0:
-        trainer.save_model(output_dir,)
+        trainer.save_model(
+            output_dir,
+        )
 
 
 def make_supervised_data_module(
@@ -165,21 +185,20 @@ def make_supervised_data_module(
     return dict(
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        data_collator= partial(data_collator, max_length=max_length),
+        data_collator=partial(data_collator, max_length=max_length),
     )
 
 
 def build_transform():
-    IMAGENET_INCEPTION_MEAN = (0.5, 0.5, 0.5) # timm.data.IMAGENET_INCEPTION_MEAN
+    IMAGENET_INCEPTION_MEAN = (0.5, 0.5, 0.5)  # timm.data.IMAGENET_INCEPTION_MEAN
     IMAGENET_INCEPTION_STD = (0.5, 0.5, 0.5)  # timm.data.IMAGENET_INCEPTION_STD
     return transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD
-                ),
-            ]
-        )
+        [
+            transforms.ToTensor(),
+            transforms.Normalize(mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD),
+        ]
+    )
+
 
 def get_parameter_number(model):
     trainable_params, all_param = 0, 0
@@ -192,8 +211,8 @@ def get_parameter_number(model):
         all_param += num_params
         if param.requires_grad:
             trainable_params += num_params
-        
-    return {'Total': all_param, 'Trainable': trainable_params}
+
+    return {"Total": all_param, "Trainable": trainable_params}
 
 
 local_rank = 0
@@ -212,7 +231,7 @@ def train():
         lora_args,
     ) = parser.parse_args_into_dataclasses()
 
-    if getattr(training_args, "deepspeed", None) : 
+    if getattr(training_args, "deepspeed", None):
         training_args.distributed_state.distributed_type = DistributedType.DEEPSPEED
 
     compute_dtype = (
@@ -228,36 +247,35 @@ def train():
     if lora_args.q_lora:
         device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)} if ddp else None
         if len(training_args.fsdp) > 0 or deepspeed.is_deepspeed_zero3_enabled():
-            logging.warning(
-                "FSDP or ZeRO3 are not incompatible with QLoRA."
-            )
-    
+            logging.warning("FSDP or ZeRO3 are not incompatible with QLoRA.")
+
     model = AutoModel.from_pretrained(
         model_args.model_name_or_path,
         trust_remote_code=True,
         torch_dtype=compute_dtype,
         device_map=device_map,
+        attn_implementation="sdpa",  # QUILLWRIGHT EDIT: SDPA, not flash_attn (not installed).
     )
 
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_args.model_name_or_path, trust_remote_code=True
-    )
+    tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
 
     if not training_args.tune_vision:
         model.vpm.requires_grad_(False)
     if not training_args.tune_llm:
         model.llm.requires_grad_(False)
-        
+
     if training_args.use_lora:
         if training_args.use_lora and training_args.tune_llm:
-            raise ValueError("The model cannot simultaneously adjust LLM parameters and apply LoRA.")
-            
+            raise ValueError(
+                "The model cannot simultaneously adjust LLM parameters and apply LoRA."
+            )
+
         rank0_print("Currently using LoRA for fine-tuning the MiniCPM-V model.")
         for name, param in model.llm.named_parameters():
             param.requires_grad = False
-        modules_to_save = ['embed_tokens','resampler']
+        modules_to_save = ["embed_tokens", "resampler"]
         if training_args.tune_vision:
-            modules_to_save.append('vpm')
+            modules_to_save.append("vpm")
         lora_config = LoraConfig(
             r=lora_args.lora_r,
             lora_alpha=lora_args.lora_alpha,
@@ -267,9 +285,11 @@ def train():
             layers_to_transform=lora_args.lora_layers_to_transform,
             modules_to_save=modules_to_save,
         )
-        if not hasattr(model, 'get_input_embeddings'):
+        if not hasattr(model, "get_input_embeddings"):
+
             def get_input_embeddings(self):
                 return self.llm.get_input_embeddings()
+
             model.get_input_embeddings = MethodType(get_input_embeddings, model)
         if lora_args.q_lora:
             model = prepare_model_for_kbit_training(
@@ -281,11 +301,10 @@ def train():
 
     rank0_print(get_parameter_number(model))
 
-    llm_type = training_args.llm_type    
-    
-    rank0_print(f'llm_type={llm_type}')
+    llm_type = training_args.llm_type
 
-    
+    rank0_print(f"llm_type={llm_type}")
+
     # Load data
     if hasattr(model.config, "slice_config"):
         model.config.slice_config.max_slice_nums = training_args.max_slice_nums
@@ -312,8 +331,8 @@ def train():
         batch_vision=batch_vision,
         max_length=training_args.model_max_length,
     )
-    
-    training_args.gradient_checkpointing_kwargs={"use_reentrant":False}
+
+    training_args.gradient_checkpointing_kwargs = {"use_reentrant": False}
     trainer = CPMTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -325,9 +344,8 @@ def train():
     trainer.save_state()
 
     safe_save_model_for_hf_trainer(
-        trainer=trainer,
-        output_dir=training_args.output_dir,
-        bias=lora_args.lora_bias)
+        trainer=trainer, output_dir=training_args.output_dir, bias=lora_args.lora_bias
+    )
 
 
 if __name__ == "__main__":

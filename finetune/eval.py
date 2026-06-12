@@ -39,6 +39,7 @@ ADAPTER_DEFAULT = "Aarya2004/minicpmv-cord-lora"
 image = (
     modal.Image.from_registry("nvidia/cuda:12.1.1-devel-ubuntu22.04", add_python="3.10")
     .pip_install(
+        "numpy<2",  # torch 2.1.2 is built against NumPy 1.x; NumPy 2 crashes its init.
         "torch==2.1.2",
         "torchvision==0.16.2",
         "transformers==4.40.0",
@@ -50,9 +51,9 @@ image = (
         "huggingface_hub",
     )
     .env({"HF_HOME": "/cache"})
-    # Bring the scorer + the shared PROMPT into the image so the remote fn can import them.
-    # data_utils has no modal import — safer to bundle than prepare_data.
-    .add_local_python_source("scorer", "data_utils")
+    # Bring the scorer + shared PROMPT + the flash_attn import patch into the image.
+    # All three are modal-free; safer to bundle than prepare_data.
+    .add_local_python_source("scorer", "data_utils", "flash_patch")
 )
 
 vol = modal.Volume.from_name("quillwright-hf-cache", create_if_missing=True)
@@ -85,13 +86,20 @@ def evaluate(
     baseline_only: bool = False,
 ) -> dict:
     import json
+    from unittest.mock import patch
 
     import torch
     from PIL import Image
     from transformers import AutoModel, AutoTokenizer
+    from transformers.dynamic_module_utils import get_imports
 
     import scorer
     from data_utils import PROMPT  # single source of truth for the instruction
+    from flash_patch import make_patched_get_imports
+
+    # MiniCPM-V-2_6's remote code hard-imports flash_attn at load (check_imports), even
+    # though we use SDPA. Strip it so the modeling file loads; SDPA handles attention.
+    _patched_imports = make_patched_get_imports(get_imports)
 
     rows = [json.loads(line) for line in open("/cache/cord/test.jsonl")]
     if limit:
@@ -104,16 +112,17 @@ def evaluate(
     # --- Load base model per RESEARCH.md §5 inference contract ---
     # attn_implementation='sdpa' (never 'eager'); torch_dtype=bfloat16 on from_pretrained
     # then .eval().cuda() separately (NOT .to("cuda") with dtype arg).
-    base = (
-        AutoModel.from_pretrained(
-            MODEL,
-            trust_remote_code=True,
-            attn_implementation="sdpa",
-            torch_dtype=torch.bfloat16,
+    with patch("transformers.dynamic_module_utils.get_imports", _patched_imports):
+        base = (
+            AutoModel.from_pretrained(
+                MODEL,
+                trust_remote_code=True,
+                attn_implementation="sdpa",
+                torch_dtype=torch.bfloat16,
+            )
+            .eval()
+            .cuda()
         )
-        .eval()
-        .cuda()
-    )
 
     def _run(model) -> tuple[list[dict], int]:
         """Run inference over all rows; returns (per_case list, failure_count)."""

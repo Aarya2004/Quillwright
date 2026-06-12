@@ -56,6 +56,7 @@ LORA_TARGET = r"llm\..*layers\.\d+\.self_attn\.(q_proj|k_proj|v_proj|o_proj)"
 image = (
     modal.Image.from_registry("nvidia/cuda:12.1.1-devel-ubuntu22.04", add_python="3.10")
     .pip_install(
+        "numpy<2",  # torch 2.1.2 is built against NumPy 1.x; NumPy 2 crashes its init.
         "torch==2.1.2",
         "torchvision==0.16.2",
         "transformers==4.40.0",  # V-2_6 "tested" pin; NOT 4.46/4.47/5.x
@@ -71,7 +72,7 @@ image = (
     .env({"HF_HOME": "/cache"})
     # data_utils.py (the converter + PROMPT) and the vendored OpenBMB scripts
     # must be importable / runnable inside the container.
-    .add_local_python_source("data_utils")
+    .add_local_python_source("data_utils", "flash_patch")
     .add_local_dir(
         # vendor/ holds finetune.py, dataset.py, trainer.py — copied to /root/vendor
         # so we can `python /root/vendor/finetune.py ...` as a single process.
@@ -231,24 +232,33 @@ def _smoke_assert_and_chat():
     on a non-finite loss path, and `check=True` propagates any non-zero exit.
     """
     import json
+    from unittest.mock import patch
 
     import torch
     from peft import PeftModel
     from PIL import Image
     from transformers import AutoModel, AutoTokenizer
+    from transformers.dynamic_module_utils import get_imports
 
     from data_utils import PROMPT
+    from flash_patch import make_patched_get_imports
 
     adapter = _adapter_dir()
     print(f"[smoke] loading adapter from {adapter}")
 
     torch.cuda.reset_peak_memory_stats()
-    base = AutoModel.from_pretrained(
-        MODEL,
-        trust_remote_code=True,
-        attn_implementation="sdpa",  # RESEARCH.md §5: sdpa or fa2, never eager.
-        torch_dtype=torch.bfloat16,
-    )
+    # Same flash_attn import-check workaround as the training subprocess (vendor/finetune.py)
+    # and eval.py — strip flash_attn so the remote modeling file loads; SDPA does attention.
+    with patch(
+        "transformers.dynamic_module_utils.get_imports",
+        make_patched_get_imports(get_imports),
+    ):
+        base = AutoModel.from_pretrained(
+            MODEL,
+            trust_remote_code=True,
+            attn_implementation="sdpa",  # RESEARCH.md §5: sdpa or fa2, never eager.
+            torch_dtype=torch.bfloat16,
+        )
     tokenizer = AutoTokenizer.from_pretrained(MODEL, trust_remote_code=True)
 
     lora_model = PeftModel.from_pretrained(base, adapter, trust_remote_code=True).eval().cuda()
