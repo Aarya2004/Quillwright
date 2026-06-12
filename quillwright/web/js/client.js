@@ -59,6 +59,17 @@ export async function recalc(rows, jobTitle, taxRate) {
   return res.json();
 }
 
+// Document Capture (ADR-0011): parse a handed-over document (supplier quote, spec
+// sheet) into {model, observations, proposed_items} for the human to confirm.
+export async function parseDocument(dataUrl, filename) {
+  const res = await fetch("/api/parse_document", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data: dataUrl, filename }),
+  });
+  return res.json();
+}
+
 // Transcribe a recorded voice note (base64 data URL) into text (Cohere Transcribe).
 export async function transcribeNote(dataUrl, filename) {
   const res = await fetch("/api/transcribe", {

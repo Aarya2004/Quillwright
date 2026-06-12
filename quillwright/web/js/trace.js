@@ -8,6 +8,7 @@ const steps = [];
 
 const CARDS = {
   recall: { title: "Memory", lead: "Checked your past jobs for anything similar." },
+  document: { title: "Document Capture", lead: "Read the handed-over document." },
   perceive: { title: "Site Analysis", lead: "Reviewed the job and noted what's needed." },
   price: { title: "Market Pricing", lead: "Pulled current prices for each part." },
   add_priced_item: { title: "Market Pricing", lead: "Pulled current prices for each part." },

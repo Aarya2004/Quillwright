@@ -344,6 +344,57 @@ td[contenteditable]:focus {
   gap: 12px;
 }
 
+/* Document Capture: Proposed-Line-Items confirm card (rides the Agent-Pause surface). */
+.doc-confirm {
+  flex: 1;
+  min-width: 0;
+}
+.doc-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.doc-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 72px 96px;
+  gap: 12px;
+  align-items: center;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.doc-item:has(input[type="checkbox"]:not(:checked)) {
+  opacity: 0.45;
+}
+.doc-item .doc-desc {
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+.doc-item .doc-desc small {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.doc-item input[type="number"] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--outline);
+  border-radius: 6px;
+  font-family: var(--font-body);
+}
+.doc-item input[type="checkbox"] {
+  accent-color: var(--primary-container);
+}
+
 /* Financial summary. */
 .summary {
   display: flex;

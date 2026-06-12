@@ -9,6 +9,7 @@ import {
   translateEstimate,
   chatAboutEstimate,
   transcribeNote,
+  parseDocument,
 } from "./client.js";
 import { resetTrace, addStep } from "./trace.js";
 
@@ -81,6 +82,90 @@ async function onPhotos(e) {
 
 function money(n) {
   return `$${Number(n).toFixed(2)}`;
+}
+
+// --- Document Capture (ADR-0011): a handed-over document -> Proposed Line Items ---
+// The document is the *source*, but every price it carries is proposed, never a
+// fact — the human confirms (or edits) each row before it enters the estimate.
+async function onDocument(e) {
+  const file = (e.target.files || [])[0];
+  e.target.value = ""; // allow re-picking the same file
+  if (!file) return;
+  $("forge-state").textContent = "Reading document…";
+  const dataUrl = await readAsDataURL(file);
+  const out = await parseDocument(dataUrl, file.name);
+  $("forge-state").textContent = rows.length ? "Done" : "Idle";
+  const title = (out.observations[0] || {}).text || file.name;
+  addStep($("log"), {
+    action: "document",
+    model: out.model,
+    detail: `“${title}” — ${out.proposed_items.length} priced row(s) proposed`,
+    status: "ok",
+  });
+  showProposedItems(out.proposed_items);
+}
+
+// Render the Proposed-Line-Items confirm card on the Agent-Pause surface.
+function showProposedItems(items) {
+  const card = $("pause");
+  if (!items.length) {
+    card.innerHTML = `
+      <div class="bot"><span class="material-symbols-outlined">document_scanner</span></div>
+      <div class="doc-confirm">
+        <p>I couldn't find any priced rows in that document.</p>
+        <div class="opts"><button class="link-btn" id="doc-dismiss">Dismiss</button></div>
+      </div>`;
+  } else {
+    card.innerHTML = `
+      <div class="bot"><span class="material-symbols-outlined">document_scanner</span></div>
+      <div class="doc-confirm">
+        <p>I read ${items.length} priced row(s) off that document. Confirm what enters the estimate:</p>
+        <div class="doc-items">
+          ${items
+            .map(
+              (p, i) => `
+          <label class="doc-item">
+            <input type="checkbox" data-i="${i}" checked />
+            <span class="doc-desc">${p.description}<small>${p.source_text}</small></span>
+            <input class="doc-qty" type="number" step="any" value="${p.quantity}" aria-label="Quantity" />
+            <input class="doc-rate" type="number" step="0.01" value="${p.rate.toFixed(2)}" aria-label="Rate" />
+          </label>`,
+            )
+            .join("")}
+        </div>
+        <div class="opts">
+          <button class="btn btn--primary" id="doc-add">Add to estimate</button>
+          <button class="link-btn" id="doc-dismiss">Dismiss</button>
+        </div>
+      </div>`;
+  }
+  card.style.display = "flex";
+
+  const hide = () => {
+    card.style.display = "none";
+    card.innerHTML = "";
+  };
+  $("doc-dismiss").addEventListener("click", hide);
+  const add = $("doc-add");
+  if (add)
+    add.addEventListener("click", () => {
+      card.querySelectorAll(".doc-item").forEach((row) => {
+        const check = row.querySelector("input[type=checkbox]");
+        if (!check.checked) return;
+        const p = items[Number(check.dataset.i)];
+        rows.push({
+          description: p.description,
+          quantity: parseFloat(row.querySelector(".doc-qty").value) || 1,
+          unit: p.unit,
+          rate: parseFloat(row.querySelector(".doc-rate").value) || 0,
+          subtotal: 0,
+          price_source: "document",
+        });
+      });
+      hide();
+      recalcFromRows();
+      setChatEnabled(rows.length > 0);
+    });
 }
 
 // Render the editable estimate from `rows`. qty/rate cells edit -> recalc.
@@ -321,6 +406,7 @@ function addItem() {
 $("forge-btn").addEventListener("click", forge);
 $("new-estimate-btn").addEventListener("click", newEstimate);
 $("photo-input").addEventListener("change", onPhotos);
+$("doc-input").addEventListener("change", onDocument);
 $("mic-btn").addEventListener("click", toggleRecording);
 $("add-item-btn").addEventListener("click", addItem);
 $("pdf-btn").addEventListener("click", () => downloadPdf(rows, JOB_TITLE, TAX_RATE));
