@@ -18,6 +18,7 @@ from quillwright.api.estimate import (
     resume_estimate_stream,
 )
 from quillwright.api.chat import chat_about_estimate
+from quillwright.api.document import parse_document_capture
 from quillwright.api.export import estimate_to_json_payload
 from quillwright.api.pages import dashboard_data, inventory_data, jobs_data
 from quillwright.api.recalc import recalc_estimate
@@ -89,6 +90,15 @@ def api_upload(payload: dict = Body(...)) -> dict:
     """Save a base64 image; returns its server path for the next forge call."""
     path = save_upload(payload["data"], payload.get("filename", "photo.png"))
     return {"path": path}
+
+
+@app.post("/api/parse_document")
+def api_parse_document(payload: dict = Body(...)) -> dict:
+    """Document Capture (ADR-0011): read a handed-over document (supplier quote,
+    spec sheet) into Proposed Line Items the human confirms before they enter
+    the estimate."""
+    path = save_upload(payload["data"], payload.get("filename", "document.png"))
+    return parse_document_capture(path)
 
 
 @app.post("/api/transcribe")
