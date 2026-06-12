@@ -60,9 +60,16 @@ def _stub_perception(transcript: str) -> StubModel:
 
 
 def _perception(transcript: str, has_real_image: bool):
-    """Real MiniCPM-V via Ollama when enabled AND a real photo exists; else the stub."""
-    if REAL_MODELS and has_real_image:
-        return ModelResolver(mode="private", backend="ollama").for_role("perception")
+    """The Perception role for a real photo: hosted Omni (Best Stack) when its
+    Modal URL is configured, MiniCPM-V via Ollama under FF_REAL_MODELS, else stub."""
+    if has_real_image:
+        from quillwright.resolver import modal_resolver_if_configured
+
+        modal = modal_resolver_if_configured("perception")
+        if modal is not None:
+            return modal.for_role("perception")
+        if REAL_MODELS:
+            return ModelResolver(mode="private", backend="ollama").for_role("perception")
     return _stub_perception(transcript)
 
 

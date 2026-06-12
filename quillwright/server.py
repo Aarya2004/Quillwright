@@ -127,9 +127,15 @@ def api_translate(payload: dict = Body(...)) -> dict:
         tax_rate=payload.get("tax_rate", 0.13),
     )
     language = payload.get("language", "English")
-    if REAL_MODELS and not language.lower().startswith("english"):
-        model = ModelResolver(mode="private", backend="ollama").for_role("multilingual")
-        est = translate_estimate(est, language, model)
+    if not language.lower().startswith("english"):
+        from quillwright.resolver import modal_resolver_if_configured
+
+        modal = modal_resolver_if_configured("multilingual")
+        if modal is not None:  # Best-Stack Aya on Modal
+            est = translate_estimate(est, language, modal.for_role("multilingual"))
+        elif REAL_MODELS:  # Private-Stack Aya via local Ollama
+            model = ModelResolver(mode="private", backend="ollama").for_role("multilingual")
+            est = translate_estimate(est, language, model)
     return est
 
 

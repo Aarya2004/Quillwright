@@ -8,7 +8,13 @@ import os
 
 
 def _resolve_audio():
-    """Real on-device STT when FF_REAL_MODELS=1; else None (caller keeps typed note)."""
+    """The Audio role, by env: hosted Omni (Best Stack) when its Modal URL is
+    configured, on-device STT when FF_REAL_MODELS=1, else None (typed note)."""
+    from quillwright.resolver import modal_resolver_if_configured
+
+    modal = modal_resolver_if_configured("audio")
+    if modal is not None:
+        return modal.for_role("audio")
     if os.environ.get("FF_REAL_MODELS") == "1":
         from quillwright.resolver import ModelResolver
 

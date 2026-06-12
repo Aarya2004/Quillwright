@@ -52,22 +52,27 @@ There is no single local/Modal switch. `FF_REAL_MODELS=1` is the master gate out
 stub mode; backends then resolve **per role** (see `quillwright/resolver.py`), and a
 few roles can only go one way:
 
-| Role                                      | Stub (default) | Local (Ollama)                                                                        | Modal (hosted)                                                          |
-| ----------------------------------------- | -------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| **brain** (agent loop)                    | scripted       | Nemotron-3-Nano **4B**                                                                | Nemotron-3-Nano **30B** — set `FF_BACKEND=modal` + `FF_MODAL_BRAIN_URL` |
-| **perception** (vision)                   | scripted       | MiniCPM-V                                                                             | _not hosted on Modal_ — stays on Ollama                                 |
-| **multilingual**                          | scripted       | Aya                                                                                   | _not hosted on Modal_ — stays on Ollama                                 |
-| **embedding / audio**                     | scripted       | on-device (sentence-transformers / transformers) — same path for any non-stub backend | _same on-device path_                                                   |
-| **extraction** (Document Capture / Parse) | scripted       | _no local path_ (>30GB RAM on Apple Silicon)                                          | **Modal only**, always remote — needs `FF_MODAL_PARSE_URL`              |
+| Role                                      | Stub (default) | Local (Ollama)                                                         | Modal (hosted Best Stack)                                                       |
+| ----------------------------------------- | -------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **brain** (agent loop)                    | scripted       | Nemotron-3-Nano **4B**                                                 | Nemotron-3-Nano **30B** — set `FF_BACKEND=modal` + `FF_MODAL_BRAIN_URL`         |
+| **perception** (vision)                   | scripted       | MiniCPM-V                                                              | Nemotron **Omni** — additionally set `FF_MODAL_OMNI_URL` (else stays on Ollama) |
+| **audio** (voice note)                    | scripted       | Cohere Transcribe on-device (transformers)                             | Nemotron **Omni** (same deployment as perception) — `FF_MODAL_OMNI_URL`         |
+| **multilingual**                          | scripted       | Aya                                                                    | **Aya Expanse 8B** — additionally set `FF_MODAL_AYA_URL` (else stays on Ollama) |
+| **embedding**                             | scripted       | on-device (sentence-transformers) — same path for any non-stub backend | _same on-device path_                                                           |
+| **extraction** (Document Capture / Parse) | scripted       | _no local path_ (>30GB RAM on Apple Silicon)                           | **Modal only**, always remote — needs `FF_MODAL_PARSE_URL`                      |
 
-Two inconsistencies that surprise people:
+How the switches compose:
 
-- **`FF_BACKEND=modal` moves only the _brain_ to Modal.** Vision and multilingual still
-  resolve to Ollama; embedding/audio still run on-device. It is not a whole-stack switch.
+- **`FF_BACKEND=modal` by itself moves only the _brain_ to Modal** (its URL is then
+  required — missing `FF_MODAL_BRAIN_URL` fails loud, never silently downgrades).
+- **Each other role opts in per-URL**: with `FF_BACKEND=modal` set, perception/audio
+  upgrade to the hosted Omni only when `FF_MODAL_OMNI_URL` is also set, multilingual to
+  Aya Expanse only when `FF_MODAL_AYA_URL` is set. Unset URLs keep the local/on-device
+  path working — deploying one GPU app never breaks the roles you didn't deploy.
 - **Parse keys off its own `FF_MODAL_PARSE_URL`, independent of `FF_BACKEND`.** So you can
   run a local Ollama brain _and_ hit Modal Parse at the same time — "am I on Modal?" is not
   a single yes/no. This is intentional: Parse has no local serving path (ADR-0011), but it
-  means the offline ("Airplane-Mode") story only holds while `FF_MODAL_PARSE_URL` is unset.
+  means the offline ("Airplane-Mode") story only holds while every `FF_MODAL_*_URL` is unset.
 
 ## Test
 

@@ -55,3 +55,24 @@ def test_transcribe_normalizes_a_list_returning_model():
 
     out = transcribe_audio("/tmp/x.wav", model=ListModel())
     assert out["transcript"] == "only item"
+
+
+def test_resolve_audio_prefers_modal_omni_when_configured(monkeypatch):
+    # Best-Stack Audio: FF_BACKEND=modal + the Omni URL routes the voice note to
+    # the hosted Omni instead of the local transformers model.
+    from quillwright.api.transcribe import _resolve_audio
+    from quillwright.backends.modal import ModalModel
+
+    monkeypatch.setenv("FF_BACKEND", "modal")
+    monkeypatch.setenv("FF_MODAL_OMNI_URL", "https://example--omni")
+    monkeypatch.delenv("FF_REAL_MODELS", raising=False)
+    asr = _resolve_audio()
+    assert isinstance(asr, ModalModel)
+
+
+def test_resolve_audio_stays_none_without_modal_or_real_models(monkeypatch):
+    from quillwright.api.transcribe import _resolve_audio
+
+    monkeypatch.delenv("FF_BACKEND", raising=False)
+    monkeypatch.delenv("FF_REAL_MODELS", raising=False)
+    assert _resolve_audio() is None
