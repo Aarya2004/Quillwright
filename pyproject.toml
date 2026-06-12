@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "quillwright"
 version = "0.1.0"
@@ -19,6 +23,12 @@ embed = ["sentence-transformers>=3.0", "numpy>=1.26"]
 # Spoken voice note via Cohere Transcribe (ADR-0009): on-device STT. Opt-in, heavy.
 # Gated model — needs HF access + token. Install with: pip install -e ".[audio]"
 audio = ["transformers>=5.4", "torch", "accelerate", "soundfile", "librosa", "sentencepiece", "protobuf"]
+
+# Flat layout with sibling dirs (data/, node_modules/) — scope discovery to the
+# quillwright package (and its subpackages) so setuptools auto-discovery doesn't
+# error on "multiple top-level packages".
+[tool.setuptools.packages.find]
+include = ["quillwright*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
