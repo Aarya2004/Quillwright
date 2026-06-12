@@ -76,3 +76,36 @@ def test_modal_model_requires_url():
         assert False, "expected RuntimeError when no URL configured"
     except RuntimeError:
         pass
+
+
+def test_extraction_role_resolves_to_parse_model(monkeypatch):
+    # Parse (Document Capture, ADR-0011) is a single REMOTE serving path — it
+    # resolves to ParseModel for any non-stub backend, independent of brain hosting.
+    from quillwright.backends.parse import ParseModel
+
+    monkeypatch.setenv("FF_MODAL_PARSE_URL", "https://example--quillwright-parse-parser-parse")
+    resolver = ModelResolver(mode="best", backend="modal")
+    extractor = resolver.for_role("extraction")
+    assert isinstance(extractor, ParseModel)
+
+
+def test_extraction_role_under_stub_backend_is_not_parse_model():
+    # With the stub backend (tests/CI default), extraction must NOT try to reach
+    # Modal — it falls through to the stub path and raises like any unknown role.
+    resolver = ModelResolver(mode="private")  # backend defaults to "stub"
+    try:
+        resolver.for_role("extraction")
+        assert False, "expected KeyError for extraction under stub backend"
+    except KeyError:
+        pass
+
+
+def test_parse_model_requires_url(monkeypatch):
+    from quillwright.backends.parse import ParseModel
+
+    monkeypatch.delenv("FF_MODAL_PARSE_URL", raising=False)
+    try:
+        ParseModel(base_url="")
+        assert False, "expected RuntimeError when no Parse URL configured"
+    except RuntimeError:
+        pass
