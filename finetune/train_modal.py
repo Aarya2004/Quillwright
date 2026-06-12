@@ -269,7 +269,12 @@ def _smoke_assert_and_chat():
     pct = 100.0 * trainable / total if total else 0.0
     print(f"[smoke] trainable={trainable:,} total={total:,} ({pct:.3f}%)")
     assert trainable > 0, "LoRA targeted nothing (0 trainable params)"
-    assert pct < 5.0, f"trainable% too high ({pct:.2f}%) — vision tower likely unfrozen"
+    # ~7% is correct here: LoRA on the LLM attention is small, but the recipe saves
+    # embed_tokens + resampler IN FULL (modules_to_save) — embed_tokens alone is
+    # hundreds of M params for an 8B/large-vocab model. The vision tower (vpm, billions
+    # of params) staying frozen is what matters; if it were trained this would be 30%+.
+    # 15% comfortably clears the legitimate ~7% while still catching a real vpm unfreeze.
+    assert pct < 15.0, f"trainable% too high ({pct:.2f}%) — vision tower likely unfrozen"
 
     # --- inference round trip (bonus guard, RESEARCH.md §5) -----------------
     rows = [json.loads(line) for line in open(MANIFEST)]
