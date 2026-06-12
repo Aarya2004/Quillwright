@@ -46,6 +46,29 @@ ollama pull nemotron-3-nano:4b
 FF_REAL_MODELS=1 python -m quillwright.server
 ```
 
+### Backend resolution — read this before "am I on Modal?"
+
+There is no single local/Modal switch. `FF_REAL_MODELS=1` is the master gate out of
+stub mode; backends then resolve **per role** (see `quillwright/resolver.py`), and a
+few roles can only go one way:
+
+| Role                                      | Stub (default) | Local (Ollama)                                                                        | Modal (hosted)                                                          |
+| ----------------------------------------- | -------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **brain** (agent loop)                    | scripted       | Nemotron-3-Nano **4B**                                                                | Nemotron-3-Nano **30B** — set `FF_BACKEND=modal` + `FF_MODAL_BRAIN_URL` |
+| **perception** (vision)                   | scripted       | MiniCPM-V                                                                             | _not hosted on Modal_ — stays on Ollama                                 |
+| **multilingual**                          | scripted       | Aya                                                                                   | _not hosted on Modal_ — stays on Ollama                                 |
+| **embedding / audio**                     | scripted       | on-device (sentence-transformers / transformers) — same path for any non-stub backend | _same on-device path_                                                   |
+| **extraction** (Document Capture / Parse) | scripted       | _no local path_ (>30GB RAM on Apple Silicon)                                          | **Modal only**, always remote — needs `FF_MODAL_PARSE_URL`              |
+
+Two inconsistencies that surprise people:
+
+- **`FF_BACKEND=modal` moves only the _brain_ to Modal.** Vision and multilingual still
+  resolve to Ollama; embedding/audio still run on-device. It is not a whole-stack switch.
+- **Parse keys off its own `FF_MODAL_PARSE_URL`, independent of `FF_BACKEND`.** So you can
+  run a local Ollama brain _and_ hit Modal Parse at the same time — "am I on Modal?" is not
+  a single yes/no. This is intentional: Parse has no local serving path (ADR-0011), but it
+  means the offline ("Airplane-Mode") story only holds while `FF_MODAL_PARSE_URL` is unset.
+
 ## Test
 
 ```
