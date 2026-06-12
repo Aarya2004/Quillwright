@@ -27,7 +27,7 @@ from quillwright.api.translate import translate_estimate
 from quillwright.api.upload import save_upload
 from quillwright.models import Estimate, LineItem
 from quillwright.pdf import estimate_to_pdf
-from quillwright.resolver import ModelResolver
+from quillwright.resolver import ModelResolver, active_models
 
 REAL_MODELS = os.environ.get("FF_REAL_MODELS") == "1"
 
@@ -73,6 +73,13 @@ _announce_mode()
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
     return (WEB / "index.html").read_text()
+
+
+@app.get("/api/model_info")
+def api_model_info() -> dict:
+    """Which model fills each role right now (mode + per-role labels) for the UI
+    badge — one honest source of truth, read from the same env the resolvers use."""
+    return active_models()
 
 
 @app.post("/api/forge_estimate")

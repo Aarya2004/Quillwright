@@ -157,3 +157,87 @@ def test_parse_model_requires_url(monkeypatch):
         assert False, "expected RuntimeError when no Parse URL configured"
     except RuntimeError:
         pass
+
+
+def _clear_model_env(monkeypatch):
+    for var in (
+        "FF_REAL_MODELS",
+        "FF_BACKEND",
+        "FF_MODAL_BRAIN_URL",
+        "FF_MODAL_OMNI_URL",
+        "FF_MODAL_AYA_URL",
+    ):
+        monkeypatch.delenv(var, raising=False)
+
+
+def test_active_models_stub_mode(monkeypatch):
+    # Default (no env): every role is stubbed, mode is "stub".
+    from quillwright.resolver import active_models
+
+    _clear_model_env(monkeypatch)
+    info = active_models()
+    assert info["mode"] == "stub"
+    assert info["roles"]["brain"] == "stub"
+    assert info["roles"]["perception"] == "stub"
+
+
+def test_active_models_local_mode_names_ollama_tags(monkeypatch):
+    # FF_REAL_MODELS=1 → all roles on local Ollama; labels are the real tags.
+    from quillwright.resolver import active_models
+
+    _clear_model_env(monkeypatch)
+    monkeypatch.setenv("FF_REAL_MODELS", "1")
+    info = active_models()
+    assert info["mode"] == "local"
+    assert info["roles"]["brain"] == "nemotron-3-nano:4b"
+    assert info["roles"]["perception"] == "minicpm-v"
+    assert info["roles"]["multilingual"] == "aya"
+
+
+def test_active_models_modal_brain_only_is_mixed(monkeypatch):
+    # FF_BACKEND=modal alone moves ONLY the brain to Modal; the other roles stay
+    # local → the mode is "mixed" (honest: not a pure Modal stack), and each role
+    # label reflects where it actually runs.
+    from quillwright.resolver import active_models
+
+    _clear_model_env(monkeypatch)
+    monkeypatch.setenv("FF_BACKEND", "modal")
+    monkeypatch.setenv("FF_MODAL_BRAIN_URL", "https://example--brain")
+    info = active_models()
+    assert info["mode"] == "mixed"
+    assert "30b" in info["roles"]["brain"].lower()  # Modal Best-Stack brain
+    # No FF_REAL_MODELS, so perception is honestly still stubbed (not on Ollama).
+    assert info["roles"]["perception"] == "stub"
+
+
+def test_active_models_modal_brain_plus_local_rest_is_mixed(monkeypatch):
+    # The realistic "best brain, local everything else" combo: FF_REAL_MODELS=1
+    # (local Ollama) + FF_BACKEND=modal + brain URL → brain on Modal, perception/
+    # multilingual on Ollama → honestly "mixed", each label reflecting reality.
+    from quillwright.resolver import active_models
+
+    _clear_model_env(monkeypatch)
+    monkeypatch.setenv("FF_REAL_MODELS", "1")
+    monkeypatch.setenv("FF_BACKEND", "modal")
+    monkeypatch.setenv("FF_MODAL_BRAIN_URL", "https://example--brain")
+    info = active_models()
+    assert info["mode"] == "mixed"
+    assert "30b" in info["roles"]["brain"].lower()
+    assert info["roles"]["perception"] == "minicpm-v"  # local Ollama
+    assert info["roles"]["multilingual"] == "aya"
+
+
+def test_active_models_full_modal_stack(monkeypatch):
+    # Brain + Omni + Aya all on Modal → a pure "modal" stack.
+    from quillwright.resolver import active_models
+
+    _clear_model_env(monkeypatch)
+    monkeypatch.setenv("FF_BACKEND", "modal")
+    monkeypatch.setenv("FF_MODAL_BRAIN_URL", "https://example--brain")
+    monkeypatch.setenv("FF_MODAL_OMNI_URL", "https://example--omni")
+    monkeypatch.setenv("FF_MODAL_AYA_URL", "https://example--aya")
+    info = active_models()
+    assert info["mode"] == "modal"
+    assert "30b" in info["roles"]["brain"].lower()
+    assert "omni" in info["roles"]["perception"].lower()
+    assert "aya" in info["roles"]["multilingual"].lower()

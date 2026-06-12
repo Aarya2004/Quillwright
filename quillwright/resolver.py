@@ -100,6 +100,68 @@ def modal_resolver_if_configured(role: str) -> "ModelResolver | None":
     return ModelResolver(mode="best", backend="modal")
 
 
+# Human-facing labels for the Modal Best-Stack models (the resolver tags above are
+# terse; these read well in the UI badge).
+MODAL_LABELS = {
+    "brain": "Nemotron-3-Nano-30B",
+    "perception": "Nemotron-Omni-30B",
+    "audio": "Nemotron-Omni-30B",
+    "multilingual": "Aya-Expanse-8B",
+}
+
+# Roles shown in the UI badge (audio is omitted — it has no always-on indicator and
+# rides the same deployment as perception).
+_BADGE_ROLES = ("brain", "perception", "multilingual")
+
+
+def active_models() -> dict:
+    """Where each Model Role actually resolves right now, for the UI badge + banner.
+
+    Reads the same env the resolvers do (FF_REAL_MODELS / FF_BACKEND / FF_MODAL_*_URL)
+    so it is one honest source of truth — not a guess. Returns
+    {"mode": <stub|local|modal|mixed>, "roles": {role: <label>}}.
+
+    `mode` summarizes the spread: "stub" if nothing is real, "local" if every real
+    role is on Ollama, "modal" if every real role is on Modal, "mixed" otherwise
+    (e.g. FF_BACKEND=modal moves only the brain — the rest stay local).
+    """
+    import os
+
+    real = os.environ.get("FF_REAL_MODELS") == "1"
+    modal_brain = os.environ.get("FF_BACKEND") == "modal"
+
+    if not real and not modal_brain:
+        return {"mode": "stub", "roles": {r: "stub" for r in _BADGE_ROLES}}
+
+    def _where(role: str) -> str:
+        # A role is on Modal iff its own URL is configured (brain keys off the
+        # backend flag; the others opt in per-URL — mirrors the resolvers).
+        if modal_resolver_if_configured(role) is not None:
+            return "modal"
+        return "local" if real else "stub"
+
+    roles, backends = {}, set()
+    for role in _BADGE_ROLES:
+        where = _where(role)
+        backends.add(where)
+        if where == "modal":
+            roles[role] = MODAL_LABELS[role]
+        elif where == "local":
+            roles[role] = OLLAMA_TAGS[role]
+        else:
+            roles[role] = "stub"
+
+    # A single uniform backend across all badge roles names the mode; any spread
+    # (e.g. brain on Modal but the rest stubbed/local) is honestly "mixed".
+    if backends == {"modal"}:
+        mode = "modal"
+    elif backends == {"local"}:
+        mode = "local"
+    else:
+        mode = "mixed"
+    return {"mode": mode, "roles": roles}
+
+
 class ModelResolver:
     def __init__(
         self,
