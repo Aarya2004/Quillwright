@@ -143,6 +143,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 20px 24px;
   border-bottom: 1px solid var(--outline-variant);
 }
@@ -158,20 +159,67 @@
   padding: 24px;
 }
 
-/* Digital Apprentice header. */
+/* Digital Apprentice header. The badge wraps onto its own line under the title
+   when the pane is narrow, so it never collides with the run-state label. */
 .apprentice {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  min-width: 0;
+}
+.apprentice h2 {
+  margin-right: 2px;
 }
 .apprentice .material-symbols-outlined {
   color: var(--primary);
   animation: pulse 2s infinite;
 }
+/* Model-mode badge: which models are actually running (stub/local/modal/mixed)
+   + per-role labels. Honest at-a-glance answer to "am I on the real models?". */
+.model-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--secondary);
+  background: var(--surface);
+}
+.model-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--outline-variant);
+  flex: none;
+}
+.model-badge-roles {
+  font-weight: 400;
+  color: var(--secondary);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+}
+/* Dot color per mode: stub = neutral, local = green (on-device), modal = orange
+   (hosted accent), mixed = amber (a spread of backends). */
+.model-badge[data-mode="local"] .model-badge-dot {
+  background: var(--ok);
+}
+.model-badge[data-mode="modal"] .model-badge-dot {
+  background: var(--primary);
+}
+.model-badge[data-mode="mixed"] .model-badge-dot {
+  background: #d9920a;
+}
+
 .live {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: none;
   color: var(--secondary);
   font-size: 14px;
 }

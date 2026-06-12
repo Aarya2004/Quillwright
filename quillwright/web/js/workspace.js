@@ -10,6 +10,7 @@ import {
   chatAboutEstimate,
   transcribeNote,
   parseDocument,
+  modelInfo,
 } from "./client.js";
 import { resetTrace, addStep } from "./trace.js";
 
@@ -441,6 +442,24 @@ $("est-rows").addEventListener("focusout", onCellEdit);
 $("transcript").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) forge();
 });
+
+// Populate the model-mode badge (stub / local / modal / mixed) + per-role labels.
+async function showModelBadge() {
+  try {
+    const info = await modelInfo();
+    const badge = $("model-badge");
+    badge.dataset.mode = info.mode;
+    $("model-badge-mode").textContent = info.mode.charAt(0).toUpperCase() + info.mode.slice(1);
+    const labels = { brain: "brain", perception: "vision", multilingual: "lang" };
+    $("model-badge-roles").textContent = Object.entries(info.roles)
+      .map(([role, name]) => `${labels[role] || role}: ${name}`)
+      .join(" · ");
+    badge.hidden = false;
+  } catch {
+    /* badge is informational; never block the app if it fails */
+  }
+}
+showModelBadge();
 
 // First paint: show the empty-estimate state rather than a bare table header.
 renderRows();

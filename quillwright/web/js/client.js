@@ -24,6 +24,12 @@ async function consumeStream(url, body, onEvent) {
   }
 }
 
+// Which models fill each role right now (mode + per-role labels) for the badge.
+export async function modelInfo() {
+  const res = await fetch("/api/model_info");
+  return res.json();
+}
+
 // Upload one image (base64 data URL); returns the server-side path.
 export async function uploadImage(dataUrl, filename) {
   const res = await fetch("/api/upload", {
