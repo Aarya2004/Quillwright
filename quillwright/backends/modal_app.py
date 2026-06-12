@@ -61,6 +61,9 @@ app = modal.App("quillwright-brain")
     image=image,
     gpu="L40S",  # FP8 needs ~32GB VRAM; L40S has 48GB (A10G's 24GB is too small).
     volumes={"/cache": hf_cache},  # clean mount point; HF_HOME points here.
+    # HF_TOKEN for the weight download (harmless if ungated; required if the NVIDIA
+    # repo is gated). Same secret across all four apps.
+    secrets=[modal.Secret.from_name("huggingface-secret")],
     timeout=1200,
     scaledown_window=120,  # warm 2 min after a request (masks cold starts; limits idle L40S burn).
     min_containers=0,  # true scale-to-zero: $0 when idle (open-ended judging window — never pre-warm-and-forget).

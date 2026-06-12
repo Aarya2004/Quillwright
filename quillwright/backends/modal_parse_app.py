@@ -65,6 +65,9 @@ app = modal.App("quillwright-parse")
     image=image,
     gpu="T4",  # Parse is ~1GB; a T4 is plenty (and the cheapest GPU).
     volumes={"/cache": hf_cache},
+    # HF_TOKEN for the weight download (harmless if ungated; required if the NVIDIA
+    # repo is gated). Same secret across all four apps.
+    secrets=[modal.Secret.from_name("huggingface-secret")],
     timeout=600,
     scaledown_window=240,  # cheap T4 — modest idle burn, kept warm a bit longer for multi-doc capture.
     min_containers=0,  # true scale-to-zero: $0 when idle (open-ended judging window — never pre-warm-and-forget).

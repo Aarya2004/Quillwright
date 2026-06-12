@@ -40,6 +40,10 @@ app = modal.App("quillwright-aya")
     image=image,
     gpu="A10G",  # 8B BF16 ~16GB; A10G's 24GB fits with short-context headroom.
     volumes={"/cache": hf_cache},
+    # aya-expanse-8b is a GATED HF repo — vLLM 401s without a token. HF_TOKEN from
+    # this secret authenticates the weight download. Accept the license on the repo
+    # page first: huggingface.co/CohereLabs/aya-expanse-8b
+    secrets=[modal.Secret.from_name("huggingface-secret")],
     timeout=1200,
     scaledown_window=300,  # stay warm 5 min after a request to mask cold starts (cheap A10G — idle burn is low).
     min_containers=0,  # true scale-to-zero: $0 when idle (open-ended judging window — never pre-warm-and-forget).
