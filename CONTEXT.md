@@ -12,6 +12,14 @@ _Avoid_: upload, input, submission
 A single fact the perception model extracts from a photo — an item, part, damage, or piece of read text (e.g. a nameplate model number).
 _Avoid_: detection, finding, result
 
+**Document Capture**:
+A second capture path: a document the tech or customer hands over — a spec sheet, supplier quote, or old written estimate — read by the Extraction Model Role (Nemotron Parse) into structured text + tables that feed the same Estimate pipeline. Distinct from a job-site photo (different input, different model); entered via its own control, never auto-classified.
+_Avoid_: scan, OCR (Document Capture is the agent-facing capability; OCR is one mechanism)
+
+**Proposed Line Item**:
+A Line Item whose price came from a Document Capture, not the catalog — surfaced to the human as a proposal to confirm or edit before it enters the Estimate. The document is the _source_, but the price only becomes customer-facing once a human confirms it (an Agent Pause), preserving Facts-from-Tools.
+_Avoid_: draft line (a Line Item is already a draft; "Proposed" specifically means awaiting human confirmation of a document-read price)
+
 **Agent Brain**:
 The orchestrator model that runs the plan → act → self-check loop and decides which Tools to call. There is exactly one.
 _Avoid_: orchestrator, controller, LLM
@@ -21,7 +29,7 @@ A callable capability the Agent Brain invokes. Tools are where facts (prices, ma
 _Avoid_: function, plugin, skill
 
 **Facts-from-Tools**:
-The correctness rule: any number that reaches the customer (price, quantity, markup, tax, total) must come from a Tool (`lookup_price`, `compute`) or user-confirmed data — never from the Agent Brain's free generation.
+The correctness rule: any number that reaches the customer (price, quantity, markup, tax, total) must come from a Tool (`lookup_price`, `compute`) or user-confirmed data — never from the Agent Brain's free generation. This extends to **Document Capture**: a price read off a document by Nemotron Parse is a _model_ output, so it is never used directly — it becomes a Proposed Line Item the human confirms (the document is the source; the human is the gate).
 _Avoid_: no-hallucination (too vague)
 
 **Line Item**:
