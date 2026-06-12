@@ -57,15 +57,63 @@ def test_modal_backend_returns_modal_brain(monkeypatch):
     assert brain.name == "nemotron-3-nano-30b-a3b"
 
 
-def test_modal_backend_rejects_roles_not_yet_hosted():
-    # de-risk scope = brain only; vision/multilingual must fail LOUD, not silently stub.
+def test_modal_backend_rejects_roles_not_hosted():
+    # A role with no Modal serving path must fail LOUD, not silently stub.
     resolver = ModelResolver(mode="best", backend="modal")
-    for role in ("perception", "multilingual"):
-        try:
-            resolver.for_role(role)
-            assert False, f"expected KeyError for {role}"
-        except KeyError:
-            pass
+    try:
+        resolver.for_role("visual")
+        assert False, "expected KeyError for visual"
+    except KeyError:
+        pass
+
+
+def test_modal_backend_hosts_omni_for_perception_and_audio(monkeypatch):
+    # Best-Stack Perception AND Audio both ride the ONE Omni deployment (ADR-0009:
+    # Omni is omnimodal — image + audio — so one app serves two Model Roles).
+    from quillwright.backends.modal import ModalModel
+
+    monkeypatch.setenv("FF_MODAL_OMNI_URL", "https://example--quillwright-omni-serve")
+    resolver = ModelResolver(mode="best", backend="modal")
+    perception = resolver.for_role("perception")
+    audio = resolver.for_role("audio")
+    assert isinstance(perception, ModalModel) and isinstance(audio, ModalModel)
+    assert "omni" in perception.name
+    assert "omni" in audio.name
+
+
+def test_modal_backend_hosts_aya_for_multilingual(monkeypatch):
+    from quillwright.backends.modal import ModalModel
+
+    monkeypatch.setenv("FF_MODAL_AYA_URL", "https://example--quillwright-aya-serve")
+    resolver = ModelResolver(mode="best", backend="modal")
+    multilingual = resolver.for_role("multilingual")
+    assert isinstance(multilingual, ModalModel)
+    assert "aya" in multilingual.name
+
+
+def test_modal_resolver_if_configured_gates_on_backend_and_url(monkeypatch):
+    # Per-role opt-in (mirrors FF_MODAL_PARSE_URL): FF_BACKEND=modal moves ONLY the
+    # brain; each other role rides Modal IFF its own URL is also set. Without that,
+    # the local path keeps working — never a surprise dependency on a GPU endpoint.
+    from quillwright.resolver import modal_resolver_if_configured
+
+    monkeypatch.delenv("FF_BACKEND", raising=False)
+    monkeypatch.setenv("FF_MODAL_OMNI_URL", "https://example--omni")
+    assert modal_resolver_if_configured("perception") is None  # backend not modal
+
+    monkeypatch.setenv("FF_BACKEND", "modal")
+    monkeypatch.delenv("FF_MODAL_OMNI_URL", raising=False)
+    assert modal_resolver_if_configured("perception") is None  # role URL not set
+
+    monkeypatch.setenv("FF_MODAL_OMNI_URL", "https://example--omni")
+    resolver = modal_resolver_if_configured("perception")
+    assert resolver is not None
+    from quillwright.backends.modal import ModalModel
+
+    assert isinstance(resolver.for_role("perception"), ModalModel)
+
+    # A role with no Modal endpoint mapping never upgrades.
+    assert modal_resolver_if_configured("embedding") is None
 
 
 def test_modal_model_requires_url():

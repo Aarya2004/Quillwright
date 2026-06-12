@@ -5,7 +5,128 @@ to the {content, tool_calls:[{function:{name, arguments(dict)}}]} contract that
 brain_loop.py / chat.py expect. We test that translation directly.
 """
 
-from quillwright.backends.modal import _adapt_tool_call, _to_openai_messages
+import json
+
+from quillwright.backends.modal import ModalModel, _adapt_tool_call, _to_openai_messages
+
+
+class _Resp:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self._payload
+
+
+def _capture_post(captured, content="ok"):
+    def post(url, json=None, timeout=None):
+        captured["url"] = url
+        captured["body"] = json
+        return _Resp({"choices": [{"message": {"content": content}}]})
+
+    return post
+
+
+def test_generate_with_image_sends_openai_image_content(monkeypatch, tmp_path):
+    # Best-Stack Perception (Omni): an image rides the OpenAI multimodal content
+    # shape — a data-URL image_url part next to the text part.
+    img = tmp_path / "unit.png"
+    img.write_bytes(b"\x89PNGfake")
+    monkeypatch.setenv("FF_MODAL_OMNI_URL", "https://example--omni")
+    captured = {}
+    monkeypatch.setattr("quillwright.backends.modal.requests.post", _capture_post(captured))
+
+    model = ModalModel("nemotron-3-nano-omni-30b-a3b", role="perception")
+    out = model.generate("What parts do you see?", image_path=str(img))
+
+    assert out == "ok"
+    parts = captured["body"]["messages"][0]["content"]
+    kinds = {p["type"] for p in parts}
+    assert kinds == {"text", "image_url"}
+    image_part = next(p for p in parts if p["type"] == "image_url")
+    assert image_part["image_url"]["url"].startswith("data:image/png;base64,")
+
+
+def test_generate_without_image_keeps_plain_string_content(monkeypatch):
+    monkeypatch.setenv("FF_MODAL_OMNI_URL", "https://example--omni")
+    captured = {}
+    monkeypatch.setattr("quillwright.backends.modal.requests.post", _capture_post(captured))
+
+    model = ModalModel("nemotron-3-nano-omni-30b-a3b", role="perception")
+    model.generate("plain prompt")
+    assert captured["body"]["messages"][0]["content"] == "plain prompt"
+
+
+def test_transcribe_sends_input_audio_and_returns_text(monkeypatch, tmp_path):
+    # Best-Stack Audio (Omni): a voice note goes up as OpenAI input_audio (base64 +
+    # format) and the transcript comes back as plain content.
+    wav = tmp_path / "note.wav"
+    wav.write_bytes(b"RIFFfakewav")
+    monkeypatch.setenv("FF_MODAL_OMNI_URL", "https://example--omni")
+    captured = {}
+    monkeypatch.setattr(
+        "quillwright.backends.modal.requests.post",
+        _capture_post(captured, content="replaced the capacitor"),
+    )
+
+    model = ModalModel("nemotron-3-nano-omni-30b-a3b", role="audio")
+    text = model.transcribe(str(wav))
+
+    assert text == "replaced the capacitor"
+    parts = captured["body"]["messages"][0]["content"]
+    audio_part = next(p for p in parts if p["type"] == "input_audio")
+    assert audio_part["input_audio"]["format"] == "wav"
+    assert audio_part["input_audio"]["data"]  # base64 payload present
+
+
+def test_each_role_reads_its_own_url_env(monkeypatch):
+    # multilingual must point at the Aya app, never silently reuse the brain URL.
+    monkeypatch.delenv("FF_MODAL_AYA_URL", raising=False)
+    monkeypatch.setenv("FF_MODAL_BRAIN_URL", "https://example--brain")
+    try:
+        ModalModel("aya-expanse-8b", role="multilingual")
+        assert False, "expected RuntimeError when the role's own URL is unset"
+    except RuntimeError as exc:
+        assert "FF_MODAL_AYA_URL" in str(exc)
+
+
+def test_chat_unchanged_for_brain_role(monkeypatch):
+    # The original brain contract must survive the per-role refactor.
+    monkeypatch.setenv("FF_MODAL_BRAIN_URL", "https://example--brain")
+    captured = {}
+
+    def post(url, json=None, timeout=None):
+        captured["url"] = url
+        captured["body"] = json
+        return _Resp(
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "content": "",
+                            "tool_calls": [
+                                {
+                                    "function": {
+                                        "name": "finish",
+                                        "arguments": json_dumps_empty,
+                                    }
+                                }
+                            ],
+                        }
+                    }
+                ]
+            }
+        )
+
+    json_dumps_empty = json.dumps({})
+    monkeypatch.setattr("quillwright.backends.modal.requests.post", post)
+    model = ModalModel("nemotron-3-nano-30b-a3b")
+    out = model.chat([{"role": "user", "content": "x"}], tools=[])
+    assert captured["url"].endswith("/v1/chat/completions")
+    assert out["tool_calls"][0]["function"]["arguments"] == {}
 
 
 def test_adapt_parses_json_string_arguments():

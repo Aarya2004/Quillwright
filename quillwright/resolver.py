@@ -53,12 +53,14 @@ OLLAMA_TAGS = {
     "multilingual": "aya",
 }
 
-# Roles served on Modal (ADR-0005 hosted compute). De-risk scope = brain only for
-# now (ADR-0009 Best-Stack brain = Nemotron 30B-A3B); vision/multilingual follow
-# once the brain path is proven. The label is informational; modal_app.py pins the
-# real repo id.
+# Roles served on Modal (ADR-0005 hosted compute, ADR-0009 Best Stack). Labels are
+# informational; each role's modal app pins the real repo id (see backends/modal.py
+# ROLE_ENDPOINTS). Perception + audio share the ONE Omni deployment (omnimodal).
 MODAL_ROLES = {
     "brain": "nemotron-3-nano-30b-a3b",
+    "perception": "nemotron-3-nano-omni-30b-a3b",
+    "audio": "nemotron-3-nano-omni-30b-a3b",
+    "multilingual": "aya-expanse-8b",
 }
 
 
@@ -68,13 +70,34 @@ def brain_resolver() -> "ModelResolver":
     FF_BACKEND=modal  -> Best-Stack brain (Nemotron 30B) hosted on Modal (ADR-0009).
     otherwise         -> Private-Stack brain (Nemotron 4B) via local Ollama.
 
-    Perception + multilingual stay on Ollama for now (Modal de-risk = brain only).
+    The brain is special: FF_BACKEND=modal *means* "brain on Modal", so a missing
+    FF_MODAL_BRAIN_URL fails LOUD in ModalModel rather than silently downgrading.
+    Other roles opt in per-URL via modal_resolver_if_configured().
     """
     import os
 
     if os.environ.get("FF_BACKEND") == "modal":
         return ModelResolver(mode="best", backend="modal")
     return ModelResolver(mode="private", backend="ollama")
+
+
+def modal_resolver_if_configured(role: str) -> "ModelResolver | None":
+    """A Best-Stack Modal resolver for `role`, or None when the local path should run.
+
+    Per-role opt-in (mirrors FF_MODAL_PARSE_URL): FF_BACKEND=modal moves ONLY the
+    brain; perception/audio/multilingual each ride Modal IFF their own URL env is
+    also set. Callers fall back to their existing local/stub path on None — turning
+    on the hosted brain never breaks a role whose GPU app isn't deployed.
+    """
+    import os
+
+    if os.environ.get("FF_BACKEND") != "modal":
+        return None
+    from quillwright.backends.modal import ROLE_ENDPOINTS
+
+    if role not in ROLE_ENDPOINTS or not os.environ.get(ROLE_ENDPOINTS[role][0]):
+        return None
+    return ModelResolver(mode="best", backend="modal")
 
 
 class ModelResolver:
@@ -98,9 +121,10 @@ class ModelResolver:
             from quillwright.backends.embedding import EmbeddingModel
 
             return EmbeddingModel()
-        # Audio (Cohere Transcribe) likewise has ONE on-device path via transformers
-        # (ADR-0009) — not Ollama. Resolve it directly for any non-stub backend.
-        if role == "audio" and self._backend != "stub":
+        # Audio: on-device Cohere Transcribe via transformers (ADR-0009) — not Ollama —
+        # EXCEPT under the modal backend, where it rides the hosted Omni deployment
+        # like any other MODAL_ROLES entry (falls through to the modal branch below).
+        if role == "audio" and self._backend not in ("stub", "modal"):
             from quillwright.backends.audio import AudioModel
 
             return AudioModel()
@@ -119,12 +143,10 @@ class ModelResolver:
             return OllamaModel(OLLAMA_TAGS[role])
         if self._backend == "modal":
             if role not in MODAL_ROLES:
-                raise KeyError(
-                    f"role '{role}' is not served on Modal yet (de-risk scope = brain only)"
-                )
+                raise KeyError(f"role '{role}' is not served on Modal")
             from quillwright.backends.modal import ModalModel
 
-            return ModalModel(MODAL_ROLES[role])
+            return ModalModel(MODAL_ROLES[role], role=role)
         if role not in self._roles:
             raise KeyError(f"unknown role: {role}")
         return StubModel(responses=[""], name=self._roles[role])

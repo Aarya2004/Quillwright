@@ -1,36 +1,76 @@
 """ModalModel: the Best-Stack hosted-compute client (ADR-0005 / ADR-0009).
 
-Same interface as OllamaModel (name + generate + chat) so the resolver can swap to
-it with `backend="modal"`. It calls the vLLM OpenAI-compatible server deployed by
-`modal_app.py` and adapts the response back to our internal contract:
+Same interface as OllamaModel (name + generate + chat, plus transcribe for the
+Audio role) so the resolver can swap to it with `backend="modal"`. It calls the
+vLLM OpenAI-compatible server deployed by the role's modal app and adapts the
+response back to our internal contract:
 
   - chat() returns {"content": str, "tool_calls": [{"function": {"name", "arguments"}}]}
     where `arguments` is a DICT (vLLM/OpenAI gives it as a JSON string — we parse it),
     matching what brain_loop.py expects from OllamaModel.chat().
+  - generate() takes an optional image_path (Best-Stack Perception via Omni) sent
+    as an OpenAI data-URL image_url content part.
+  - transcribe() sends a voice note as OpenAI input_audio (Best-Stack Audio via the
+    SAME Omni deployment — it is omnimodal, so one app serves two Model Roles).
 
-The base URL (printed by `modal deploy`) comes from FF_MODAL_BRAIN_URL.
+Each role reads its own base URL env (printed by `modal deploy` of its app):
+brain -> modal_app.py, perception/audio -> modal_omni_app.py,
+multilingual -> modal_aya_app.py.
 """
 
+import base64
 import json
 import os
+from pathlib import Path
 
 import requests
 
+# role -> (url env, served-model override env, default served model repo id).
+# The deployed vLLM server pins the real repo; the env override exists for the
+# day a variant swap shouldn't need a redeploy of this client.
+ROLE_ENDPOINTS = {
+    "brain": (
+        "FF_MODAL_BRAIN_URL",
+        "FF_MODAL_BRAIN_MODEL",
+        "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8",
+    ),
+    "perception": (
+        "FF_MODAL_OMNI_URL",
+        "FF_MODAL_OMNI_MODEL",
+        "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-FP8",
+    ),
+    "audio": (
+        "FF_MODAL_OMNI_URL",
+        "FF_MODAL_OMNI_MODEL",
+        "nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning-FP8",
+    ),
+    "multilingual": (
+        "FF_MODAL_AYA_URL",
+        "FF_MODAL_AYA_MODEL",
+        "CohereLabs/aya-expanse-8b",
+    ),
+}
+
 
 class ModalModel:
-    def __init__(self, model: str, base_url: str | None = None, timeout: float = 300.0):
+    def __init__(
+        self,
+        model: str,
+        role: str = "brain",
+        base_url: str | None = None,
+        timeout: float = 300.0,
+    ):
         # `model` is the label/role tag; the deployed server already pins the real
         # repo id, so we send a model field vLLM accepts (the served model name).
         self.name = model
-        self._base = (base_url or os.environ.get("FF_MODAL_BRAIN_URL", "")).rstrip("/")
+        url_env, model_env, default_model = ROLE_ENDPOINTS[role]
+        self._base = (base_url or os.environ.get(url_env, "")).rstrip("/")
         if not self._base:
             raise RuntimeError(
-                "FF_MODAL_BRAIN_URL is not set — deploy modal_app.py and export the URL "
-                "it prints (see backends/modal_app.py)."
+                f"{url_env} is not set — deploy the Modal app for role '{role}' and "
+                "export the URL it prints (see quillwright/backends/modal_*.py)."
             )
-        self._served_model = os.environ.get(
-            "FF_MODAL_BRAIN_MODEL", "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-FP8"
-        )
+        self._served_model = os.environ.get(model_env, default_model)
         self._timeout = timeout
 
     def _post(self, path: str, body: dict) -> dict:
@@ -55,14 +95,53 @@ class ModalModel:
         }
 
     def generate(self, prompt: str, image_path: str | None = None) -> str:
-        """Plain completion via the OpenAI chat API (text-only; vision is a later role)."""
+        """Completion via the OpenAI chat API; an image (Best-Stack Perception via
+        Omni) rides as a data-URL image_url content part."""
+        content: str | list = prompt
+        if image_path:
+            suffix = Path(image_path).suffix.lstrip(".").lower() or "png"
+            content = [
+                {"type": "text", "text": prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/{suffix};base64,{_b64(image_path)}"},
+                },
+            ]
         body = {
             "model": self._served_model,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [{"role": "user", "content": content}],
             "stream": False,
         }
         data = self._post("/v1/chat/completions", body)
         return (data.get("choices") or [{}])[0].get("message", {}).get("content", "") or ""
+
+    def transcribe(self, audio_path: str) -> str:
+        """Transcribe a voice note (Best-Stack Audio via Omni): OpenAI input_audio
+        content in, plain transcript out. Same contract as AudioModel.transcribe."""
+        fmt = Path(audio_path).suffix.lstrip(".").lower() or "wav"
+        body = {
+            "model": self._served_model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_audio",
+                            "input_audio": {"data": _b64(audio_path), "format": fmt},
+                        },
+                        {"type": "text", "text": "Transcribe this voice note verbatim."},
+                    ],
+                }
+            ],
+            "stream": False,
+        }
+        data = self._post("/v1/chat/completions", body)
+        return (data.get("choices") or [{}])[0].get("message", {}).get("content", "") or ""
+
+
+def _b64(path: str) -> str:
+    with open(path, "rb") as fh:
+        return base64.b64encode(fh.read()).decode("ascii")
 
 
 def _adapt_tool_call(tc: dict) -> dict:
