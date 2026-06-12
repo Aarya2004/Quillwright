@@ -73,11 +73,15 @@ Two inconsistencies that surprise people:
 
 ```
 pytest -v
-ruff check . && ruff format --check .       # Python lint/format
-npx prettier --check "quillwright/web/**/*"  # web lint/format
+ruff check . && ruff format --check .                  # Python lint/format
+npx prettier --check --ignore-unknown "quillwright/web/**/*"  # web lint/format
+python scripts/check_deps_sync.py                      # pyproject ↔ requirements.txt
 
 # brain accuracy against the eval set (needs Ollama + FF_REAL_MODELS=1)
 FF_REAL_MODELS=1 PYTHONPATH=. python scripts/run_brain_eval.py
 ```
+
+CI (`.github/workflows/ci.yml`) runs the same gate on every push/PR: the
+dependency-sync check, ruff lint/format, pytest, and the web prettier check.
 
 Models resolve per role via `quillwright/resolver.py` (stub ↔ Ollama). Pricing is clearly-labeled sample data.
