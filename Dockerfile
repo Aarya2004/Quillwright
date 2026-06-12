@@ -1,4 +1,4 @@
-# FieldForge HF Space — Docker SDK.
+# Quillwright HF Space — Docker SDK.
 # Runs the bespoke gr.Server (FastAPI) app in STUB mode (no GPU, no Ollama): the contest
 # requires a Gradio Space underneath, and Docker SDK is sanctioned. Real models reach the
 # hosted Space via Modal later (ADR-0005); this image needs neither GPU nor model weights.
