@@ -104,6 +104,13 @@ class ModelResolver:
             from quillwright.backends.audio import AudioModel
 
             return AudioModel()
+        # Extraction (Nemotron Parse) has ONE serving path too, but a REMOTE one:
+        # it is visual, so it never fits Ollama/vLLM and is always hosted on Modal
+        # (ADR-0011). The Modal endpoint URL comes from FF_MODAL_PARSE_URL.
+        if role == "extraction" and self._backend != "stub":
+            from quillwright.backends.parse import ParseModel
+
+            return ParseModel()
         if self._backend == "ollama":
             if role not in OLLAMA_TAGS:
                 raise KeyError(f"no ollama tag for role: {role}")
