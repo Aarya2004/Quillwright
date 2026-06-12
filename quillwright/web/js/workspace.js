@@ -17,6 +17,12 @@ const $ = (id) => document.getElementById(id);
 const TAX_RATE = 0.13;
 const JOB_TITLE = "AC Unit Repair — 123 Maple St";
 
+// Run state, in one place: the label text + the live-dot color (data-state).
+function setState(state, label) {
+  $("forge-state").textContent = label;
+  document.querySelector(".live").dataset.state = state;
+}
+
 // Photos picked for this job: server-side paths (after upload).
 let imagePaths = [];
 // Current estimate rows (editable). [{description, quantity, unit, rate, subtotal}]
@@ -91,10 +97,11 @@ async function onDocument(e) {
   const file = (e.target.files || [])[0];
   e.target.value = ""; // allow re-picking the same file
   if (!file) return;
-  $("forge-state").textContent = "Reading document…";
+  setState("working", "Reading document…");
   const dataUrl = await readAsDataURL(file);
   const out = await parseDocument(dataUrl, file.name);
-  $("forge-state").textContent = rows.length ? "Done" : "Idle";
+  if (rows.length) setState("done", "Done");
+  else setState("idle", "Idle");
   const title = (out.observations[0] || {}).text || file.name;
   addStep($("log"), {
     action: "document",
@@ -124,7 +131,7 @@ function showProposedItems(items) {
           ${items
             .map(
               (p, i) => `
-          <label class="doc-item">
+          <label class="doc-item" style="--doc-delay:${i * 55}ms">
             <input type="checkbox" data-i="${i}" checked />
             <span class="doc-desc">${p.description}<small>${p.source_text}</small></span>
             <input class="doc-qty" type="number" step="any" value="${p.quantity}" aria-label="Quantity" />
@@ -172,6 +179,11 @@ function showProposedItems(items) {
 // `animate` staggers the rows in (used when a fresh estimate lands, not on edits).
 function renderRows(animate = false) {
   const tbody = $("est-rows");
+  if (!rows.length) {
+    tbody.innerHTML =
+      '<tr class="table-empty"><td colspan="4">No line items yet — forge an estimate to begin.</td></tr>';
+    return;
+  }
   tbody.innerHTML = rows
     .map(
       (
@@ -211,7 +223,7 @@ function setEstimate(est, animate = false) {
   if (!est) {
     rows = [];
     lastTotal = null;
-    $("est-rows").innerHTML = "";
+    renderRows();
     renderTotals({ subtotal: 0, tax_rate: 0, tax: 0, total: 0 });
     setChatEnabled(false);
     return;
@@ -267,21 +279,20 @@ function handleEvent(event) {
     showPause(event);
   } else if (event.type === "estimate") {
     setEstimate(event.estimate, true);
-    $("forge-state").textContent = "Done";
+    setState("done", "Done");
   }
 }
 
 // Render the Agent-Pause question card; answering resumes the run.
 function showPause(event) {
-  $("forge-state").textContent = "Needs you";
+  setState("needs-you", "Needs you");
   const card = $("pause");
   card.innerHTML = `
     <div class="bot"><span class="material-symbols-outlined">smart_toy</span></div>
-    <div style="flex:1">
+    <div class="pause-body">
       <p>${event.reason}. What should I charge for it?</p>
       <div class="opts">
-        <input id="pause-price" type="number" step="0.01" placeholder="0.00"
-               style="padding:8px;border:1px solid var(--outline);border-radius:8px;width:120px" />
+        <input id="pause-price" class="pause-price" type="number" step="0.01" placeholder="0.00" />
         <button class="btn btn--primary" id="pause-submit">Use this price</button>
       </div>
     </div>`;
@@ -293,8 +304,8 @@ function showPause(event) {
     if (Number.isNaN(value)) return;
     card.style.display = "none";
     card.innerHTML = "";
-    $("forge-state").textContent = "Working…";
-    await resumeEstimateStream(value, handleEvent);
+    setState("working", "Working…");
+    await withForgeLocked(() => resumeEstimateStream(value, handleEvent));
   };
   $("pause-submit").addEventListener("click", submit);
   input.addEventListener("keydown", (e) => {
@@ -302,20 +313,30 @@ function showPause(event) {
   });
 }
 
+// Hold the Forge button down while a run streams (no double-forge); always release.
+async function withForgeLocked(run) {
+  $("forge-btn").disabled = true;
+  try {
+    await run();
+  } finally {
+    $("forge-btn").disabled = false;
+  }
+}
+
 async function forge() {
   const transcript = $("transcript").value;
   resetTrace($("log"));
   setEstimate(null);
   $("pause").style.display = "none";
-  $("forge-state").textContent = "Working…";
-  await forgeEstimateStream(transcript, "hvac", imagePaths, handleEvent);
+  setState("working", "Working…");
+  await withForgeLocked(() => forgeEstimateStream(transcript, "hvac", imagePaths, handleEvent));
 }
 
 function newEstimate() {
   resetTrace($("log"));
   setEstimate(null);
   $("pause").style.display = "none";
-  $("forge-state").textContent = "Idle";
+  setState("idle", "Idle");
   $("transcript").value = "";
   $("thumbs").innerHTML = "";
   imagePaths = [];
@@ -420,3 +441,6 @@ $("est-rows").addEventListener("focusout", onCellEdit);
 $("transcript").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) forge();
 });
+
+// First paint: show the empty-estimate state rather than a bare table header.
+renderRows();
