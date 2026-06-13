@@ -102,7 +102,7 @@ app = modal.App("quillwright-ft-train")
     secrets=[modal.Secret.from_name("huggingface-secret")],
     timeout=14400,  # 4h ceiling: cold start + weight pull + train + Hub push.
 )
-def train(smoke: bool = False, hub_model_id: str = HUB_MODEL_ID_DEFAULT):
+def train(smoke: bool = False, hub_model_id: str = HUB_MODEL_ID_DEFAULT, push: bool = True):
     import json
     import os
     import subprocess
@@ -208,7 +208,15 @@ def train(smoke: bool = False, hub_model_id: str = HUB_MODEL_ID_DEFAULT):
         print("SMOKE OK — training + inference contracts proven (see asserts above).")
         return
 
-    # --- full run: push the adapter folder to the Hub -----------------------
+    # --- full run: adapter is saved on the volume at OUTPUT_DIR ---------------
+    # Push is GATED (push=False) so you can eval the local adapter FIRST and only
+    # publish if it's actually better. Eval reads it from OUTPUT_DIR directly:
+    #   FF_FT_DATASET=synth modal run finetune/eval.py --adapter <OUTPUT_DIR>
+    if not push:
+        print(f"adapter saved (NOT pushed) -> {_adapter_dir()}")
+        print(f"eval it locally, then push if better: see eval.py --adapter {_adapter_dir()}")
+        return
+
     _push_adapter(hub_model_id)
     print(f"pushed adapter -> https://huggingface.co/{hub_model_id}")
 
@@ -354,5 +362,7 @@ tok = AutoTokenizer.from_pretrained("{MODEL}", trust_remote_code=True)
 
 
 @app.local_entrypoint()
-def main(smoke: bool = False, hub_model_id: str = HUB_MODEL_ID_DEFAULT):
-    train.remote(smoke=smoke, hub_model_id=hub_model_id)
+def main(smoke: bool = False, hub_model_id: str = HUB_MODEL_ID_DEFAULT, push: bool = True):
+    """`--no-push` trains + saves the adapter to the volume WITHOUT publishing — eval it
+    locally first, then push only if it beats baseline (see eval.py --adapter <dir>)."""
+    train.remote(smoke=smoke, hub_model_id=hub_model_id, push=push)

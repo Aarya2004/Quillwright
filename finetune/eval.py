@@ -41,6 +41,11 @@ _ADAPTERS = {
     "cord": "Aarya2004/minicpmv-cord-lora",
     "synth": "Aarya2004/minicpmv-trade-lora",
 }
+# Prefer the LOCAL adapter saved by an unpushed train run (gate-then-publish workflow:
+# train --no-push -> eval the local adapter -> push only if better). Falls back to the
+# Hub id if no local adapter exists on the volume. (PeftModel.from_pretrained accepts
+# either a local dir or a Hub id, so this is a default-resolution convenience.)
+LOCAL_ADAPTER_DIR = f"/cache/ft-out/minicpmv-{DATASET}"
 ADAPTER_DEFAULT = _ADAPTERS.get(DATASET, f"Aarya2004/minicpmv-{DATASET}-lora")
 TEST_MANIFEST = f"/cache/{DATASET}/test.jsonl"
 RESULTS_PATH = f"/cache/{DATASET}/results.json"
@@ -187,6 +192,13 @@ def evaluate(
     # --- tuned: wrap base with LoRA adapter; re-use the already-loaded base weights ---
     # PeftModel.from_pretrained(base, adapter_path, trust_remote_code=True) is the
     # documented pattern (RESEARCH.md §5 + finetune readme). .eval().cuda() after.
+    # If the caller didn't override --adapter and a LOCAL (unpushed) adapter exists on
+    # the volume, prefer it — that's the gate-then-publish path (eval before pushing).
+    if adapter == ADAPTER_DEFAULT and os.path.exists(
+        os.path.join(LOCAL_ADAPTER_DIR, "adapter_config.json")
+    ):
+        adapter = LOCAL_ADAPTER_DIR
+        print(f"using local (unpushed) adapter: {adapter}")
     from peft import PeftModel
 
     tuned_model = PeftModel.from_pretrained(base, adapter, trust_remote_code=True).eval().cuda()
