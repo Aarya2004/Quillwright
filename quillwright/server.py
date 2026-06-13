@@ -8,8 +8,8 @@ import json
 import os
 from pathlib import Path
 
-from fastapi import Body
-from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi import Body, Request
+from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 from gradio import Server
 
 from quillwright.api.estimate import (
@@ -21,7 +21,10 @@ from quillwright.api.chat import chat_about_estimate
 from quillwright.api.document import parse_document_capture
 from quillwright.api.export import estimate_to_json_payload
 from quillwright.api.pages import dashboard_data, inventory_data, jobs_data
+from quillwright.api.pdf_links import get_pdf, public_pdf_url, register_pdf
 from quillwright.api.recalc import recalc_estimate
+from quillwright.api.send import SendError, resolve_send_mode, send_estimate
+from quillwright.api.send import _render_pdf_bytes as render_estimate_pdf_bytes
 from quillwright.api.transcribe import transcribe_audio
 from quillwright.api.translate import translate_estimate
 from quillwright.api.upload import save_upload
@@ -166,6 +169,53 @@ def api_pdf(payload: dict = Body(...)) -> FileResponse:
     path = "/tmp/quillwright_estimate.pdf"
     estimate_to_pdf(est, path)
     return FileResponse(path, media_type="application/pdf", filename="estimate.pdf")
+
+
+@app.post("/api/send_estimate")
+def api_send_estimate(request: Request, payload: dict = Body(...)):
+    """Finalize & Send (S10): deliver the estimate by SMS (Twilio MMS) or email
+    (SendGrid, PDF attached). Real send runs on the local path (FF_SEND_ENABLED=1 +
+    creds); the public Space drafts only (honest framing, ADR-0005).
+
+    For the SMS path in real mode we mint a public PDF URL the carrier can fetch
+    (MMS attaches by URL, not file)."""
+    channel = payload.get("channel", "")
+    recipient = payload.get("recipient", "")
+    rows = payload.get("rows", [])
+    job_title = payload.get("job_title", "Estimate")
+    tax_rate = payload.get("tax_rate", 0.13)
+
+    try:
+        pdf_url = None
+        if resolve_send_mode() == "real" and channel == "sms":
+            # Render the PDF, register it, and hand Twilio a URL it can GET. Inside
+            # the try so a render/IO failure returns 400 like the email path, not 500.
+            pdf_bytes = render_estimate_pdf_bytes(rows, job_title=job_title, tax_rate=tax_rate)
+            token = register_pdf(pdf_bytes)
+            pdf_url = public_pdf_url(token, base_url=str(request.base_url))
+
+        return send_estimate(
+            channel=channel,
+            recipient=recipient,
+            rows=rows,
+            job_title=job_title,
+            tax_rate=tax_rate,
+            pdf_url=pdf_url,
+        )
+    except SendError as exc:
+        return Response(content=str(exc), status_code=400, media_type="text/plain")
+    except Exception as exc:  # noqa: BLE001 — PDF/IO failure → loud 400, never a bare 500
+        return Response(content=f"sms send failed: {exc}", status_code=400, media_type="text/plain")
+
+
+@app.get("/api/estimate_pdf/{token}")
+def api_estimate_pdf(token: str):
+    """Serve a previously-rendered estimate PDF by token, so Twilio MMS can fetch
+    it as the message attachment (S10)."""
+    pdf_bytes = get_pdf(token)
+    if pdf_bytes is None:
+        return HTMLResponse("not found", status_code=404)
+    return Response(content=pdf_bytes, media_type="application/pdf")
 
 
 @app.post("/api/export_json")
