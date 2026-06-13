@@ -14,6 +14,7 @@ import {
   modelInfo,
 } from "./client.js";
 import { resetTrace, addStep } from "./trace.js";
+import { escapeHtml } from "./util.js";
 
 const $ = (id) => document.getElementById(id);
 const TAX_RATE = 0.13;
@@ -135,7 +136,7 @@ function showProposedItems(items) {
               (p, i) => `
           <label class="doc-item" style="--doc-delay:${i * 55}ms">
             <input type="checkbox" data-i="${i}" checked />
-            <span class="doc-desc">${p.description}<small>${p.source_text}</small></span>
+            <span class="doc-desc">${escapeHtml(p.description)}<small>${escapeHtml(p.source_text)}</small></span>
             <input class="doc-qty" type="number" step="any" value="${p.quantity}" aria-label="Quantity" />
             <input class="doc-rate" type="number" step="0.01" value="${p.rate.toFixed(2)}" aria-label="Rate" />
           </label>`,
@@ -390,7 +391,7 @@ function appendMsg(role, text) {
   ensureChatStarted();
   const el = document.createElement("div");
   el.className = `chat-msg ${role}`;
-  el.innerHTML = `<div class="bubble">${text}</div>`;
+  el.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
   appendToStream(el);
   return el;
 }
@@ -442,13 +443,6 @@ function addItem() {
 
 // --- Finalize & Send (S10): channel + recipient modal -> /api/send_estimate ---
 let sendChannel = "sms";
-
-function escapeHtml(s) {
-  return String(s).replace(
-    /[&<>"']/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
-  );
-}
 
 function setSendChannel(channel) {
   sendChannel = channel;

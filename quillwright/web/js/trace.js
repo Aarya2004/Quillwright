@@ -4,6 +4,8 @@
 // the staggered "steps slowly show up" reveal. A connector rail links the
 // check-circles down the left edge for a terminal/console feel.
 
+import { escapeHtml } from "./util.js";
+
 const steps = [];
 
 const CARDS = {
@@ -39,8 +41,8 @@ function cardInner(c) {
   const lead = meta.lead ? `<p class="detail">${meta.lead}</p>` : "";
   const items =
     c.details.length > 1 || meta.lead
-      ? `<ul class="step-items">${c.details.map((d) => `<li>${d}</li>`).join("")}</ul>`
-      : `<p class="detail">${c.details[0]}</p>`;
+      ? `<ul class="step-items">${c.details.map((d) => `<li>${escapeHtml(d)}</li>`).join("")}</ul>`
+      : `<p class="detail">${escapeHtml(c.details[0])}</p>`;
   return `<div class="step-rail">${marker}<span class="rail-line"></span></div>
     <div class="step-body">
       <p class="title">${meta.title}</p>
