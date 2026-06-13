@@ -42,19 +42,32 @@ MODEL = "openbmb/MiniCPM-V-2_6"
 LLM_TYPE = "qwen2"  # 2_6's LLM is Qwen2 (finetune_lora.sh at the vendored SHA).
 
 # Dataset is selectable so the SAME proven recipe trains either CORD (default) or the
-# grounded-synthetic trade corpus, without forking this script. FF_FT_DATASET picks the
-# data dir under /cache and the matching Hub repo / output dir; default = cord (unchanged).
-DATASET = os.environ.get("FF_FT_DATASET", "cord")  # "cord" | "synth"
+# grounded-synthetic trade corpus, without forking this script. The dataset is passed as
+# a FUNCTION ARGUMENT (Modal serializes it into the remote container) — NOT read from an
+# env var inside the container, because the local FF_FT_DATASET shell var does NOT cross
+# the local->remote boundary (it silently fell back to cord and retrained CORD once).
+# The env var only sets the local entrypoint's DEFAULT, which is then threaded as an arg.
 _HUB_IDS = {
     "cord": "Aarya2004/minicpmv-cord-lora",
     "synth": "Aarya2004/minicpmv-trade-lora",
 }
-HUB_MODEL_ID_DEFAULT = _HUB_IDS.get(DATASET, f"Aarya2004/minicpmv-{DATASET}-lora")
 
-# Paths inside the container (keyed by dataset).
-MANIFEST = f"/cache/{DATASET}/train.jsonl"
-TRAIN_JSON = f"/cache/{DATASET}/openbmb_train.json"  # converted, what finetune.py reads
-OUTPUT_DIR = f"/cache/ft-out/minicpmv-{DATASET}"
+
+def _hub_id(dataset: str) -> str:
+    return _HUB_IDS.get(dataset, f"Aarya2004/minicpmv-{dataset}-lora")
+
+
+def _manifest(dataset: str) -> str:
+    return f"/cache/{dataset}/train.jsonl"
+
+
+def _train_json(dataset: str) -> str:
+    return f"/cache/{dataset}/openbmb_train.json"  # converted, what finetune.py reads
+
+
+def _output_dir(dataset: str) -> str:
+    return f"/cache/ft-out/minicpmv-{dataset}"
+
 
 # LoRA target regex — the finetune_lora.sh form WITH o_proj, scoped to the LLM
 # (`llm.` prefix) so the vision tower + resampler stay frozen (RESEARCH.md §3).
@@ -102,7 +115,7 @@ app = modal.App("quillwright-ft-train")
     secrets=[modal.Secret.from_name("huggingface-secret")],
     timeout=14400,  # 4h ceiling: cold start + weight pull + train + Hub push.
 )
-def train(smoke: bool = False, hub_model_id: str = HUB_MODEL_ID_DEFAULT, push: bool = True):
+def train(smoke: bool = False, dataset: str = "cord", hub_model_id: str = "", push: bool = True):
     import json
     import os
     import subprocess
@@ -112,15 +125,23 @@ def train(smoke: bool = False, hub_model_id: str = HUB_MODEL_ID_DEFAULT, push: b
 
     from data_utils import manifest_rows, to_openbmb_examples
 
+    # Paths come from the `dataset` ARGUMENT (serialized into this container) — never an
+    # env var, which would not cross from the local shell. Resolve them here.
+    manifest_path = _manifest(dataset)
+    train_json = _train_json(dataset)
+    output_dir = _output_dir(dataset)
+    hub_model_id = hub_model_id or _hub_id(dataset)
+    print(f"[train] dataset={dataset} manifest={manifest_path} output={output_dir}")
+
     # --- materialize the OpenBMB-format training JSON ------------------------
-    rows = manifest_rows(MANIFEST)
+    rows = manifest_rows(manifest_path)
     if smoke:
         rows = rows[:8]
     examples = to_openbmb_examples(rows)
-    os.makedirs(os.path.dirname(TRAIN_JSON), exist_ok=True)
-    with open(TRAIN_JSON, "w") as f:
+    os.makedirs(os.path.dirname(train_json), exist_ok=True)
+    with open(train_json, "w") as f:
         json.dump(examples, f, ensure_ascii=False)
-    print(f"wrote {len(examples)} OpenBMB examples -> {TRAIN_JSON} (smoke={smoke})")
+    print(f"wrote {len(examples)} OpenBMB examples -> {train_json} (smoke={smoke})")
 
     # --- drive the vendored finetune.py single-process (no torchrun, no DS) ---
     # Flags per RESEARCH.md §3: LLM-only bf16 LoRA, vision frozen, r=alpha=64,
@@ -134,9 +155,9 @@ def train(smoke: bool = False, hub_model_id: str = HUB_MODEL_ID_DEFAULT, push: b
         "--llm_type",
         LLM_TYPE,
         "--data_path",
-        TRAIN_JSON,
+        train_json,
         "--output_dir",
-        OUTPUT_DIR,
+        output_dir,
         "--use_lora",
         "true",
         "--tune_vision",
@@ -204,39 +225,40 @@ def train(smoke: bool = False, hub_model_id: str = HUB_MODEL_ID_DEFAULT, push: b
     vol.commit()
 
     if smoke:
-        _smoke_assert_and_chat()
+        _smoke_assert_and_chat(output_dir, manifest_path)
         print("SMOKE OK — training + inference contracts proven (see asserts above).")
         return
 
-    # --- full run: adapter is saved on the volume at OUTPUT_DIR ---------------
+    # --- full run: adapter is saved on the volume at output_dir --------------
     # Push is GATED (push=False) so you can eval the local adapter FIRST and only
-    # publish if it's actually better. Eval reads it from OUTPUT_DIR directly:
-    #   FF_FT_DATASET=synth modal run finetune/eval.py --adapter <OUTPUT_DIR>
+    # publish if it's actually better. Eval reads it from the dataset's output dir:
+    #   modal run finetune/eval.py --dataset synth --adapter <output_dir>
+    adapter = _adapter_dir(output_dir)
     if not push:
-        print(f"adapter saved (NOT pushed) -> {_adapter_dir()}")
-        print(f"eval it locally, then push if better: see eval.py --adapter {_adapter_dir()}")
+        print(f"adapter saved (NOT pushed) -> {adapter}")
+        print(f"eval it locally, then push if better: eval.py --dataset {dataset}")
         return
 
-    _push_adapter(hub_model_id)
+    _push_adapter(hub_model_id, output_dir)
     print(f"pushed adapter -> https://huggingface.co/{hub_model_id}")
 
 
-def _adapter_dir() -> str:
-    """Resolve the saved adapter dir (finetune.py saves to OUTPUT_DIR, possibly
+def _adapter_dir(output_dir: str) -> str:
+    """Resolve the saved adapter dir (finetune.py saves to output_dir, possibly
     in a checkpoint-* subdir if save_strategy produced one)."""
     import glob
     import os
 
-    if os.path.exists(os.path.join(OUTPUT_DIR, "adapter_config.json")):
-        return OUTPUT_DIR
-    cks = sorted(glob.glob(os.path.join(OUTPUT_DIR, "checkpoint-*")))
+    if os.path.exists(os.path.join(output_dir, "adapter_config.json")):
+        return output_dir
+    cks = sorted(glob.glob(os.path.join(output_dir, "checkpoint-*")))
     for ck in reversed(cks):
         if os.path.exists(os.path.join(ck, "adapter_config.json")):
             return ck
-    return OUTPUT_DIR
+    return output_dir
 
 
-def _smoke_assert_and_chat():
+def _smoke_assert_and_chat(output_dir: str, manifest_path: str):
     """RESEARCH.md smoke contract + bonus guard, run after the 2-step subprocess.
 
     Re-runs the recipe's model-load path in-process to assert:
@@ -260,7 +282,7 @@ def _smoke_assert_and_chat():
     from data_utils import PROMPT
     from flash_patch import make_patched_get_imports
 
-    adapter = _adapter_dir()
+    adapter = _adapter_dir(output_dir)
     print(f"[smoke] loading adapter from {adapter}")
 
     torch.cuda.reset_peak_memory_stats()
@@ -294,7 +316,7 @@ def _smoke_assert_and_chat():
     assert pct < 15.0, f"trainable% too high ({pct:.2f}%) — vision tower likely unfrozen"
 
     # --- inference round trip (bonus guard, RESEARCH.md §5) -----------------
-    rows = [json.loads(line) for line in open(MANIFEST)]
+    rows = [json.loads(line) for line in open(manifest_path)]
     img_path = rows[0]["image"]
     img = Image.open(img_path).convert("RGB")
     msgs = [{"role": "user", "content": [img, PROMPT]}]  # image INSIDE content list
@@ -305,13 +327,16 @@ def _smoke_assert_and_chat():
     print(f"[smoke] torch.cuda.max_memory_allocated = {peak:.2f} GiB")
 
 
-def _push_adapter(hub_model_id: str):
-    """Push the LoRA adapter folder + a minimal model card to the Hub."""
+def _push_adapter(hub_model_id: str, output_dir: str):
+    """Push the LoRA adapter folder + a minimal model card to the Hub.
+
+    Used by the auto-push (CORD) path; the synth/trade model is pushed manually with the
+    hand-written finetune/MODEL_CARD.md after its eval clears the bar (gate-then-publish)."""
     import os
 
     from huggingface_hub import HfApi, upload_folder
 
-    adapter = _adapter_dir()
+    adapter = _adapter_dir(output_dir)
     token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
 
     card = f"""---
@@ -362,7 +387,13 @@ tok = AutoTokenizer.from_pretrained("{MODEL}", trust_remote_code=True)
 
 
 @app.local_entrypoint()
-def main(smoke: bool = False, hub_model_id: str = HUB_MODEL_ID_DEFAULT, push: bool = True):
-    """`--no-push` trains + saves the adapter to the volume WITHOUT publishing — eval it
-    locally first, then push only if it beats baseline (see eval.py --adapter <dir>)."""
-    train.remote(smoke=smoke, hub_model_id=hub_model_id, push=push)
+def main(smoke: bool = False, dataset: str = "", hub_model_id: str = "", push: bool = True):
+    """Train on `--dataset cord` (default) or `--dataset synth` (the trade corpus).
+
+    dataset is passed as an ARGUMENT into the remote container (an env var would NOT
+    cross the boundary). FF_FT_DATASET is honored only as the local default for
+    convenience. `--no-push` saves the adapter without publishing (gate-then-publish:
+    eval locally first, push only if it beats baseline)."""
+    dataset = dataset or os.environ.get("FF_FT_DATASET", "cord")
+    print(f"[main] training dataset={dataset} push={push}")
+    train.remote(smoke=smoke, dataset=dataset, hub_model_id=hub_model_id, push=push)
