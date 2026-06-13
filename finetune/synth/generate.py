@@ -32,9 +32,9 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 _FINETUNE = os.path.dirname(_HERE)
 
 # Where rendered images + the manifest land inside the single /cache volume mount.
+# Split-aware so we can generate a held-out test set (different seed -> different jobs)
+# for an honest baseline-vs-tuned eval, without overwriting the train manifest.
 SYNTH_ROOT = "/cache/synth"
-IMAGES_DIR = f"{SYNTH_ROOT}/images"
-MANIFEST = f"{SYNTH_ROOT}/train.jsonl"
 
 DEFAULT_FULL_N = 1000
 DEFAULT_SMOKE_N = 10
@@ -72,8 +72,12 @@ app = modal.App("quillwright-synth-generate")
 
 
 @app.function(image=image, volumes={"/cache": vol}, timeout=7200)
-def generate(n: int = DEFAULT_FULL_N, seed: int = 0, degrade: bool = False):
-    """Render N synthetic invoices into /cache/synth and write the JSONL manifest.
+def generate(n: int = DEFAULT_FULL_N, seed: int = 0, degrade: bool = False, split: str = "train"):
+    """Render N synthetic invoices into /cache/synth/<split> and write <split>.jsonl.
+
+    split="train" (default) is the training corpus; split="test" (use a DIFFERENT seed)
+    is the held-out set eval scores against — different seed => different jobs, so the
+    model never sees the test invoices.
 
     degrade=False (default) = CLEAN mode: WeasyPrint render only, no Augraphy. This is
     the reliable path — clean invoice PNGs are perfectly good training data. degrade=True
@@ -98,13 +102,15 @@ def generate(n: int = DEFAULT_FULL_N, seed: int = 0, degrade: bool = False):
     if not templates:
         templates = ["__placeholder__"]
 
-    os.makedirs(IMAGES_DIR, exist_ok=True)
+    images_dir = f"{SYNTH_ROOT}/images/{split}"
+    manifest = f"{SYNTH_ROOT}/{split}.jsonl"
+    os.makedirs(images_dir, exist_ok=True)
     rng = random.Random(seed)
     degradation = 0.5 if degrade else 0.0  # 0.0 = clean (skip Augraphy)
 
     written = 0
     failures = 0
-    with open(MANIFEST, "w") as mf:
+    with open(manifest, "w") as mf:
         for i in range(n):
             trade, job_type = realistic_job_mix(rng)
             job = assemble_job(catalog, trade, job_type, rng)
@@ -118,14 +124,14 @@ def generate(n: int = DEFAULT_FULL_N, seed: int = 0, degrade: bool = False):
                 failures += 1
                 continue
 
-            img_path = os.path.join(IMAGES_DIR, f"{i:05d}.png")
+            img_path = os.path.join(images_dir, f"{i:05d}.png")
             with open(img_path, "wb") as imgf:
                 imgf.write(png_bytes)
 
             mf.write(
                 json.dumps(
                     {
-                        "id": f"synth-{i:05d}",
+                        "id": f"synth-{split}-{i:05d}",
                         "image": img_path,
                         "prompt": PROMPT,
                         "target": json.dumps(to_target(job), ensure_ascii=False, sort_keys=True),
@@ -136,8 +142,7 @@ def generate(n: int = DEFAULT_FULL_N, seed: int = 0, degrade: bool = False):
             written += 1
 
     vol.commit()  # flush so the training job sees images + manifest
-    print(f"wrote {written}/{n} invoices to {MANIFEST} (render failures: {failures})")
-    print(f"wrote {written} synthetic invoices -> {MANIFEST} (seed={seed})")
+    print(f"wrote {written}/{n} invoices to {manifest} (render failures: {failures})")
 
 
 def _resolve_render():
@@ -188,11 +193,18 @@ def _placeholder_render_invoice(
 
 
 @app.local_entrypoint()
-def main(smoke: bool = False, n: int = DEFAULT_FULL_N, seed: int = 0, degrade: bool = False):
+def main(
+    smoke: bool = False,
+    n: int = DEFAULT_FULL_N,
+    seed: int = 0,
+    degrade: bool = False,
+    split: str = "train",
+):
     """Modal entrypoint. `--smoke` renders DEFAULT_SMOKE_N images; else N (default 1000).
 
-    Clean renders by default; `--degrade` opts into Augraphy (needs its deps confirmed)."""
-    generate.remote(n=DEFAULT_SMOKE_N if smoke else n, seed=seed, degrade=degrade)
+    Clean renders by default; `--degrade` opts into Augraphy (needs its deps confirmed).
+    `--split test --seed 99` makes a held-out test set (different seed = unseen jobs)."""
+    generate.remote(n=DEFAULT_SMOKE_N if smoke else n, seed=seed, degrade=degrade, split=split)
 
 
 def _local_smoke(n: int = 3, seed: int = 0):

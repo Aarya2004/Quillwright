@@ -40,12 +40,21 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 
 MODEL = "openbmb/MiniCPM-V-2_6"
 LLM_TYPE = "qwen2"  # 2_6's LLM is Qwen2 (finetune_lora.sh at the vendored SHA).
-HUB_MODEL_ID_DEFAULT = "Aarya2004/minicpmv-cord-lora"  # adapter repo to push to
 
-# Paths inside the container.
-MANIFEST = "/cache/cord/train.jsonl"
-TRAIN_JSON = "/cache/cord/openbmb_train.json"  # converted, what finetune.py reads
-OUTPUT_DIR = "/cache/ft-out/minicpmv-cord"
+# Dataset is selectable so the SAME proven recipe trains either CORD (default) or the
+# grounded-synthetic trade corpus, without forking this script. FF_FT_DATASET picks the
+# data dir under /cache and the matching Hub repo / output dir; default = cord (unchanged).
+DATASET = os.environ.get("FF_FT_DATASET", "cord")  # "cord" | "synth"
+_HUB_IDS = {
+    "cord": "Aarya2004/minicpmv-cord-lora",
+    "synth": "Aarya2004/minicpmv-trade-lora",
+}
+HUB_MODEL_ID_DEFAULT = _HUB_IDS.get(DATASET, f"Aarya2004/minicpmv-{DATASET}-lora")
+
+# Paths inside the container (keyed by dataset).
+MANIFEST = f"/cache/{DATASET}/train.jsonl"
+TRAIN_JSON = f"/cache/{DATASET}/openbmb_train.json"  # converted, what finetune.py reads
+OUTPUT_DIR = f"/cache/ft-out/minicpmv-{DATASET}"
 
 # LoRA target regex — the finetune_lora.sh form WITH o_proj, scoped to the LLM
 # (`llm.` prefix) so the vision tower + resampler stay frozen (RESEARCH.md §3).
