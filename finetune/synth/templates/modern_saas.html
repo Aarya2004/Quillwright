@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        font-size: 13px;
+        color: #1a1a2e;
+        background: #fff;
+        padding: 40px;
+      }
+      .page {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+
+      /* Header band */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 36px;
+      }
+      .company-block .company-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: #2563eb;
+        letter-spacing: -0.5px;
+      }
+      .company-block .tagline {
+        font-size: 10px;
+        color: #6b7280;
+        margin-top: 2px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .company-block .contact {
+        font-size: 11px;
+        color: #6b7280;
+        margin-top: 6px;
+        line-height: 1.5;
+      }
+
+      .doc-meta {
+        text-align: right;
+      }
+      .doc-meta .doc-type {
+        font-size: 11px;
+        font-weight: 600;
+        color: #2563eb;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+      .doc-meta .doc-number {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a2e;
+      }
+      .doc-meta .doc-date {
+        font-size: 11px;
+        color: #6b7280;
+        margin-top: 4px;
+      }
+
+      /* Divider */
+      .divider {
+        height: 2px;
+        background: linear-gradient(to right, #2563eb, #93c5fd);
+        margin-bottom: 28px;
+        border-radius: 1px;
+      }
+
+      /* Bill-to block */
+      .bill-row {
+        display: flex;
+        gap: 60px;
+        margin-bottom: 28px;
+      }
+      .bill-section label {
+        font-size: 9px;
+        font-weight: 700;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        display: block;
+        margin-bottom: 4px;
+      }
+      .bill-section .biz-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1a1a2e;
+      }
+      .bill-section .address {
+        font-size: 11px;
+        color: #6b7280;
+        line-height: 1.6;
+      }
+
+      /* Line items table */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      thead tr {
+        background: #eff6ff;
+      }
+      thead th {
+        padding: 9px 12px;
+        text-align: left;
+        font-size: 10px;
+        font-weight: 700;
+        color: #3b82f6;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 2px solid #bfdbfe;
+      }
+      thead th.num {
+        text-align: right;
+      }
+      tbody tr {
+        border-bottom: 1px solid #f3f4f6;
+      }
+      tbody tr:hover {
+        background: #f9fafb;
+      }
+      tbody td {
+        padding: 10px 12px;
+        font-size: 12px;
+        color: #374151;
+        vertical-align: top;
+      }
+      tbody td.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      tbody td.desc {
+        max-width: 320px;
+      }
+
+      /* Totals */
+      .totals-wrap {
+        display: flex;
+        justify-content: flex-end;
+      }
+      .totals-table {
+        width: 260px;
+      }
+      .totals-table tr td {
+        padding: 5px 12px;
+        font-size: 12px;
+        color: #4b5563;
+      }
+      .totals-table tr td:last-child {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .totals-table .grand-total td {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1a1a2e;
+        border-top: 2px solid #2563eb;
+        padding-top: 8px;
+      }
+
+      /* Footer */
+      .footer {
+        margin-top: 40px;
+        padding-top: 16px;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+      }
+      .footer span {
+        font-size: 10px;
+        color: #9ca3af;
+      }
+      .badge {
+        display: inline-block;
+        background: #eff6ff;
+        color: #2563eb;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <div class="company-block">
+          <div class="company-name">{{ company_name }}</div>
+          <div class="tagline">{{ trade | title }} Services</div>
+          <div class="contact">
+            {{ company_phone }}&nbsp;&nbsp;|&nbsp;&nbsp;{{ company_email }}<br />{{ company_city }}
+          </div>
+        </div>
+        <div class="doc-meta">
+          <div class="doc-type">Invoice</div>
+          <div class="doc-number">#{{ invoice_number }}</div>
+          <div class="doc-date">Date: {{ invoice_date }}</div>
+          <div class="doc-date">Due: {{ due_date }}</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="bill-row">
+        <div class="bill-section">
+          <label>Bill To</label>
+          <div class="biz-name">{{ customer_name }}</div>
+          <div class="address">{{ customer_address }}</div>
+        </div>
+        <div class="bill-section">
+          <label>Job Type</label>
+          <div class="biz-name">{{ job_type | title }}</div>
+          <div class="address">{{ trade | title }} · Work Order {{ invoice_number }}</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 42%">Description</th>
+            <th class="num" style="width: 10%">Qty</th>
+            <th style="width: 10%">Unit</th>
+            <th class="num" style="width: 16%">Rate</th>
+            <th class="num" style="width: 16%">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in line_items %}
+          <tr>
+            <td class="desc">{{ item.description }}</td>
+            <td class="num">{{ item.quantity }}</td>
+            <td>{{ item.unit }}</td>
+            <td class="num">${{ "%.2f" | format(item.rate) }}</td>
+            <td class="num">${{ "%.2f" | format(item.amount) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="totals-wrap">
+        <table class="totals-table">
+          <tbody>
+            <tr>
+              <td>Subtotal</td>
+              <td>${{ "%.2f" | format(total) }}</td>
+            </tr>
+            <tr>
+              <td>Tax (0%)</td>
+              <td>$0.00</td>
+            </tr>
+            <tr class="grand-total">
+              <td>Total Due</td>
+              <td>${{ "%.2f" | format(total) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer">
+        <span>Thank you for your business!</span>
+        <span class="badge">{{ job_type }}</span>
+      </div>
+    </div>
+  </body>
+</html>

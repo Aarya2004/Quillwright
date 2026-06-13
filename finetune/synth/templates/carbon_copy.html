@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 11px;
+        color: #1a0a00;
+        background: #fef9e8;
+        padding: 0;
+      }
+      .page {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 32px 40px;
+        position: relative;
+      }
+
+      /* Carbon copy texture stripes */
+      .page::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: repeating-linear-gradient(
+          90deg,
+          #c0392b 0px,
+          #c0392b 2px,
+          transparent 2px,
+          transparent 6px
+        );
+      }
+
+      /* Copy label */
+      .copy-label {
+        position: absolute;
+        top: 10px;
+        right: 40px;
+        font-size: 9px;
+        font-weight: bold;
+        color: #c0392b;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        border: 1.5px solid #c0392b;
+        padding: 2px 8px;
+      }
+
+      /* Header */
+      .cc-header {
+        margin-bottom: 16px;
+        margin-top: 8px;
+      }
+      .cc-header .co-name {
+        font-size: 17px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+      }
+      .cc-header .co-sub {
+        font-size: 10px;
+        color: #555;
+        margin-top: 2px;
+        letter-spacing: 1px;
+      }
+      .cc-header .co-contact {
+        font-size: 10px;
+        color: #555;
+        margin-top: 4px;
+      }
+
+      /* Form-style boxes */
+      .form-row {
+        display: flex;
+        gap: 0;
+        margin-bottom: 0;
+        border: 1px solid #8b7355;
+      }
+      .form-row + .form-row {
+        border-top: none;
+      }
+      .form-cell {
+        flex: 1;
+        padding: 4px 7px;
+        border-right: 1px solid #8b7355;
+      }
+      .form-cell:last-child {
+        border-right: none;
+      }
+      .form-cell .fc-label {
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #8b7355;
+      }
+      .form-cell .fc-val {
+        font-size: 11px;
+        font-weight: bold;
+        min-height: 14px;
+      }
+      .form-section {
+        border: 1px solid #8b7355;
+        margin-bottom: 14px;
+      }
+      .form-section .sec-header {
+        background: #8b7355;
+        color: #fff;
+        font-size: 9px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        padding: 3px 8px;
+      }
+      .form-section .sec-body {
+        padding: 6px 8px;
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      /* Line items */
+      table.items {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 0;
+        font-size: 10.5px;
+        border: 1px solid #8b7355;
+      }
+      table.items thead {
+        background: #8b7355;
+        color: #fff;
+      }
+      table.items thead th {
+        padding: 5px 7px;
+        text-align: left;
+        font-weight: bold;
+        border-right: 1px solid #a07850;
+      }
+      table.items thead th:last-child {
+        border-right: none;
+      }
+      table.items thead th.r {
+        text-align: right;
+      }
+      table.items tbody tr {
+        border-bottom: 1px solid #c9b99a;
+      }
+      table.items tbody tr:nth-child(even) {
+        background: #fdf3da;
+      }
+      table.items tbody td {
+        padding: 5px 7px;
+        border-right: 1px solid #c9b99a;
+        vertical-align: top;
+      }
+      table.items tbody td:last-child {
+        border-right: none;
+      }
+      table.items tbody td.r {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Totals */
+      .cc-totals {
+        border: 1px solid #8b7355;
+        border-top: 2px solid #8b7355;
+      }
+      .cc-totals table {
+        width: 100%;
+      }
+      .cc-totals td {
+        padding: 4px 8px;
+        font-size: 10.5px;
+      }
+      .cc-totals td:last-child {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .cc-totals .grand td {
+        font-weight: bold;
+        font-size: 13px;
+        background: #fef0c8;
+        border-top: 2px solid #8b7355;
+      }
+
+      /* Signature */
+      .sig-area {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+        gap: 24px;
+        font-size: 10px;
+      }
+      .sig-box {
+        flex: 1;
+      }
+      .sig-box .sig-line {
+        border-bottom: 1px solid #333;
+        height: 28px;
+        margin-bottom: 3px;
+      }
+      .sig-box .sig-caption {
+        font-size: 9px;
+        color: #777;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .stripe-footer {
+        height: 4px;
+        background: repeating-linear-gradient(
+          90deg,
+          #c0392b 0px,
+          #c0392b 2px,
+          transparent 2px,
+          transparent 6px
+        );
+        margin-top: 20px;
+      }
+      .page-label {
+        text-align: center;
+        font-size: 9px;
+        color: #c0392b;
+        margin-top: 4px;
+        letter-spacing: 2px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="copy-label">Customer Copy</div>
+
+      <div class="cc-header">
+        <div class="co-name">{{ company_name }}</div>
+        <div class="co-sub">
+          {{ trade | title }} Contractors &mdash; Est. {{ established_year }}
+        </div>
+        <div class="co-contact">{{ company_address }} &bull; Tel: {{ company_phone }}</div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-cell">
+          <div class="fc-label">Invoice No.</div>
+          <div class="fc-val">{{ invoice_number }}</div>
+        </div>
+        <div class="form-cell">
+          <div class="fc-label">Date</div>
+          <div class="fc-val">{{ invoice_date }}</div>
+        </div>
+        <div class="form-cell">
+          <div class="fc-label">Due Date</div>
+          <div class="fc-val">{{ due_date }}</div>
+        </div>
+        <div class="form-cell">
+          <div class="fc-label">Job Type</div>
+          <div class="fc-val">{{ job_type | title }}</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-cell" style="flex: 2">
+          <div class="fc-label">Customer / Bill To</div>
+          <div class="fc-val">{{ customer_name }}</div>
+        </div>
+        <div class="form-cell" style="flex: 2">
+          <div class="fc-label">Service Address</div>
+          <div class="fc-val">{{ customer_address }}</div>
+        </div>
+      </div>
+
+      <br />
+
+      <table class="items">
+        <thead>
+          <tr>
+            <th style="width: 46%">Item / Description</th>
+            <th class="r" style="width: 9%">Qty</th>
+            <th style="width: 8%">Unit</th>
+            <th class="r" style="width: 16%">Unit Price</th>
+            <th class="r" style="width: 16%">Extension</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in line_items %}
+          <tr>
+            <td>{{ item.description }}</td>
+            <td class="r">{{ item.quantity }}</td>
+            <td>{{ item.unit }}</td>
+            <td class="r">${{ "%.2f" | format(item.rate) }}</td>
+            <td class="r">${{ "%.2f" | format(item.amount) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="cc-totals">
+        <table>
+          <tbody>
+            <tr>
+              <td>Subtotal</td>
+              <td>${{ "%.2f" | format(total) }}</td>
+            </tr>
+            <tr>
+              <td>Tax</td>
+              <td>$0.00</td>
+            </tr>
+            <tr class="grand">
+              <td>TOTAL DUE</td>
+              <td>${{ "%.2f" | format(total) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sig-area">
+        <div class="sig-box">
+          <div class="sig-line"></div>
+          <div class="sig-caption">Customer Signature &amp; Date</div>
+        </div>
+        <div class="sig-box">
+          <div class="sig-line"></div>
+          <div class="sig-caption">Technician / Contractor</div>
+        </div>
+        <div class="sig-box">
+          <div class="sig-line"></div>
+          <div class="sig-caption">Payment Received</div>
+        </div>
+      </div>
+
+      <div class="stripe-footer"></div>
+      <div class="page-label">RETAIN FOR YOUR RECORDS &mdash; TRIPLICATE FORM</div>
+    </div>
+  </body>
+</html>

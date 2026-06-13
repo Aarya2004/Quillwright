@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, "Helvetica Neue", sans-serif;
+        font-size: 11px;
+        color: #333;
+        background: #fff;
+        padding: 28px 36px;
+      }
+      .page {
+        max-width: 740px;
+        margin: 0 auto;
+      }
+
+      /* Top two-column header like QB export */
+      .qb-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+      .qb-company {
+      }
+      .qb-company .name {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2b5e9e;
+        margin-bottom: 4px;
+      }
+      .qb-company .addr {
+        font-size: 10.5px;
+        color: #555;
+        line-height: 1.55;
+      }
+      .qb-doc {
+        text-align: right;
+      }
+      .qb-doc .doc-label {
+        font-size: 22px;
+        font-weight: bold;
+        color: #2b5e9e;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .qb-doc .doc-sub {
+        font-size: 10px;
+        color: #777;
+        margin-top: 2px;
+      }
+
+      /* Info table (QB's gray-bar style) */
+      .info-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        font-size: 10.5px;
+      }
+      .info-table td {
+        padding: 5px 10px;
+      }
+      .info-table .label-cell {
+        background: #e8edf4;
+        font-weight: bold;
+        color: #2b5e9e;
+        width: 100px;
+        border: 1px solid #c5cfe0;
+      }
+      .info-table .value-cell {
+        border: 1px solid #c5cfe0;
+        background: #fff;
+      }
+
+      /* Bill-to / ship-to split */
+      .addr-row {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 20px;
+      }
+      .addr-box {
+        flex: 1;
+        border: 1px solid #c5cfe0;
+      }
+      .addr-box .addr-header {
+        background: #e8edf4;
+        padding: 5px 10px;
+        font-weight: bold;
+        color: #2b5e9e;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        border-bottom: 1px solid #c5cfe0;
+      }
+      .addr-box .addr-body {
+        padding: 8px 10px;
+        font-size: 10.5px;
+        line-height: 1.6;
+        color: #333;
+      }
+
+      /* Line items */
+      table.items {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 0;
+        font-size: 10.5px;
+      }
+      table.items thead {
+        background: #2b5e9e;
+        color: #fff;
+      }
+      table.items thead th {
+        padding: 7px 10px;
+        text-align: left;
+        font-weight: bold;
+        border-right: 1px solid #3a6db0;
+      }
+      table.items thead th:last-child {
+        border-right: none;
+      }
+      table.items thead th.r {
+        text-align: right;
+      }
+      table.items tbody tr:nth-child(odd) {
+        background: #f4f7fb;
+      }
+      table.items tbody tr:nth-child(even) {
+        background: #fff;
+      }
+      table.items tbody td {
+        padding: 6px 10px;
+        border-bottom: 1px solid #dce4f0;
+        border-right: 1px solid #dce4f0;
+        vertical-align: top;
+      }
+      table.items tbody td:last-child {
+        border-right: none;
+      }
+      table.items tbody td.r {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Totals */
+      .qb-totals {
+        display: flex;
+        justify-content: flex-end;
+        border: 1px solid #c5cfe0;
+        margin-top: 0;
+      }
+      .qb-totals table {
+        font-size: 10.5px;
+        min-width: 260px;
+      }
+      .qb-totals td {
+        padding: 5px 12px;
+        border-bottom: 1px solid #dce4f0;
+      }
+      .qb-totals td:last-child {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        min-width: 90px;
+      }
+      .qb-totals .balance-due td {
+        background: #2b5e9e;
+        color: #fff;
+        font-weight: bold;
+        font-size: 11.5px;
+      }
+
+      /* Footer */
+      .qb-footer {
+        margin-top: 22px;
+        font-size: 9.5px;
+        color: #888;
+        border-top: 1px solid #c5cfe0;
+        padding-top: 8px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .qb-footer .terms {
+        color: #555;
+      }
+      .qb-footer .generated {
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="qb-header">
+        <div class="qb-company">
+          <div class="name">{{ company_name }}</div>
+          <div class="addr">
+            {{ company_address }}<br />
+            {{ company_phone }}<br />
+            {{ company_email }}
+          </div>
+        </div>
+        <div class="qb-doc">
+          <div class="doc-label">Invoice</div>
+          <div class="doc-sub">{{ trade | title }} Services</div>
+        </div>
+      </div>
+
+      <table class="info-table">
+        <tbody>
+          <tr>
+            <td class="label-cell">Invoice #</td>
+            <td class="value-cell">{{ invoice_number }}</td>
+            <td class="label-cell">Invoice Date</td>
+            <td class="value-cell">{{ invoice_date }}</td>
+          </tr>
+          <tr>
+            <td class="label-cell">Due Date</td>
+            <td class="value-cell">{{ due_date }}</td>
+            <td class="label-cell">Terms</td>
+            <td class="value-cell">Net 30</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="addr-row">
+        <div class="addr-box">
+          <div class="addr-header">Bill To</div>
+          <div class="addr-body">
+            <strong>{{ customer_name }}</strong><br />
+            {{ customer_address }}
+          </div>
+        </div>
+        <div class="addr-box">
+          <div class="addr-header">Service Info</div>
+          <div class="addr-body">
+            Trade: {{ trade | title }}<br />
+            Job Type: {{ job_type | title }}<br />
+            Work Order: {{ invoice_number }}
+          </div>
+        </div>
+      </div>
+
+      <table class="items">
+        <thead>
+          <tr>
+            <th style="width: 42%">Product/Service</th>
+            <th style="width: 9%">Qty</th>
+            <th style="width: 9%">Unit</th>
+            <th class="r" style="width: 18%">Rate</th>
+            <th class="r" style="width: 18%">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in line_items %}
+          <tr>
+            <td>{{ item.description }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.unit }}</td>
+            <td class="r">${{ "%.2f" | format(item.rate) }}</td>
+            <td class="r">${{ "%.2f" | format(item.amount) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="qb-totals">
+        <table>
+          <tbody>
+            <tr>
+              <td>Subtotal</td>
+              <td>${{ "%.2f" | format(total) }}</td>
+            </tr>
+            <tr>
+              <td>Discount</td>
+              <td>$0.00</td>
+            </tr>
+            <tr>
+              <td>Tax (0.0%)</td>
+              <td>$0.00</td>
+            </tr>
+            <tr class="balance-due">
+              <td>Balance Due</td>
+              <td>${{ "%.2f" | format(total) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="qb-footer">
+        <div class="terms">
+          Payment Terms: Net 30 days &nbsp;|&nbsp; Checks payable to {{ company_name }}
+        </div>
+        <div class="generated">Exported from {{ company_name }} Accounting</div>
+      </div>
+    </div>
+  </body>
+</html>
