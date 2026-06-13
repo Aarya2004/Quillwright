@@ -74,6 +74,38 @@ How the switches compose:
   a single yes/no. This is intentional: Parse has no local serving path (ADR-0011), but it
   means the offline ("Airplane-Mode") story only holds while every `FF_MODAL_*_URL` is unset.
 
+## Finalize & Send (S10)
+
+**Finalize & Send** delivers a finished estimate to the customer by **SMS** (Twilio MMS —
+the PDF attached by URL) or **email** (SendGrid — the PDF attached inline). It has the same
+honest, env-gated framing as the models:
+
+- **Real send is opt-in and local-only.** Set `FF_SEND_ENABLED=1` plus the provider creds
+  and the message is actually transmitted. The providers (`twilio`, `sendgrid`) are an
+  optional extra — `pip install -e ".[send]"` — deliberately **not** in the Space
+  `requirements.txt` (third-party API creds can't live on a public Space — ADR-0005).
+- **The public Space drafts only.** With `FF_SEND_ENABLED` unset, `/api/send_estimate`
+  returns `{status: "drafted", transmitted: false}` and the UI shows a "Draft ready —
+  nothing was transmitted from this hosted demo" card. It never claims a send it didn't do.
+
+Env vars for the real path:
+
+| Var                                        | For   | Purpose                            |
+| ------------------------------------------ | ----- | ---------------------------------- |
+| `FF_SEND_ENABLED=1`                        | both  | master gate out of draft-only mode |
+| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` | SMS   | Twilio auth                        |
+| `FF_SEND_FROM`                             | SMS   | the Twilio sending number          |
+| `SENDGRID_API_KEY`                         | email | SendGrid auth                      |
+| `FF_SEND_FROM_EMAIL`                       | email | the verified sender address        |
+
+Facts-from-Tools holds: send introduces no numbers — the PDF and the summary line both go
+through `recalc_estimate`, the same server-authoritative totals the PDF/JSON already show.
+SMS needs a public PDF URL (MMS attaches by URL); the server mints one at
+`/api/estimate_pdf/{token}`.
+
+> **Inbound voice-call capture (S12)** — "call a number → it forges an estimate" — is a
+> high-priority deferred stretch (a Twilio Voice webhook); see `docs/PROGRESS.md` §5.
+
 ## Test
 
 ```
