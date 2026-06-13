@@ -45,6 +45,11 @@ DEFAULT_SMOKE_N = 10
 # render.py isn't importable yet we fall back to a minimal Pillow-only image so the placeholder
 # path still builds; TODO(other-agent): once render.py is in, this just picks up its lists.
 sys.path.insert(0, _HERE)  # so `import render` resolves at image-build (local) time
+# data_utils lives in finetune/ (the PARENT), not finetune/synth/. add_local_python_source
+# below resolves the module via sys.path at build time, so the parent must be on it — else
+# Modal raises "data_utils has no spec - might not be installed?". (CORD's prepare_data.py
+# dodges this only because it's run from finetune/; we run from the repo root.)
+sys.path.insert(0, _FINETUNE)
 try:
     from render import RENDER_APT_DEPS, RENDER_PIP_DEPS
 except ImportError:
@@ -67,8 +72,14 @@ app = modal.App("quillwright-synth-generate")
 
 
 @app.function(image=image, volumes={"/cache": vol}, timeout=7200)
-def generate(n: int = DEFAULT_FULL_N, seed: int = 0):
-    """Render N synthetic invoices into /cache/synth and write the JSONL manifest."""
+def generate(n: int = DEFAULT_FULL_N, seed: int = 0, degrade: bool = False):
+    """Render N synthetic invoices into /cache/synth and write the JSONL manifest.
+
+    degrade=False (default) = CLEAN mode: WeasyPrint render only, no Augraphy. This is
+    the reliable path — clean invoice PNGs are perfectly good training data. degrade=True
+    opts into Augraphy scan/photo degradation (better transfer to photographed real docs)
+    but Augraphy has finicky numpy/opencv pins; only enable once its deps are confirmed.
+    """
     import json
     import random
 
@@ -89,15 +100,24 @@ def generate(n: int = DEFAULT_FULL_N, seed: int = 0):
 
     os.makedirs(IMAGES_DIR, exist_ok=True)
     rng = random.Random(seed)
+    degradation = 0.5 if degrade else 0.0  # 0.0 = clean (skip Augraphy)
 
     written = 0
+    failures = 0
     with open(MANIFEST, "w") as mf:
         for i in range(n):
             trade, job_type = realistic_job_mix(rng)
             job = assemble_job(catalog, trade, job_type, rng)
             template = rng.choice(templates)
 
-            png_bytes = render_invoice(job, template)
+            # One bad render must not kill the whole run (and leave a half manifest).
+            try:
+                png_bytes = render_invoice(job, template, degradation=degradation, seed=i)
+            except Exception as exc:  # noqa: BLE001 - log + skip, keep generating
+                print(f"  [WARN] render failed for {i:05d} ({trade}/{job_type}): {exc!r}")
+                failures += 1
+                continue
+
             img_path = os.path.join(IMAGES_DIR, f"{i:05d}.png")
             with open(img_path, "wb") as imgf:
                 imgf.write(png_bytes)
@@ -116,6 +136,7 @@ def generate(n: int = DEFAULT_FULL_N, seed: int = 0):
             written += 1
 
     vol.commit()  # flush so the training job sees images + manifest
+    print(f"wrote {written}/{n} invoices to {MANIFEST} (render failures: {failures})")
     print(f"wrote {written} synthetic invoices -> {MANIFEST} (seed={seed})")
 
 
@@ -139,8 +160,12 @@ def _resolve_render():
         return _placeholder_render_invoice, (lambda: ["__placeholder__"])
 
 
-def _placeholder_render_invoice(job: dict, template_name: str) -> bytes:
-    """Minimal valid PNG so the manifest + image-write path is exercisable without render.py."""
+def _placeholder_render_invoice(
+    job: dict, template_name: str, degradation: float = 0.0, seed: int | None = None
+) -> bytes:
+    """Minimal valid PNG so the manifest + image-write path is exercisable without render.py.
+
+    Accepts degradation/seed to match the real render_invoice signature (ignored here)."""
     import io
 
     from PIL import Image, ImageDraw
@@ -163,9 +188,11 @@ def _placeholder_render_invoice(job: dict, template_name: str) -> bytes:
 
 
 @app.local_entrypoint()
-def main(smoke: bool = False, n: int = DEFAULT_FULL_N, seed: int = 0):
-    """Modal entrypoint. `--smoke` renders DEFAULT_SMOKE_N images; else N (default 1000)."""
-    generate.remote(n=DEFAULT_SMOKE_N if smoke else n, seed=seed)
+def main(smoke: bool = False, n: int = DEFAULT_FULL_N, seed: int = 0, degrade: bool = False):
+    """Modal entrypoint. `--smoke` renders DEFAULT_SMOKE_N images; else N (default 1000).
+
+    Clean renders by default; `--degrade` opts into Augraphy (needs its deps confirmed)."""
+    generate.remote(n=DEFAULT_SMOKE_N if smoke else n, seed=seed, degrade=degrade)
 
 
 def _local_smoke(n: int = 3, seed: int = 0):
