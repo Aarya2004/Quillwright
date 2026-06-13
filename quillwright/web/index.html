@@ -179,6 +179,57 @@
       </div>
     </div>
 
+    <!-- Finalize & Send modal (S10): pick a channel + recipient, then send -->
+    <div class="send-overlay" id="send-overlay" hidden>
+      <div
+        class="send-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="send-title"
+        id="send-modal"
+      >
+        <!-- Form view -->
+        <div id="send-form-view">
+          <header class="send-head">
+            <h2 id="send-title">Send estimate</h2>
+            <button class="send-x" id="send-cancel" type="button" aria-label="Close">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </header>
+          <div class="send-channels" role="tablist" aria-label="Send via">
+            <button class="send-chan is-active" id="chan-sms" data-channel="sms" type="button">
+              <span class="material-symbols-outlined">sms</span> Text message
+            </button>
+            <button class="send-chan" id="chan-email" data-channel="email" type="button">
+              <span class="material-symbols-outlined">mail</span> Email
+            </button>
+          </div>
+          <label class="send-label" for="send-recipient" id="send-recipient-label">
+            Phone number
+          </label>
+          <input
+            class="send-input"
+            id="send-recipient"
+            type="text"
+            inputmode="tel"
+            placeholder="+1 555 123 4567"
+            autocomplete="off"
+          />
+          <p class="send-error" id="send-error" hidden></p>
+          <div class="send-actions">
+            <button class="link-btn" id="send-cancel-2" type="button">Cancel</button>
+            <button class="btn btn--primary" id="send-go" type="button">
+              Send <span class="material-symbols-outlined">send</span>
+            </button>
+          </div>
+          <p class="send-note" id="send-note"></p>
+        </div>
+
+        <!-- Confirmation view (populated by JS) -->
+        <div id="send-confirm-view" hidden></div>
+      </div>
+    </div>
+
     <script type="module" src="/web/js/workspace.js"></script>
   </body>
 </html>

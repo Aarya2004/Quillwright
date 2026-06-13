@@ -874,9 +874,189 @@ td.cell-pulse {
   .doc-item,
   .live .live-dot,
   td.cell-pulse,
+  .send-overlay,
+  .send-modal,
+  .send-confirm-icon,
   #forge-btn:disabled .material-symbols-outlined {
     animation: none !important;
   }
+}
+
+/* --- Finalize & Send modal (S10) --- */
+.send-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(24, 28, 30, 0.55);
+  backdrop-filter: blur(2px);
+  padding: 20px;
+  animation: send-fade 0.18s ease;
+}
+.send-overlay[hidden] {
+  display: none;
+}
+@keyframes send-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.send-modal {
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  width: 100%;
+  max-width: 420px;
+  padding: 22px;
+  animation: send-rise 0.2s ease;
+}
+@keyframes send-rise {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.send-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.send-head h2 {
+  font-family: var(--font-head);
+  font-size: 19px;
+  margin: 0;
+  color: var(--on-surface);
+}
+.send-x {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--on-surface-variant);
+  display: flex;
+  padding: 4px;
+  border-radius: 8px;
+}
+.send-x:hover {
+  background: var(--surface-container);
+}
+.send-channels {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.send-chan {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 10px;
+  background: var(--surface-container-low);
+  color: var(--on-surface-variant);
+  font-family: var(--font-head);
+  font-size: 14px;
+  cursor: pointer;
+}
+.send-chan .material-symbols-outlined {
+  font-size: 18px;
+}
+.send-chan.is-active {
+  border-color: var(--primary);
+  background: var(--primary-fixed);
+  color: var(--on-primary-fixed-variant);
+}
+.send-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-variant);
+  margin-bottom: 6px;
+}
+.send-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid var(--outline);
+  border-radius: 10px;
+  font-size: 15px;
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+}
+.send-input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 0;
+  border-color: var(--primary);
+}
+.send-error {
+  color: var(--error);
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+.send-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+}
+.send-note {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin: 12px 0 0;
+}
+#send-go.is-busy .material-symbols-outlined {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+/* Confirmation view */
+.send-confirm {
+  text-align: center;
+  padding: 8px 4px 4px;
+}
+.send-confirm-icon {
+  font-size: 52px;
+}
+.send-confirm.is-sent .send-confirm-icon {
+  color: #2e7d32;
+}
+.send-confirm.is-draft .send-confirm-icon {
+  color: var(--primary-container);
+}
+.send-confirm h2 {
+  font-family: var(--font-head);
+  margin: 8px 0 4px;
+  color: var(--on-surface);
+}
+.send-summary {
+  font-family: var(--font-mono, monospace);
+  font-size: 14px;
+  color: var(--on-surface);
+  margin: 4px 0 10px;
+}
+.send-confirm-sub {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+.send-ref {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin: -8px 0 14px;
 }
 
 /* Mic button — recording state pulses red so it's obvious it's live. */

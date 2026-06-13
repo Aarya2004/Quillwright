@@ -6,6 +6,7 @@ import {
   recalc,
   downloadPdf,
   downloadJson,
+  sendEstimate,
   translateEstimate,
   chatAboutEstimate,
   transcribeNote,
@@ -439,6 +440,97 @@ function addItem() {
   recalcFromRows();
 }
 
+// --- Finalize & Send (S10): channel + recipient modal -> /api/send_estimate ---
+let sendChannel = "sms";
+
+function escapeHtml(s) {
+  return String(s).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
+}
+
+function setSendChannel(channel) {
+  sendChannel = channel;
+  $("chan-sms").classList.toggle("is-active", channel === "sms");
+  $("chan-email").classList.toggle("is-active", channel === "email");
+  const isSms = channel === "sms";
+  $("send-recipient-label").textContent = isSms ? "Phone number" : "Email address";
+  const input = $("send-recipient");
+  input.placeholder = isSms ? "+1 555 123 4567" : "name@example.com";
+  input.inputMode = isSms ? "tel" : "email";
+  $("send-note").textContent = isSms
+    ? "We'll text a link to the estimate PDF (MMS)."
+    : "We'll email the estimate with the PDF attached.";
+}
+
+function openSendModal() {
+  if (!rows.length) return; // nothing to send
+  $("send-form-view").hidden = false;
+  $("send-confirm-view").hidden = true;
+  $("send-confirm-view").innerHTML = "";
+  $("send-error").hidden = true;
+  $("send-recipient").value = "";
+  setSendChannel("sms");
+  $("send-overlay").hidden = false;
+  $("send-recipient").focus();
+}
+
+function closeSendModal() {
+  $("send-overlay").hidden = true;
+}
+
+async function doSend() {
+  const recipient = $("send-recipient").value.trim();
+  const err = $("send-error");
+  if (!recipient) {
+    err.textContent = "Enter a recipient first.";
+    err.hidden = false;
+    return;
+  }
+  err.hidden = true;
+  const goBtn = $("send-go");
+  goBtn.disabled = true;
+  goBtn.classList.add("is-busy");
+  try {
+    const out = await sendEstimate(sendChannel, recipient, rows, JOB_TITLE, TAX_RATE);
+    renderSendConfirm(out);
+  } catch (e) {
+    err.textContent = e.message || "Send failed.";
+    err.hidden = false;
+  } finally {
+    goBtn.disabled = false;
+    goBtn.classList.remove("is-busy");
+  }
+}
+
+function renderSendConfirm(out) {
+  const sent = out.transmitted === true;
+  const chanLabel = out.channel === "sms" ? "text" : "email";
+  const icon = sent ? "check_circle" : "drafts";
+  // Honest framing (ADR-0005): on the public Space nothing is transmitted, and the
+  // card says so plainly rather than claiming a send that didn't happen.
+  const headline = sent ? `Sent by ${chanLabel}` : `Draft ready`;
+  const sub = sent
+    ? `Delivered to ${escapeHtml(out.recipient)}.`
+    : `Prepared for ${escapeHtml(out.recipient)} — real ${chanLabel} send runs on the local machine (see the demo). Nothing was transmitted from this hosted demo.`;
+  const ref =
+    sent && out.provider_id ? `<p class="send-ref">Ref: ${escapeHtml(out.provider_id)}</p>` : "";
+  $("send-confirm-view").innerHTML = `
+    <div class="send-confirm ${sent ? "is-sent" : "is-draft"}">
+      <span class="material-symbols-outlined send-confirm-icon">${icon}</span>
+      <h2>${headline}</h2>
+      <p class="send-summary">${escapeHtml(out.summary)}</p>
+      <p class="send-confirm-sub">${sub}</p>
+      ${ref}
+      <button class="btn btn--primary" id="send-done" type="button">Done</button>
+    </div>`;
+  $("send-form-view").hidden = true;
+  $("send-confirm-view").hidden = false;
+  $("send-done").addEventListener("click", closeSendModal);
+  $("send-done").focus();
+}
+
 $("forge-btn").addEventListener("click", forge);
 $("new-estimate-btn").addEventListener("click", newEstimate);
 $("photo-input").addEventListener("change", onPhotos);
@@ -448,7 +540,21 @@ $("add-item-btn").addEventListener("click", addItem);
 $("pdf-btn").addEventListener("click", () => downloadPdf(rows, JOB_TITLE, TAX_RATE));
 $("json-btn").addEventListener("click", () => downloadJson(rows, JOB_TITLE, TAX_RATE));
 $("discard-btn").addEventListener("click", newEstimate);
-$("finalize-btn").addEventListener("click", () => downloadPdf(rows, JOB_TITLE, TAX_RATE));
+$("finalize-btn").addEventListener("click", openSendModal);
+$("chan-sms").addEventListener("click", () => setSendChannel("sms"));
+$("chan-email").addEventListener("click", () => setSendChannel("email"));
+$("send-go").addEventListener("click", doSend);
+$("send-cancel").addEventListener("click", closeSendModal);
+$("send-cancel-2").addEventListener("click", closeSendModal);
+$("send-overlay").addEventListener("click", (e) => {
+  if (e.target === $("send-overlay")) closeSendModal();
+});
+$("send-recipient").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") doSend();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("send-overlay").hidden) closeSendModal();
+});
 $("lang").addEventListener("change", onLanguageChange);
 $("chat-form").addEventListener("submit", sendChat);
 // Edits commit on blur (after the user leaves the cell).

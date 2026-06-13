@@ -124,6 +124,22 @@ export async function downloadPdf(rows, jobTitle, taxRate) {
   URL.revokeObjectURL(url);
 }
 
+// Finalize & Send (S10): deliver the estimate to a customer by SMS or email.
+// Returns {status:"sent"|"drafted", transmitted, channel, recipient, summary, provider_id}.
+// On bad input the server replies 400 with a plain-text reason.
+export async function sendEstimate(channel, recipient, rows, jobTitle, taxRate) {
+  const res = await fetch("/api/send_estimate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ channel, recipient, rows, job_title: jobTitle, tax_rate: taxRate }),
+  });
+  if (!res.ok) {
+    const reason = await res.text();
+    throw new Error(reason || "Send failed.");
+  }
+  return res.json();
+}
+
 // Download a machine-readable JSON of the current estimate (the "no lock-in" export).
 export async function downloadJson(rows, jobTitle, taxRate) {
   const res = await fetch("/api/export_json", {
