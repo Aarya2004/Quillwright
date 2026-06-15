@@ -9,6 +9,7 @@ import { escapeHtml } from "./util.js";
 const steps = [];
 
 const CARDS = {
+  warmup: { title: "Waking the models", lead: "" },
   recall: { title: "Memory", lead: "Checked your past jobs for anything similar." },
   document: { title: "Document Capture", lead: "Read the handed-over document." },
   perceive: { title: "Site Analysis", lead: "Reviewed the job and noted what's needed." },

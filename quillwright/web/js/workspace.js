@@ -41,6 +41,11 @@ let sourceDescriptions = [];
 // (null until it has been forged/saved). Thread + id travel together on save/reopen.
 let refinementThread = [];
 let savedId = null;
+// Model mode from /api/model_info (stub | local | modal | mixed) + whether we've forged
+// once this session — used to warn about the GPU cold-start on the first real forge.
+let modelMode = "stub";
+let firstForgeDone = false;
+let warmupPending = false; // a "waking the models" card is showing, awaiting the first step
 
 function readAsDataURL(file) {
   return new Promise((resolve) => {
@@ -297,6 +302,17 @@ function onCellEdit(e) {
 
 // The single event handler used by both the initial run and the resume.
 function handleEvent(event) {
+  // The first real signal means the models are warm — mark the warm-up card done.
+  if (warmupPending && (event.type === "trace" || event.type === "estimate")) {
+    warmupPending = false;
+    addStep($("log"), {
+      action: "warmup",
+      model: "",
+      detail: "Models are warm.",
+      status: "ok",
+    });
+    setState("working", "Working…");
+  }
   if (event.type === "trace") {
     addStep($("log"), event.step);
   } else if (event.type === "pause") {
@@ -353,6 +369,22 @@ async function forge() {
   setEstimate(null);
   $("pause").style.display = "none";
   setState("working", "Working…");
+  // First real forge pays a GPU cold-start (Modal apps scale to zero; the 30B brain can
+  // take a minute or two to wake). Say so honestly so a slow first run reads as warming,
+  // not hung. Stub mode is instant, so only warn when real models are actually in play.
+  if (!firstForgeDone && modelMode !== "stub") {
+    setState("working", "Warming models…");
+    warmupPending = true;
+    addStep($("log"), {
+      action: "warmup",
+      model: modelMode === "modal" || modelMode === "mixed" ? "Modal GPU" : "local models",
+      detail:
+        "First run wakes the models — this can take a minute or two on a cold start. " +
+        "It's working, not stuck.",
+      status: "active", // pulses until the first real step lands (then marked done)
+    });
+  }
+  firstForgeDone = true;
   await withForgeLocked(() => forgeEstimateStream(transcript, "hvac", imagePaths, handleEvent));
 }
 
@@ -647,6 +679,7 @@ $("transcript").addEventListener("keydown", (e) => {
 async function showModelBadge() {
   try {
     const info = await modelInfo();
+    modelMode = info.mode || "stub";
     const badge = $("model-badge");
     badge.dataset.mode = info.mode;
     $("model-badge-mode").textContent = info.mode.charAt(0).toUpperCase() + info.mode.slice(1);

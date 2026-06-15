@@ -83,6 +83,38 @@ How the switches compose:
   a single yes/no. This is intentional: Parse has no local serving path (ADR-0011), but it
   means the offline ("Airplane-Mode") story only holds while every `FF_MODAL_*_URL` is unset.
 
+### Wiring the hosted Space to Modal (live real models)
+
+The Space can serve the real models on Modal GPUs — no tunnel involved (Modal apps are
+public HTTPS endpoints; the Space just calls them). The apps are deployed and scale to zero;
+wiring is purely Space **secrets** (Settings → Variables and secrets):
+
+| Secret               | Value                           | Effect                                            |
+| -------------------- | ------------------------------- | ------------------------------------------------- |
+| `FF_BACKEND`         | `modal`                         | moves the **brain** to Modal (Nemotron 30B)       |
+| `FF_MODAL_BRAIN_URL` | `https://<brain-app>.modal.run` | **required** when `FF_BACKEND=modal` (fails loud) |
+| `FF_MODAL_OMNI_URL`  | `https://<omni-app>.modal.run`  | upgrades **vision + audio** to hosted Omni        |
+| `FF_MODAL_AYA_URL`   | `https://<aya-app>.modal.run`   | upgrades **multilingual** to Aya Expanse          |
+| `FF_MODAL_PARSE_URL` | `https://<parse-app>.modal.run` | enables **Document Capture** (Parse; Modal-only)  |
+
+Get the URLs from `modal app list` / each app's deployed endpoint. Each role opts in per-URL;
+unset URLs keep that role on its non-Modal path.
+
+> **⏳ Model cold-start.** The first request to each Modal app pays a GPU cold-start — up to a
+> **minute or two for the 30B brain**. The app is warming, not broken: the UI shows a "Waking
+> the models" card on the first forge whenever real models are in play. **Warm the apps before
+> a live demo** (hit each once). When `FF_BACKEND` is unset the Space runs in instant CPU stub
+> mode (the default for the public submission link).
+
+> **💸 Cost.** A judge-clickable hosted GPU can spend over the whole judging window. The apps
+> are set to **scale to zero** when idle; confirm that before leaving the Space Modal-wired,
+> and don't leave apps you only warmed for the demo serving afterwards.
+
+> **🔒 Phone features are NOT served by the Space.** The Twilio call and QR phone-capture run
+> on a **tunneled local machine** (`FF_PUBLIC_BASE_URL` = ngrok/cloudflared URL), because
+> third-party send creds (Twilio) can't live on a public Space (ADR-0005). Modal serves the
+> _models_; the phone _capture paths_ are the local-demo + video story.
+
 ## Finalize & Send (S10)
 
 **Finalize & Send** delivers a finished estimate to the customer by **SMS** (Twilio MMS —
