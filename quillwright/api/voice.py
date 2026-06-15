@@ -30,6 +30,16 @@ import os
 from collections.abc import Callable
 from xml.sax.saxutils import escape
 
+# Spoken voice for every <Say>. Amazon Polly Neural voices (rendered by Twilio at no extra
+# cost beyond standard call rates) sound far more natural than the default. Override with
+# FF_VOICE if you prefer another (e.g. Polly.Joanna-Neural, Polly.Stephen-Neural).
+VOICE = os.environ.get("FF_VOICE", "Polly.Matthew-Neural")
+
+
+def _say(message: str) -> str:
+    """A <Say> with the configured natural voice."""
+    return f'<Say voice="{escape(VOICE)}">{escape(message)}</Say>'
+
 
 def public_base_url() -> str:
     """The tunnel's public base URL (FF_PUBLIC_BASE_URL), trailing slash stripped, or ''."""
@@ -53,21 +63,21 @@ def greeting_twiml(base_url: str | None = None) -> str:
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         "<Response>"
-        "<Say>Welcome to Quillwright. After the beep, describe the job — the parts you "
-        "used and the labor — then stop talking. I'll forge an estimate, read it back, "
-        "and you can tell me what to change.</Say>"
-        f'<Record action="{escape(action)}" method="POST" maxLength="120" '
+        + _say(
+            "Welcome to Quillwright. After the beep, describe the job — the parts you "
+            "used and the labor — then stop talking. I'll forge an estimate, read it back, "
+            "and you can tell me what to change."
+        )
+        + f'<Record action="{escape(action)}" method="POST" maxLength="120" '
         'playBeep="true" timeout="5" />'
-        "<Say>I didn't catch a recording. Goodbye.</Say>"
-        "</Response>"
+        + _say("I didn't catch a recording. Goodbye.")
+        + "</Response>"
     )
 
 
 def _say_response(message: str) -> str:
     """A bare spoken TwiML response (no recording)."""
-    return (
-        f'<?xml version="1.0" encoding="UTF-8"?>\n<Response><Say>{escape(message)}</Say></Response>'
-    )
+    return f'<?xml version="1.0" encoding="UTF-8"?>\n<Response>{_say(message)}</Response>'
 
 
 # --- Conversational refine loop (Tier A): after forging, the agent reads the total and
@@ -98,8 +108,9 @@ def _call_state(call_sid: str) -> dict | None:
 
 
 def reset_calls() -> None:
-    """Drop all in-flight call state (tests)."""
+    """Drop all in-flight call + job state (tests)."""
     _CALLS.clear()
+    _JOBS.clear()
 
 
 def _is_done(speech: str) -> bool:
@@ -115,13 +126,12 @@ def _ask_twiml(message: str, base_url: str | None = None) -> str:
     action = _action_url("/api/voice/refine", base_url)
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
-        "<Response>"
-        f'<Gather input="speech" method="POST" action="{escape(action)}" '
+        "<Response>" + f'<Gather input="speech" method="POST" action="{escape(action)}" '
         'speechTimeout="auto" timeout="6">'
-        f"<Say>{escape(message)}</Say>"
-        "</Gather>"
-        "<Say>I didn't catch that — I'll text you what I have. Goodbye.</Say>"
-        "</Response>"
+        + _say(message)
+        + "</Gather>"
+        + _say("I didn't catch that — I'll text you what I have. Goodbye.")
+        + "</Response>"
     )
 
 
@@ -130,6 +140,7 @@ def _download_recording(url: str) -> str:
     ``<url>.wav`` (a safer container for Omni than the browser's webm). Auth with the
     standard Twilio creds when present (recordings on a real account are protected)."""
     import tempfile
+    import time
 
     import requests  # already a core dep
 
@@ -138,11 +149,23 @@ def _download_recording(url: str) -> str:
     sid, token = os.environ.get("TWILIO_ACCOUNT_SID"), os.environ.get("TWILIO_AUTH_TOKEN")
     if sid and token:
         auth = (sid, token)
-    resp = requests.get(media_url, auth=auth, timeout=30)
-    resp.raise_for_status()
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        tmp.write(resp.content)
-        return tmp.name
+    # Twilio posts the recording webhook the instant recording ends, but the media file
+    # is often not encoded/available for a beat — an immediate GET 404s/403s. Retry a few
+    # times with a short backoff so the not-ready race doesn't fail the call.
+    last = None
+    for attempt in range(5):
+        resp = requests.get(media_url, auth=auth, timeout=20)
+        if resp.status_code == 200 and resp.content:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+                tmp.write(resp.content)
+                return tmp.name
+        last = resp
+        if resp.status_code not in (404, 403, 401):
+            break  # a different error won't fix itself by waiting
+        time.sleep(1.5)
+    if last is not None:
+        last.raise_for_status()
+    raise RuntimeError(f"could not fetch recording at {media_url}")
 
 
 def _send_sms(*, to: str, body: str, media_url: str) -> dict:
@@ -267,6 +290,77 @@ def handle_recording(
         "Want to add or change anything, or should I text it to you?"
     )
     return {"estimate": est, "transcript": transcript, "twiml": _ask_twiml(spoken, base)}
+
+
+# --- Async job pattern: forge+transcribe take ~tens of seconds (model load + brain),
+#     far over Twilio's ~15s webhook timeout. So the recording webhook kicks the work off
+#     on a background thread and returns a holding response immediately; Twilio is parked on
+#     a <Pause>+<Redirect> to /api/voice/status, which polls until the job finishes. Each
+#     webhook response stays well under the timeout. ---
+
+# call_sid -> {"status": "working"|"done"|"error", "twiml": <ask TwiML once done>}
+_JOBS: dict[str, dict] = {}
+
+
+def _hold_twiml(message: str, base_url: str | None = None) -> str:
+    """Speak a short status line, pause, then redirect to /api/voice/status to poll again."""
+    action = _action_url("/api/voice/status", base_url)
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        "<Response>"
+        + _say(message)
+        + '<Pause length="3" />'
+        + f'<Redirect method="POST">{escape(action)}</Redirect>'
+        + "</Response>"
+    )
+
+
+def start_recording_job(
+    *, recording_url: str, from_number: str, call_sid: str, base_url: str | None = None
+) -> str:
+    """Kick the forge off on a background thread; return holding TwiML immediately.
+    The webhook never blocks on the slow work (model load + brain)."""
+    import threading
+
+    base = (base_url if base_url is not None else public_base_url()).rstrip("/")
+    _JOBS[call_sid] = {"status": "working", "twiml": None}
+
+    def _work():
+        try:
+            result = handle_recording(
+                recording_url=recording_url,
+                from_number=from_number,
+                call_sid=call_sid,
+                base_url=base,
+            )
+            _JOBS[call_sid] = {"status": "done", "twiml": result["twiml"]}
+        except Exception as exc:  # noqa: BLE001 — surface as an error status, not a crash
+            print(f"[quillwright] voice forge job failed: {exc}", flush=True)
+            _JOBS[call_sid] = {
+                "status": "error",
+                "twiml": _say_response(
+                    "Sorry, I couldn't build that estimate. Please call back and try again."
+                ),
+            }
+
+    threading.Thread(target=_work, daemon=True).start()
+    return _hold_twiml("Got it. I'm forging your estimate now — this takes a moment.", base)
+
+
+def handle_status(*, call_sid: str, base_url: str | None = None) -> str:
+    """Poll the background forge: still working → hold + redirect again; done → the ask
+    (or error) TwiML the job produced. Unknown call → polite fallback."""
+    base = (base_url if base_url is not None else public_base_url()).rstrip("/")
+    job = _JOBS.get(call_sid)
+    if job is None:
+        return _say_response(
+            "Sorry, I lost track of that estimate. Please call back to start again."
+        )
+    if job["status"] == "working":
+        return _hold_twiml("Still working on it — just a few more seconds.", base)
+    # done or error: hand back the prepared TwiML and clear the job marker.
+    _JOBS.pop(call_sid, None)
+    return job["twiml"]
 
 
 def handle_refine(

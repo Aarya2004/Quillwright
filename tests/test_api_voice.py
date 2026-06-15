@@ -69,7 +69,7 @@ def test_handle_recording_forges_saves_draft_and_summarizes():
     listed = est_api.estimate_store().list_estimates()
     assert len(listed) == 1
     # The spoken TwiML reads back the total, then ASKS (conversational, not a hang-up).
-    assert "<Say>" in result["twiml"]
+    assert "<Say " in result["twiml"]  # voiced <Say voice="...">
     assert f"{result['estimate']['total']:.2f}" in result["twiml"]
     assert "<Gather" in result["twiml"] and 'input="speech"' in result["twiml"]
     assert "/api/voice/refine" in result["twiml"]
@@ -91,7 +91,7 @@ def test_handle_recording_empty_transcript_is_graceful():
     )
     # No transcript → no forge, a polite spoken fallback, nothing saved.
     assert result["estimate"] is None
-    assert "<Say>" in result["twiml"]
+    assert "<Say " in result["twiml"]
     assert est_api.estimate_store().list_estimates() == []
 
 
@@ -154,7 +154,57 @@ def test_refine_unknown_call_is_graceful():
         base_url="https://demo.example.com",
         sms=lambda **kw: None,
     )
-    assert "<Say>" in out["twiml"]  # a polite fallback, no crash
+    assert "<Say " in out["twiml"]  # a polite fallback, no crash
+
+
+# --- async job pattern (forge runs off-thread; Twilio polls /api/voice/status) ---
+
+
+def test_status_unknown_call_is_graceful():
+    out = voice.handle_status(call_sid="CA_never", base_url="https://demo.example.com")
+    assert "<Say " in out  # polite fallback, no crash
+
+
+def test_status_while_working_holds_and_redirects():
+    voice._JOBS["CA_w"] = {"status": "working", "twiml": None}
+    out = voice.handle_status(call_sid="CA_w", base_url="https://demo.example.com")
+    assert "<Pause" in out and "/api/voice/status" in out  # parks Twilio, polls again
+
+
+def test_status_when_done_returns_the_jobs_twiml():
+    voice._JOBS["CA_d"] = {"status": "done", "twiml": "<Response><Say>ready</Say></Response>"}
+    out = voice.handle_status(call_sid="CA_d", base_url="https://demo.example.com")
+    assert out == "<Response><Say>ready</Say></Response>"
+    assert "CA_d" not in voice._JOBS  # cleared after delivery
+
+
+def test_start_recording_job_returns_immediately_then_completes():
+    import time
+
+    # Inject fast stubs so the background thread finishes quickly (no model, no network).
+    def fake_download(url):
+        return "/tmp/x.wav"
+
+    # Patch the module-level default the background job uses via handle_recording.
+    orig_dl = voice._download_recording
+    voice._download_recording = fake_download
+    try:
+        twiml = voice.start_recording_job(
+            recording_url="https://api.twilio.com/rec/abc",
+            from_number="+15551234567",
+            call_sid="CA_job",
+            base_url="https://demo.example.com",
+        )
+        # Returns a holding response straight away.
+        assert "<Pause" in twiml and "/api/voice/status" in twiml
+        # The job eventually completes (stub forge is fast). Poll briefly.
+        for _ in range(50):
+            if voice._JOBS.get("CA_job", {}).get("status") != "working":
+                break
+            time.sleep(0.1)
+        assert voice._JOBS["CA_job"]["status"] in ("done", "error")
+    finally:
+        voice._download_recording = orig_dl
 
 
 def test_voice_endpoints_are_wired():

@@ -222,10 +222,11 @@ async def api_voice_incoming(request: Request):
 
 @app.post("/api/voice/recording")
 async def api_voice_recording(request: Request):
-    """Twilio recording-complete webhook (S12): transcribe → forge → save draft →
-    speak the total back → ASK if they want to refine (conversational loop). Reads
-    RecordingUrl + From + CallSid from Twilio's form post."""
-    from quillwright.api.voice import handle_recording
+    """Twilio recording-complete webhook (S12): kick the forge off on a background thread
+    and return a holding response immediately — the work (model load + brain) far exceeds
+    Twilio's ~15s webhook timeout, so we poll via /api/voice/status. Reads RecordingUrl +
+    From + CallSid from Twilio's form post."""
+    from quillwright.api.voice import start_recording_job
 
     form = await request.form()
     recording_url = str(form.get("RecordingUrl", ""))
@@ -233,13 +234,12 @@ async def api_voice_recording(request: Request):
     call_sid = str(form.get("CallSid", "default"))
     base = os.environ.get("FF_PUBLIC_BASE_URL") or str(request.base_url).rstrip("/")
     try:
-        result = handle_recording(
+        twiml = start_recording_job(
             recording_url=recording_url,
             from_number=from_number,
             call_sid=call_sid,
             base_url=base,
         )
-        twiml = result["twiml"]
     except Exception as exc:  # noqa: BLE001 — always answer Twilio with valid TwiML
         from quillwright.api.voice import _say_response
 
@@ -247,6 +247,25 @@ async def api_voice_recording(request: Request):
         twiml = _say_response(
             "Sorry, something went wrong forging your estimate. Please try again."
         )
+    return Response(content=twiml, media_type="application/xml")
+
+
+@app.post("/api/voice/status")
+async def api_voice_status(request: Request):
+    """Twilio poll target (S12): the background forge isn't done → hold + redirect again;
+    done → the spoken total + refine <Gather> (or an error fallback)."""
+    from quillwright.api.voice import handle_status
+
+    form = await request.form()
+    call_sid = str(form.get("CallSid", "default"))
+    base = os.environ.get("FF_PUBLIC_BASE_URL") or str(request.base_url).rstrip("/")
+    try:
+        twiml = handle_status(call_sid=call_sid, base_url=base)
+    except Exception as exc:  # noqa: BLE001 — always answer Twilio with valid TwiML
+        from quillwright.api.voice import _say_response
+
+        print(f"[quillwright] voice status handler failed: {exc}", flush=True)
+        twiml = _say_response("Sorry, something went wrong. It's saved as a draft. Goodbye.")
     return Response(content=twiml, media_type="application/xml")
 
 
