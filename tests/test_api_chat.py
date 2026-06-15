@@ -261,3 +261,49 @@ def test_change_rate_scope_followup_this_estimate():
     )
     c = next(r for r in out2["estimate"]["line_items"] if r["description"] == "Dual run capacitor")
     assert c["rate"] == 20.0
+
+
+# --- keyword path: "N dollars/bucks" (no $ sign) is a RATE, not a quantity ---
+
+
+def test_keyword_dollars_word_is_a_rate_not_a_quantity():
+    out = chat_about_estimate("set the contactor to 45 dollars", _rows_with_contactor())
+    c = next(r for r in out["estimate"]["line_items"] if r["description"] == "Compressor contactor")
+    assert c["rate"] == 45.0  # applied as a rate
+    assert c["quantity"] == 1.0  # NOT read as quantity 45
+    assert c["price_source"] == "user"
+
+
+def test_keyword_bucks_word_is_a_rate():
+    out = chat_about_estimate("make the labor 80 bucks an hour", _rows_with_contactor())
+    labor = next(r for r in out["estimate"]["line_items"] if r["description"] == "Labor")
+    assert labor["rate"] == 80.0
+
+
+def _rows_with_contactor():
+    return [
+        {"description": "Compressor contactor", "quantity": 1, "unit": "ea", "rate": 38.0},
+        {"description": "Labor", "quantity": 1, "unit": "hr", "rate": 90.0},
+    ]
+
+
+# --- answer read-only questions about the estimate (total / what's on it) ---
+
+
+def test_keyword_answers_whats_the_total():
+    out = chat_about_estimate("what's the total", _rows_with_contactor())
+    # 38 + 90 = 128, * 1.13 = 144.64
+    assert "144.64" in out["reply"]
+    # a question doesn't change the estimate
+    assert len(out["estimate"]["line_items"]) == 2
+
+
+def test_keyword_answers_whats_on_the_estimate():
+    out = chat_about_estimate("what's on the estimate", _rows_with_contactor())
+    assert "contactor" in out["reply"].lower() and "labor" in out["reply"].lower()
+
+
+def test_keyword_question_records_no_edit_op():
+    out = chat_about_estimate("how much is it", _rows_with_contactor())
+    # asking is not an edit; thread gets a question turn at most, estimate unchanged
+    assert len(out["estimate"]["line_items"]) == 2

@@ -51,9 +51,13 @@ def _to_qty(text: str) -> float | None:
 
 
 def _to_dollar_amount(text: str) -> float | None:
-    """An explicit dollar amount ($30, $30.50) -> float, or None. Requires the `$`
-    so a bare quantity number is never mistaken for a user-stated price."""
+    """A user-stated price -> float, or None. Matches an explicit `$30` OR a spoken
+    `30 dollars` / `30 bucks` (voice transcripts have no `$`). A bare number with no
+    money cue is NOT treated as a price (it stays a possible quantity)."""
     m = re.search(r"\$\s*(\d+(?:\.\d+)?)", text)
+    if m:
+        return float(m.group(1))
+    m = re.search(r"(\d+(?:\.\d+)?)\s*(?:dollars?|bucks)\b", text)
     return float(m.group(1)) if m else None
 
 
@@ -123,7 +127,10 @@ def _op_add(rows: list[dict], item: str, quantity: float | None) -> dict:
         }
     )
     return {
-        "reply": f"Added {qty:g} × {priced['description']} at ${priced['rate']:.2f} from the catalog.",
+        "reply": (
+            f"Done — added {qty:g} × {priced['description']} at the catalog rate of "
+            f"${priced['rate']:.2f}. I've updated the total."
+        ),
         "op": f"added {priced['description']}",
     }
 
@@ -137,7 +144,7 @@ def _op_remove(rows: list[dict], item: str) -> dict:
         }
     removed = rows.pop(i)
     return {
-        "reply": f"Removed {removed['description']}. Updated the total for you.",
+        "reply": f"Got it — took {removed['description']} off the estimate and recalculated the total.",
         "op": f"removed {removed['description']}",
     }
 
@@ -151,7 +158,7 @@ def _op_change_qty(rows: list[dict], item: str, quantity: float | None) -> dict:
         }
     rows[i]["quantity"] = quantity
     return {
-        "reply": f"Set {rows[i]['description']} to {quantity:g}. Recalculated the total.",
+        "reply": f"Sure — {rows[i]['description']} is now {quantity:g}. Total's updated.",
         "op": f"set {rows[i]['description']} to {quantity:g}",
     }
 
@@ -198,11 +205,26 @@ def _op_change_rate(rows: list[dict], item: str, rate: float | None, scope: str 
     else:
         where = "this estimate"
     return {
-        "reply": f"Set {desc} to ${rate:.2f} for {where}. Recalculated the total.",
+        "reply": f"Done — {desc} is now ${rate:.2f} for {where}, and the total's updated.",
         "changed": desc,
         # Op is dollar-free by construction (Facts-from-Tools holds in the thread too).
         "op": f"set the rate for {desc} ({where})",
     }
+
+
+def _answer_about_estimate(rows: list[dict], tax_rate: float) -> str:
+    """A spoken-friendly answer to 'what's the total / what's on it' — every number from
+    recalc (Facts-from-Tools), never free-generated."""
+    est = recalc_estimate(rows, job_title="Estimate", tax_rate=tax_rate)
+    items = est["line_items"]
+    if not items:
+        return "The estimate is empty right now — tell me what to add."
+    n = len(items)
+    listed = ", ".join(f"{li['quantity']:g} {li['description'].lower()}" for li in items)
+    return (
+        f"You've got {n} item{'s' if n != 1 else ''}: {listed}. "
+        f"The total comes to ${est['total']:.2f}."
+    )
 
 
 # --- LLM tool surface: the model only PICKS the operation + item (+ quantity);
@@ -337,8 +359,14 @@ def _model_chat(message: str, rows: list[dict], tax_rate: float, model, thread: 
     msg = model.chat(messages, CHAT_TOOLS)
     tool_calls = msg.get("tool_calls") or []
     if not tool_calls:
-        # No edit — the model answered a question. Estimate stays untouched.
+        # No edit — the model answered a question. Estimate stays untouched. If it's a
+        # total/contents question, answer it deterministically (the number must come from
+        # recalc, never the model — Facts-from-Tools), else relay the model's plain text.
         text = (msg.get("content") or "").strip()
+        if re.search(
+            r"\b(total|how much|what'?s on|what is on|whats on|breakdown)\b", message.lower()
+        ):
+            text = _answer_about_estimate(rows, tax_rate)
         return _finish(
             rows,
             tax_rate,
@@ -374,6 +402,21 @@ def _keyword_chat(message: str, rows: list[dict], tax_rate: float, thread: list[
             thread=thread,
         )
 
+    # A read-only question about the estimate ("what's the total", "what's on it",
+    # "how much is it") — answer it instead of falling through to generic help. Checked
+    # before the edit verbs, but only when no edit verb is present so "add ..." still adds.
+    is_question = re.search(r"\b(total|how much|what'?s on|what is on|whats on|breakdown)\b", msg)
+    has_edit_verb = re.search(r"\b(add|remove|delete|drop|set|change|make|update|include)\b", msg)
+    if is_question and not has_edit_verb:
+        return _finish(
+            rows,
+            tax_rate,
+            _answer_about_estimate(rows, tax_rate),
+            thread=thread,
+            message=message,
+            op="asked about the estimate",
+        )
+
     if re.search(r"\b(remove|delete|drop|take off|get rid of)\b", msg):
         result = _op_remove(rows, msg)
         return _finish(
@@ -384,8 +427,10 @@ def _keyword_chat(message: str, rows: list[dict], tax_rate: float, thread: list[
     # rate change. Checked BEFORE the quantity branch so the "$30" isn't read as a qty.
     # The keyword path can't hold a follow-up turn, so it takes the conservative
     # estimate-only scope (the model path is the one that asks catalog-vs-estimate).
+    # _to_dollar_amount only returns a value when a money cue is present ($, "dollars",
+    # "bucks"), so its non-None result is itself the signal this is a rate, not a quantity.
     rate_amount = _to_dollar_amount(msg)
-    if rate_amount is not None and re.search(r"\b(rate|price|charge|cost)\b", msg):
+    if rate_amount is not None:
         i = _find_row(rows, msg)
         if i is not None:
             result = _op_change_rate(rows, rows[i]["description"], rate_amount, scope="estimate")
