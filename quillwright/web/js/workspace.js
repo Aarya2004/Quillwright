@@ -41,6 +41,8 @@ let sourceDescriptions = [];
 // (null until it has been forged/saved). Thread + id travel together on save/reopen.
 let refinementThread = [];
 let savedId = null;
+// A rate change awaiting a scope answer ("this estimate"/"the catalog") from the next turn.
+let pendingChange = null;
 // Model mode from /api/model_info (stub | local | modal | mixed) + whether we've forged
 // once this session — used to warn about the GPU cold-start on the first real forge.
 let modelMode = "stub";
@@ -399,6 +401,7 @@ function newEstimate() {
   chatStarted = false;
   refinementThread = [];
   savedId = null;
+  pendingChange = null;
   $("transcript").focus();
 }
 
@@ -471,10 +474,12 @@ async function sendChat(e) {
   appendMsg("user", text);
   const typing = showTyping();
   try {
-    const out = await chatAboutEstimate(text, rows, TAX_RATE, refinementThread);
+    const out = await chatAboutEstimate(text, rows, TAX_RATE, refinementThread, pendingChange);
     typing.remove();
     appendMsg("bot", out.reply);
     if (out.thread) refinementThread = out.thread;
+    // Carry any pending rate change (awaiting "this estimate"/"the catalog") to next turn.
+    pendingChange = out.pending || null;
     if (out.estimate) {
       // Adopt the refined estimate; the right pane updates + total bumps.
       setEstimate(out.estimate);

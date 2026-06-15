@@ -66,18 +66,22 @@ def _finish(
     thread: list[dict] | None = None,
     message: str = "",
     op: str = "",
+    pending: dict | None = None,
 ) -> dict:
     est = recalc_estimate(rows, job_title="Estimate", tax_rate=tax_rate)
     # `changed` names the line whose rate just changed, so the UI can pulse that cell.
     # The Refinement Thread (ADR-0013) records the human message + a dollar-free op,
     # so resuming can never feed a stale number back to the model (Facts-from-Tools).
     new_thread = append_turn(thread or [], message=message, op=op) if op else (thread or [])
+    # `pending` carries a rate change awaiting a scope answer ("this estimate"/"the catalog")
+    # to the next turn — the user's stated number, deferred one turn, not the model's.
     return {
         "estimate": est,
         "reply": reply,
         "needs_price": needs_price,
         "changed": changed,
         "thread": new_thread,
+        "pending": pending,
     }
 
 
@@ -168,6 +172,7 @@ def _op_change_rate(rows: list[dict], item: str, rate: float | None, scope: str 
         }
     if scope not in ("estimate", "catalog"):
         # Numbers are user-confirmed, but we still ask WHERE it applies before changing.
+        # Stash the change as `pending` so the next turn's scope answer can apply it.
         return {
             "reply": (
                 f"Should ${rate:.2f} for {rows[i]['description']} apply to just this "
@@ -175,6 +180,7 @@ def _op_change_rate(rows: list[dict], item: str, rate: float | None, scope: str 
                 "Say “this estimate” or “the catalog”."
             ),
             "op": "asked where a rate applies",
+            "pending": {"item": rows[i]["description"], "rate": rate},
         }
     rows[i]["rate"] = rate
     rows[i]["price_source"] = "user"  # a human-confirmed price, not catalog/computed
@@ -353,6 +359,7 @@ def _model_chat(message: str, rows: list[dict], tax_rate: float, model, thread: 
         thread=thread,
         message=message,
         op=result.get("op", ""),
+        pending=result.get("pending"),
     )
 
 
@@ -438,18 +445,48 @@ def _resolve_brain():
     return None
 
 
+def _scope_answer(message: str) -> str | None:
+    """Map a scope reply to 'estimate'/'catalog', or None if it isn't one."""
+    m = message.strip().lower()
+    if re.search(r"\bcatalog\b|\bboth\b|future job", m):
+        return "catalog"
+    if re.search(r"\b(this|just this|estimate only|only this|here|this one)\b", m):
+        return "estimate"
+    return None
+
+
 def chat_about_estimate(
-    message: str, rows: list[dict], tax_rate: float = 0.13, model=None, thread=None
+    message: str, rows: list[dict], tax_rate: float = 0.13, model=None, thread=None, pending=None
 ) -> dict:
     """Apply a conversational edit to the estimate. Returns
-    {estimate, reply, needs_price, changed, thread}.
+    {estimate, reply, needs_price, changed, thread, pending}.
 
     `model` is injectable for tests; in production it's resolved from FF_REAL_MODELS.
-    `thread` is the Refinement Thread (ADR-0013): sanitized, dollar-free history that
-    is replayed for reference resolution and grows by one turn per edit/question.
+    `thread` is the Refinement Thread (ADR-0013): sanitized, dollar-free history.
+    `pending` carries a rate change awaiting a scope answer from the previous turn — if it
+    is set and this message answers "this estimate"/"the catalog", apply it directly (no
+    model), so the two-turn rate change doesn't lose context.
     """
     rows = [dict(r) for r in rows]  # don't mutate the caller's list
     thread = list(thread or [])
+
+    # Resolve a pending rate change first: "the catalog" / "this estimate" applies the
+    # number the user stated last turn (Facts-from-Tools — it's the user's, just deferred).
+    if pending and pending.get("item") and pending.get("rate") is not None:
+        scope = _scope_answer(message)
+        if scope is not None:
+            result = _op_change_rate(rows, pending["item"], float(pending["rate"]), scope=scope)
+            return _finish(
+                rows,
+                tax_rate,
+                result["reply"],
+                changed=result.get("changed"),
+                thread=thread,
+                message=message,
+                op=result.get("op", ""),
+            )
+        # Not a scope answer — fall through to normal handling, dropping the pending change.
+
     brain = model if model is not None else _resolve_brain()
     if brain is not None:
         return _model_chat(message, rows, tax_rate, brain, thread)

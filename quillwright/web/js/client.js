@@ -90,11 +90,11 @@ export async function transcribeNote(dataUrl, filename) {
 // Refine the current estimate conversationally (the Digital Apprentice chat).
 // Carries the Refinement Thread (ADR-0013) in and back out. Returns
 // {estimate, reply, needs_price, changed, thread}.
-export async function chatAboutEstimate(message, rows, taxRate, thread) {
+export async function chatAboutEstimate(message, rows, taxRate, thread, pending) {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, rows, tax_rate: taxRate, thread }),
+    body: JSON.stringify({ message, rows, tax_rate: taxRate, thread, pending }),
   });
   return res.json();
 }

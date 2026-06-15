@@ -223,3 +223,41 @@ def test_chat_thread_accumulates_across_turns():
 def test_chat_thread_default_empty_when_omitted():
     out = chat_about_estimate("change labor to 2 hours", [dict(r) for r in ROWS])
     assert out["thread"][0]["op"]
+
+
+# --- pending rate-change scope follow-up: "make it $20" → ask → "the catalog" applies it ---
+
+
+def test_change_rate_scope_followup_applies_pending_change():
+    # Turn 1: user states a rate without scope → bot asks, returns a pending change.
+    model = StubModel(responses=[], chats=[_tc("change_rate", item="capacitor", rate=20)])
+    out1 = chat_about_estimate("make the capacitor $20", _rows(), model=model)
+    assert "pending" in out1 and out1["pending"]  # a pending rate change is carried out
+    # the rate is NOT applied yet (still asking scope)
+    c1 = next(r for r in out1["estimate"]["line_items"] if r["description"] == "Dual run capacitor")
+    assert c1["rate"] != 20.0
+
+    # Turn 2: user answers "the catalog" → the pending change applies, no model needed.
+    out2 = chat_about_estimate(
+        "the catalog",
+        out1["estimate"]["line_items"],
+        thread=out1["thread"],
+        pending=out1["pending"],
+    )
+    c2 = next(r for r in out2["estimate"]["line_items"] if r["description"] == "Dual run capacitor")
+    assert c2["rate"] == 20.0
+    assert c2["price_source"] == "user"
+    assert not out2.get("pending")  # cleared after applying
+
+
+def test_change_rate_scope_followup_this_estimate():
+    model = StubModel(responses=[], chats=[_tc("change_rate", item="capacitor", rate=20)])
+    out1 = chat_about_estimate("set the capacitor rate to $20", _rows(), model=model)
+    out2 = chat_about_estimate(
+        "just this estimate",
+        out1["estimate"]["line_items"],
+        thread=out1["thread"],
+        pending=out1["pending"],
+    )
+    c = next(r for r in out2["estimate"]["line_items"] if r["description"] == "Dual run capacitor")
+    assert c["rate"] == 20.0

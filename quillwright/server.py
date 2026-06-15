@@ -304,10 +304,16 @@ async def _tool_payload(request: Request) -> dict:
     if raw:
         try:
             data = json.loads(raw)
-            if isinstance(data, dict):
-                return data
         except (json.JSONDecodeError, ValueError):
-            pass
+            data = None
+        if isinstance(data, dict):
+            # ElevenLabs may wrap the args under a key (e.g. "parameters"/"body"/"arguments").
+            # If the dict has exactly one value that is itself a dict, unwrap it.
+            if not any(k in data for k in ("session_id", "description", "request", "item", "to")):
+                for v in data.values():
+                    if isinstance(v, dict):
+                        return v
+            return data
     try:
         form = await request.form()
         if form:
@@ -439,6 +445,7 @@ def api_chat(payload: dict = Body(...)) -> dict:
         payload.get("rows", []),
         tax_rate=payload.get("tax_rate", 0.13),
         thread=payload.get("thread", []),
+        pending=payload.get("pending"),
     )
 
 
