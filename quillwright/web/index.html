@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forge Estimate | Quillwright</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/web/img/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/web/img/favicon-16.png" />
+    <link rel="icon" href="/web/img/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/web/img/apple-touch-icon.png" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700;800;900&family=Inter:wght@400;700&family=JetBrains+Mono:wght@500&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap"
+    />
+    <link rel="stylesheet" href="/web/css/theme.css" />
+    <link rel="stylesheet" href="/web/css/workspace.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <!-- Sidebar: only working destinations (current page + New Estimate). -->
+      <aside class="sidebar">
+        <div class="brand">
+          <img class="brand-logo" src="/web/img/quillwright-logo-transparent.png" alt="" />
+          <div class="brand-text">
+            <h2>Quillwright</h2>
+            <p>Industrial Precision</p>
+          </div>
+        </div>
+        <nav>
+          <a class="nav-link active" href="/">
+            <span class="material-symbols-outlined">description</span>
+            <span>Estimate Builder</span>
+          </a>
+          <a class="nav-link" href="/estimates">
+            <span class="material-symbols-outlined">folder</span>
+            <span>My Estimates</span>
+          </a>
+          <a class="nav-link" href="/dashboard">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span>Dashboard</span>
+          </a>
+          <a class="nav-link" href="/jobs">
+            <span class="material-symbols-outlined">work</span>
+            <span>Active Jobs</span>
+          </a>
+          <a class="nav-link" href="/inventory">
+            <span class="material-symbols-outlined">inventory_2</span>
+            <span>Parts Catalog</span>
+          </a>
+        </nav>
+        <button class="btn btn--primary new-estimate" id="new-estimate-btn">New Estimate</button>
+      </aside>
+
+      <div class="main">
+        <!-- Cold-start banner: this Space scales to zero, so the first load after an idle
+             period boots the container. The banner confirms the app is waking, not broken,
+             then flips to "ready" and fades once /api/model_info responds. -->
+        <div class="boot-banner" id="boot-banner" data-state="waking" hidden>
+          <span class="boot-spinner" aria-hidden="true"></span>
+          <span id="boot-text"
+            >Waking the demo up — this Space sleeps when idle, so the first load takes ~30–60s. It's
+            not broken; hang tight.</span
+          >
+        </div>
+
+        <!-- Top bar: job title only -->
+        <header class="topbar">
+          <h1>Forge Estimate: AC Unit Repair — 123 Maple St</h1>
+        </header>
+
+        <!-- Capture input -->
+        <div class="capture">
+          <input id="transcript" value="replaced the capacitor and contactor, one hour labor" />
+          <button id="mic-btn" class="btn" title="Record a voice note (Cohere Transcribe)">
+            <span class="material-symbols-outlined">mic</span>
+          </button>
+          <label class="btn" for="photo-input" title="Add job photos">
+            <span class="material-symbols-outlined">add_a_photo</span>
+          </label>
+          <input id="photo-input" type="file" accept="image/*" multiple hidden />
+          <label
+            class="btn"
+            for="doc-input"
+            title="Add a document — supplier quote or spec sheet (Document Capture)"
+          >
+            <span class="material-symbols-outlined">document_scanner</span>
+          </label>
+          <input id="doc-input" type="file" accept="image/*" hidden />
+          <button
+            id="phone-btn"
+            class="btn"
+            type="button"
+            title="Capture from your phone (scan a QR)"
+          >
+            <span class="material-symbols-outlined">qr_code_2</span>
+          </button>
+          <button id="forge-btn" class="btn btn--primary">
+            <span class="material-symbols-outlined">bolt</span> Forge estimate
+          </button>
+        </div>
+        <div id="thumbs" class="thumbs"></div>
+
+        <div class="panes">
+          <!-- Left: Digital Apprentice — one continuous stream (trace + chat),
+               with the chat input docked at the bottom of the pane. -->
+          <section class="pane pane--log">
+            <div class="pane-head">
+              <div class="apprentice">
+                <span class="material-symbols-outlined">auto_awesome</span>
+                <h2>Digital Apprentice</h2>
+                <span id="model-badge" class="model-badge" title="Which models are running" hidden
+                  ><span class="model-badge-dot"></span><span id="model-badge-mode">…</span
+                  ><span id="model-badge-roles" class="model-badge-roles"></span
+                ></span>
+              </div>
+              <div class="live">
+                <span id="forge-state">Idle</span><span class="live-dot"></span>
+              </div>
+            </div>
+
+            <!-- The stream: trace step cards, then chat turns, in one column. -->
+            <div class="stream" id="log">
+              <div class="steps">
+                <p class="step-empty">Waiting for a job to forge…</p>
+              </div>
+            </div>
+
+            <!-- Docked chat input (disabled until an estimate exists). -->
+            <form class="chat-input" id="chat-form">
+              <input
+                id="chat-text"
+                type="text"
+                autocomplete="off"
+                disabled
+                placeholder="Forge an estimate, then refine it here…"
+              />
+              <button class="chat-send" id="chat-send" type="submit" disabled aria-label="Send">
+                <span class="material-symbols-outlined">arrow_upward</span>
+              </button>
+            </form>
+          </section>
+
+          <!-- Right: Draft Estimate -->
+          <section class="pane pane--estimate">
+            <div class="pane-head">
+              <h2>Draft Estimate</h2>
+              <div class="est-actions">
+                <button class="btn" id="add-item-btn">
+                  <span class="material-symbols-outlined">add</span> Add Item
+                </button>
+                <button class="btn" id="save-btn" title="Save this estimate to My Estimates">
+                  <span class="material-symbols-outlined">save</span> Save
+                </button>
+                <button class="btn" id="pdf-btn">
+                  <span class="material-symbols-outlined">picture_as_pdf</span> Preview PDF
+                </button>
+                <button class="btn" id="json-btn" title="Export machine-readable JSON (no lock-in)">
+                  <span class="material-symbols-outlined">data_object</span> Export JSON
+                </button>
+              </div>
+            </div>
+            <div class="pane-body">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th>Qty</th>
+                    <th class="num">Rate</th>
+                    <th class="num">Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="est-rows"></tbody>
+              </table>
+
+              <div class="pause-card" id="pause" style="display: none"></div>
+
+              <div class="summary">
+                <div class="rows">
+                  <div class="row"><span>Subtotal</span><span id="sum-subtotal">$0.00</span></div>
+                  <div class="row">
+                    <span>Tax (<span id="sum-tax-rate">0%</span>)</span
+                    ><span id="sum-tax">$0.00</span>
+                  </div>
+                  <div class="row row--total">
+                    <span>Total</span><span id="sum-total">$0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Footer action bar -->
+        <footer class="footer">
+          <select id="lang">
+            <option>English</option>
+            <option>Spanish (Español)</option>
+            <option>French (Français)</option>
+            <option>Mandarin (中文)</option>
+          </select>
+          <div class="right">
+            <button class="link-btn" id="discard-btn">Discard Draft</button>
+            <button class="btn btn--primary" id="finalize-btn">
+              Finalize &amp; Send <span class="material-symbols-outlined">send</span>
+            </button>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Finalize & Send modal (S10): pick a channel + recipient, then send -->
+    <div class="send-overlay" id="send-overlay" hidden>
+      <div
+        class="send-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="send-title"
+        id="send-modal"
+      >
+        <!-- Form view -->
+        <div id="send-form-view">
+          <header class="send-head">
+            <h2 id="send-title">Send estimate</h2>
+            <button class="send-x" id="send-cancel" type="button" aria-label="Close">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </header>
+          <div class="send-channels" role="tablist" aria-label="Send via">
+            <button class="send-chan is-active" id="chan-sms" data-channel="sms" type="button">
+              <span class="material-symbols-outlined">sms</span> Text message
+            </button>
+            <button class="send-chan" id="chan-email" data-channel="email" type="button">
+              <span class="material-symbols-outlined">mail</span> Email
+            </button>
+          </div>
+          <label class="send-label" for="send-recipient" id="send-recipient-label">
+            Phone number
+          </label>
+          <input
+            class="send-input"
+            id="send-recipient"
+            type="text"
+            inputmode="tel"
+            placeholder="+1 555 123 4567"
+            autocomplete="off"
+          />
+          <p class="send-error" id="send-error" hidden></p>
+          <div class="send-actions">
+            <button class="link-btn" id="send-cancel-2" type="button">Cancel</button>
+            <button class="btn btn--primary" id="send-go" type="button">
+              Send <span class="material-symbols-outlined">send</span>
+            </button>
+          </div>
+          <p class="send-note" id="send-note"></p>
+        </div>
+
+        <!-- Confirmation view (populated by JS) -->
+        <div id="send-confirm-view" hidden></div>
+      </div>
+    </div>
+
+    <!-- Phone-capture pairing (Tier 3): scan the QR, capture on your phone -->
+    <div class="send-overlay" id="phone-overlay" hidden>
+      <div class="send-modal" role="dialog" aria-modal="true" aria-labelledby="phone-title">
+        <header class="send-head">
+          <h2 id="phone-title">Capture from your phone</h2>
+          <button class="send-x" id="phone-cancel" type="button" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </header>
+        <p class="send-note">
+          Scan this with your phone camera, then take a photo and a voice note. It forges here, live
+          on this screen.
+        </p>
+        <div id="phone-qr" class="phone-qr"></div>
+        <p class="phone-link">
+          or open <a id="phone-url" href="#" target="_blank" rel="noopener"></a>
+        </p>
+        <p class="send-note" id="phone-status">Waiting for your phone…</p>
+      </div>
+    </div>
+
+    <script type="module" src="/web/js/workspace.js"></script>
+  </body>
+</html>

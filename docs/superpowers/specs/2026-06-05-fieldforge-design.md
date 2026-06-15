@@ -1,10 +1,10 @@
-# FieldForge — Design Doc
+# Quillwright — Design Doc
 
 _Build Small Hackathon (Gradio × Hugging Face) — June 5–15, 2026_
 _Date: 2026-06-05 · Track: Backyard AI (with a dash of delight)_
 _Companion docs: [`CONTEXT.md`](../../../CONTEXT.md) (glossary) · [`docs/adr/`](../../adr/) (ADRs 0001–0007)_
 
-> **FieldForge** — a human-supervised, tool-using AI agent for tradespeople. Capture a job with a few photos and a voice note, and a team of small models autonomously forges the dreaded paperwork — an itemized **Estimate** (or service report) — that techs otherwise spend hours typing up at 6pm in the truck. Built on open small models, no third-party AI APIs, supervised by you, every number honest.
+> **Quillwright** — a human-supervised, tool-using AI agent for tradespeople. Capture a job with a few photos and a voice note, and a team of small models autonomously forges the dreaded paperwork — an itemized **Estimate** (or service report) — that techs otherwise spend hours typing up at 6pm in the truck. Built on open small models, no third-party AI APIs, supervised by you, every number honest.
 
 This spec reflects all decisions from the grilling session. Where a decision carries architectural weight, the governing ADR is cited.
 
@@ -21,7 +21,7 @@ Field-service workers (HVAC, roofing, electrical, restoration, inspection, contr
 
 **Why it's still unsolved for the worker — and our wedge.** Incumbents are **expensive (per-seat + cloud), still make the tech manually build the estimate, fail offline, and lock in data.** Verified complaints map 1:1 onto our strengths:
 
-| Incumbent complaint (verified)                                            | FieldForge answer                                     |
+| Incumbent complaint (verified)                                            | Quillwright answer                                     |
 | ------------------------------------------------------------------------- | ----------------------------------------------------- |
 | Per-seat cost / "tax on growth"; $245–398/tech/mo + $5–50k implementation | Open small models, no per-call AI tax                 |
 | "Photos didn't sync until back at Wi-Fi"; manual paper reports            | Capture → deliverable produced in the moment          |

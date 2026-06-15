@@ -1,0 +1,39 @@
+name: CI
+
+# Manual-only to conserve GitHub Actions minutes — does NOT run on push/PR.
+# Launch from the Actions tab ("Run workflow") or: gh workflow run ci.yml
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (editable + dev)
+        run: pip install -e ".[dev]"
+      - name: Dependency sync (pyproject ↔ requirements.txt)
+        run: python scripts/check_deps_sync.py
+      - name: Lint (ruff)
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Tests
+        run: pytest -q
+
+  web-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install prettier
+        run: npm ci
+      - name: Prettier check (web)
+        # --ignore-unknown so binary assets (PNG/ICO logos) under web/ are skipped
+        # rather than failing with "No parser could be inferred".
+        run: npx prettier --check --ignore-unknown "quillwright/web/**/*"

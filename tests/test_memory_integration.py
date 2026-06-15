@@ -1,4 +1,4 @@
-from fieldforge.api import estimate as est_api
+from quillwright.api import estimate as est_api
 
 
 def test_run_is_recorded_and_recalled_next_time(tmp_path, monkeypatch):
@@ -16,6 +16,6 @@ def test_run_is_recorded_and_recalled_next_time(tmp_path, monkeypatch):
     assert recalls, "expected a recall trace step on the second similar job"
 
     # and the episodic store now holds both runs
-    from fieldforge.memory import Memory
+    from quillwright.memory import Memory
 
     assert len(Memory(mem_path).recall("capacitor")) == 2

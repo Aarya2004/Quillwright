@@ -1,9 +1,9 @@
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
-from fieldforge.catalog import Catalog
-from fieldforge.resolver import StubModel
-from fieldforge.models import Capture
-from fieldforge.agent import build_agent
+from quillwright.catalog import Catalog
+from quillwright.resolver import StubModel
+from quillwright.models import Capture
+from quillwright.agent import build_agent
 
 
 def _run(agent, capture, thread="t1"):
@@ -86,3 +86,37 @@ def test_agent_resumes_after_human_supplies_price():
     est = out["estimate"]
     assert est is not None
     assert any(li.price_source == "user" and li.rate == 55.0 for li in est.line_items)
+
+
+def test_brain_failure_falls_back_to_deterministic_pricing():
+    """If the LLM brain errors mid-forge (e.g. Ollama 500), the forge must still produce
+    a catalog-priced estimate via the deterministic path — not crash the run."""
+
+    class BoomBrain:
+        name = "boom"
+
+        def chat(self, messages, tools):
+            raise RuntimeError("500 Server Error from Ollama")
+
+    perception = StubModel(
+        responses=[
+            '[{"kind":"part","text":"capacitor","confidence":0.9},'
+            ' {"kind":"part","text":"labor","confidence":0.9}]'
+        ]
+    )
+    cat = Catalog.from_file("data/sample_catalog.json")
+    agent = build_agent(
+        perception_model=perception,
+        catalog=cat,
+        checkpointer=InMemorySaver(),
+        brain_model=BoomBrain(),
+    )
+    cap = Capture(
+        image_paths=["/tmp/a.jpg"], transcript="replaced capacitor, 1h labor", trade_hint="hvac"
+    )
+    out = _run(agent, cap, thread="boom")
+    est = out["estimate"]
+    assert est is not None and est.line_items  # forge completed despite the brain failure
+    descs = [li.description.lower() for li in est.line_items]
+    assert any("capacitor" in d for d in descs)
+    assert all(li.price_source in ("catalog", "computed", "user") for li in est.line_items)

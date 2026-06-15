@@ -1,4 +1,4 @@
-from fieldforge.api.recalc import recalc_estimate
+from quillwright.api.recalc import recalc_estimate
 
 
 def test_recalc_computes_subtotals_and_totals():
@@ -19,3 +19,28 @@ def test_recalc_coerces_bad_numbers_to_safe_values():
     out = recalc_estimate(rows, job_title="j", tax_rate=0.13)
     # invalid qty/rate -> 0 so a typo never crashes the recalc
     assert out["line_items"][0]["subtotal"] == 0.0
+
+
+def test_recalc_preserves_document_price_source():
+    # A confirmed Document Capture row (ADR-0011) must keep its provenance through
+    # an edit/recalc round-trip — and the response must echo it so the client can.
+    rows = [
+        {
+            "description": "Dual run capacitor",
+            "quantity": 2,
+            "rate": 42.5,
+            "price_source": "document",
+        },
+        {"description": "Labor", "quantity": 1, "unit": "hr", "rate": 90.0},
+    ]
+    out = recalc_estimate(rows, job_title="j", tax_rate=0.13)
+    assert out["line_items"][0]["price_source"] == "document"
+    # Rows without provenance stay what they were: a human-edited row.
+    assert out["line_items"][1]["price_source"] == "user"
+
+
+def test_recalc_rejects_unknown_price_source():
+    # An arbitrary client string must not enter the model; fall back to "user".
+    rows = [{"description": "x", "quantity": 1, "rate": 5.0, "price_source": "llm_guess"}]
+    out = recalc_estimate(rows, job_title="j", tax_rate=0.13)
+    assert out["line_items"][0]["price_source"] == "user"

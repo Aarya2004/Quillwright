@@ -1,0 +1,3431 @@
+[
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "HVAC diagnostic / service call (first hour)",
+    "unit": "lot",
+    "price_low": 75.0,
+    "price_high": 200.0,
+    "source": "build-folio.com HVAC flat-rate guide; housecallpro.com pricing guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "AC tune-up / seasonal maintenance (full system check)",
+    "unit": "lot",
+    "price_low": 75.0,
+    "price_high": 200.0,
+    "source": "homeadvisor.com HVAC maintenance cost 2025; build-folio flat-rate guide"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "HVAC technician labor (per hour)",
+    "unit": "hr",
+    "price_low": 90.0,
+    "price_high": 175.0,
+    "source": "housecallpro.com 2026; build-folio loaded rate $90-$160/hr"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Genteq 45/5 MFD 440V dual run capacitor (round) 97F9851",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 35.0,
+    "source": "Grainger PROLINE comparable 50/5 at $22.55; Amazon 97F9851 ~$11-25; contractor cost range"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Genteq 35/5 MFD 370V dual run capacitor (oval) 97F9848",
+    "unit": "ea",
+    "price_low": 10.0,
+    "price_high": 28.0,
+    "source": "Grainger PROLINE 35/5 ~$18-22; comparable Walmart listing $11.95"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Genteq 55/5 MFD 440V dual run capacitor (round)",
+    "unit": "ea",
+    "price_low": 14.0,
+    "price_high": 40.0,
+    "source": "estimated from comparable Genteq 45/5 and 50/5 pricing on Grainger/SupplyHouse"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Titan Pro 7.5 MFD 370V single run capacitor TRCFD75",
+    "unit": "ea",
+    "price_low": 8.0,
+    "price_high": 20.0,
+    "source": "estimated from comparable; SupplyHouse single-run caps $8-18 range"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Capacitor replacement (part + labor flat rate)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 350.0,
+    "source": "build-folio HVAC flat-rate; homeadvisor.com capacitor replacement avg $250"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Honeywell DP2040A5004 24V 2-pole definite purpose contactor 40A",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 55.0,
+    "source": "SupplyHouse.com listing Honeywell DP2040A5004; Grainger comparable $26.99 for 40A contactor"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Honeywell DP2030B1003 120V 2-pole definite purpose contactor 30A",
+    "unit": "ea",
+    "price_low": 16.0,
+    "price_high": 48.0,
+    "source": "SupplyHouse.com listing; estimated from comparable Honeywell 2-pole contactors"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Contactor replacement (part + labor flat rate)",
+    "unit": "lot",
+    "price_low": 175.0,
+    "price_high": 400.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "material",
+    "description": "R-410A refrigerant (per pound, contractor billed rate)",
+    "unit": "lb",
+    "price_low": 40.0,
+    "price_high": 90.0,
+    "source": "homeguide.com R-410A cost 2026; acdirect.com $40-75/lb billed; post-2025 phasedown premium"
+  },
+  {
+    "trade": "hvac",
+    "kind": "material",
+    "description": "R-22 refrigerant (per pound, contractor billed rate)",
+    "unit": "lb",
+    "price_low": 100.0,
+    "price_high": 250.0,
+    "source": "pickhvac.com R22 cost 2026; homeadvisor.com $100-250/lb installed; phased-out legacy refrigerant"
+  },
+  {
+    "trade": "hvac",
+    "kind": "material",
+    "description": "R-32 refrigerant (per pound, contractor billed rate)",
+    "unit": "lb",
+    "price_low": 50.0,
+    "price_high": 100.0,
+    "source": "pickhvac.com R32 cost 2026; $275/lb recharge wholesale $8-28/lb; billed markup applied"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Refrigerant recharge (leak-free system, includes refrigerant)",
+    "unit": "lot",
+    "price_low": 250.0,
+    "price_high": 600.0,
+    "source": "build-folio flat-rate; trane.com recharge guide; 3-6 lb fill at $50-90/lb plus labor"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Refrigerant leak repair (minor, accessible joint)",
+    "unit": "lot",
+    "price_low": 250.0,
+    "price_high": 500.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Condenser coil cleaning (outdoor unit)",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 250.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Evaporator coil cleaning (indoor air handler)",
+    "unit": "lot",
+    "price_low": 175.0,
+    "price_high": 400.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Emerson 1/3 HP 825 RPM condenser fan motor (permanent split capacitor)",
+    "unit": "ea",
+    "price_low": 80.0,
+    "price_high": 200.0,
+    "source": "estimated from comparable; Grainger PSC motors $80-200; build-folio condenser fan motor replacement $300-600 installed"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Condenser fan motor replacement (part + labor)",
+    "unit": "lot",
+    "price_low": 300.0,
+    "price_high": 600.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Fasco D7909 1/2 HP 1075 RPM multi-speed ECM blower motor",
+    "unit": "ea",
+    "price_low": 150.0,
+    "price_high": 400.0,
+    "source": "estimated from comparable; Climatek ECM motor ~$499 retail; contractor cost $150-350"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Blower motor replacement (furnace/air handler, part + labor)",
+    "unit": "lot",
+    "price_low": 400.0,
+    "price_high": 900.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Rheem 62-23543-05 flame sensor rod (OEM)",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 35.0,
+    "source": "parts.rheem.com OEM listing; Amazon ~$25 comparable; eBay listings $12-30"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Flame sensor cleaning / replacement (part + labor)",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 175.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "White-Rodgers 767A-369 hot surface ignitor (120V, Norton replacement)",
+    "unit": "ea",
+    "price_low": 20.0,
+    "price_high": 60.0,
+    "source": "repairclinic.com ignitor listings; estimated from comparable $20-55 contractor cost"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Furnace ignitor replacement (part + labor)",
+    "unit": "lot",
+    "price_low": 175.0,
+    "price_high": 350.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Honeywell SV9501M8528 SmartValve gas valve (universal)",
+    "unit": "ea",
+    "price_low": 120.0,
+    "price_high": 300.0,
+    "source": "estimated from comparable; repairclinic.com gas valves $120-280; build-folio gas valve repair $350-650 installed"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Gas valve replacement (furnace, part + labor)",
+    "unit": "lot",
+    "price_low": 350.0,
+    "price_high": 650.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Honeywell TH6320R1004 Lyric T6 Pro programmable thermostat",
+    "unit": "ea",
+    "price_low": 60.0,
+    "price_high": 120.0,
+    "source": "estimated from comparable; Home Depot Honeywell programmable thermostats $60-120"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Ecobee SmartThermostat Premium (with voice control)",
+    "unit": "ea",
+    "price_low": 189.0,
+    "price_high": 250.0,
+    "source": "estimated from comparable; ecobee retail MSRP $219-250"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Thermostat replacement (basic programmable, part + labor)",
+    "unit": "lot",
+    "price_low": 200.0,
+    "price_high": 350.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Smart thermostat replacement (part + labor, includes setup)",
+    "unit": "lot",
+    "price_low": 350.0,
+    "price_high": 500.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Honeywell TDR8220A1006 24V SPDT relay / control transformer",
+    "unit": "ea",
+    "price_low": 25.0,
+    "price_high": 75.0,
+    "source": "estimated from comparable; control transformers/relays $25-75 at SupplyHouse/Grainger"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Relay / transformer replacement (part + labor)",
+    "unit": "lot",
+    "price_low": 125.0,
+    "price_high": 275.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Evaporator coil \u2014 3-ton R-410A (cased, vertical/horizontal)",
+    "unit": "ea",
+    "price_low": 500.0,
+    "price_high": 1200.0,
+    "source": "estimated from comparable; build-folio evaporator coil replacement $1200-2500 installed; part cost ~40-50% of total"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Evaporator coil replacement (3-ton, part + labor)",
+    "unit": "lot",
+    "price_low": 1200.0,
+    "price_high": 2500.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Emerson Copeland scroll compressor 3-ton R-410A (ZR36K5-PFV)",
+    "unit": "ea",
+    "price_low": 600.0,
+    "price_high": 1400.0,
+    "source": "estimated from comparable; build-folio compressor replacement $1500-3000 installed; part ~45-55% of total"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Compressor replacement (3-ton AC, part + labor)",
+    "unit": "lot",
+    "price_low": 1500.0,
+    "price_high": 3000.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Goodman GSX14036 3-ton 14 SEER R-410A condenser unit",
+    "unit": "ea",
+    "price_low": 1200.0,
+    "price_high": 2000.0,
+    "source": "hvacdirect.com Goodman 3-ton 14 SEER; theacoutlet.com GSX140361 contractor pricing"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Goodman GSX160361 3-ton 16 SEER R-410A condenser unit",
+    "unit": "ea",
+    "price_low": 1500.0,
+    "price_high": 2500.0,
+    "source": "hvacdirect.com Goodman 3-ton 16 SEER; alpinehomeair.com listing"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Goodman GLXS3BN3610 3-ton 13.4 SEER2 R-32 condenser unit (2025+)",
+    "unit": "ea",
+    "price_low": 1400.0,
+    "price_high": 2200.0,
+    "source": "eBay listing Goodman R-32 3-ton ~$1,600; estimated from 2025 SEER2 market pricing"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Goodman GMSS96 80,000 BTU 96% AFUE gas furnace (2-stage)",
+    "unit": "ea",
+    "price_low": 900.0,
+    "price_high": 1800.0,
+    "source": "estimated from comparable; Goodman 80K BTU 96% AFUE furnace retail $1,200-2,000; contractor ~20-30% less"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Split AC condenser installation (2-3 ton, disconnect + linesets + startup)",
+    "unit": "lot",
+    "price_low": 800.0,
+    "price_high": 2000.0,
+    "source": "fixr.com 3-ton AC install cost breakdown; labor portion of $4,500-8,000 total"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Furnace installation (80K BTU gas, includes venting and startup)",
+    "unit": "lot",
+    "price_low": 800.0,
+    "price_high": 2000.0,
+    "source": "estimated from comparable; furnace install labor typically $800-2,000 depending on difficulty"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Emerson TXV (thermostatic expansion valve) R-410A 3-ton",
+    "unit": "ea",
+    "price_low": 80.0,
+    "price_high": 200.0,
+    "source": "estimated from comparable; build-folio TXV replacement $400-800 installed; part ~25-35% of total"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "TXV replacement (part + labor)",
+    "unit": "lot",
+    "price_low": 400.0,
+    "price_high": 800.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Watts 3/4 in. float-type condensate drain line trap",
+    "unit": "ea",
+    "price_low": 8.0,
+    "price_high": 25.0,
+    "source": "estimated from comparable; Home Depot condensate traps $8-22"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Condensate drain line cleaning / flush",
+    "unit": "lot",
+    "price_low": 75.0,
+    "price_high": 200.0,
+    "source": "estimated from comparable; included in many tune-ups; standalone $75-150"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Aprilaire 213 high-efficiency air filter (20x25x4, MERV 13)",
+    "unit": "ea",
+    "price_low": 22.0,
+    "price_high": 45.0,
+    "source": "estimated from comparable; Aprilaire 213 retail $30-40; contractor cost slightly less"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "16x25x1 MERV 8 pleated air filter (contractor pack)",
+    "unit": "ea",
+    "price_low": 5.0,
+    "price_high": 12.0,
+    "source": "estimated from comparable; Home Depot pleated filters $5-12 each"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Erie Controls 3/4 in. zone valve (2-wire, spring return, 24V)",
+    "unit": "ea",
+    "price_low": 45.0,
+    "price_high": 120.0,
+    "source": "estimated from comparable; SupplyHouse zone valves $45-120 range"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Taco 007-F5 cast-iron circulator pump (1/25 HP, flanged)",
+    "unit": "ea",
+    "price_low": 100.0,
+    "price_high": 220.0,
+    "source": "estimated from comparable; SupplyHouse Taco 007 pumps $110-200"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Circulator pump replacement (hydronic system, part + labor)",
+    "unit": "lot",
+    "price_low": 350.0,
+    "price_high": 750.0,
+    "source": "estimated from comparable; labor 2-3 hrs at $90-175/hr plus part"
+  },
+  {
+    "trade": "hvac",
+    "kind": "material",
+    "description": "Refrigerant line set 3/8 in. suction / 3/4 in. liquid copper (pre-insulated, per foot)",
+    "unit": "ft",
+    "price_low": 8.0,
+    "price_high": 20.0,
+    "source": "estimated from comparable; line sets $8-18/ft installed material; contractor cost"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Inducer draft motor assembly (universal, Rheem/Ruud 70-24033-01)",
+    "unit": "ea",
+    "price_low": 150.0,
+    "price_high": 350.0,
+    "source": "estimated from comparable; Rheem inducer motors $150-350 contractor cost; build-folio $350-750 installed"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Inducer motor replacement (furnace, part + labor)",
+    "unit": "lot",
+    "price_low": 350.0,
+    "price_high": 750.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Heat exchanger replacement (primary, part + labor)",
+    "unit": "lot",
+    "price_low": 1500.0,
+    "price_high": 3500.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "UV air purifier installation (lamp + ballast + mounting)",
+    "unit": "lot",
+    "price_low": 350.0,
+    "price_high": 650.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "iWave-R whole-house ionizer (duct-mount air purifier)",
+    "unit": "ea",
+    "price_low": 180.0,
+    "price_high": 350.0,
+    "source": "estimated from comparable; iWave-R MSRP ~$200-300 contractor cost"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Whole-house air purifier installation (part + labor)",
+    "unit": "lot",
+    "price_low": 500.0,
+    "price_high": 1200.0,
+    "source": "build-folio HVAC flat-rate guide 2026"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Honeywell HE360A1075 power humidifier (bypass, 17 gal/day)",
+    "unit": "ea",
+    "price_low": 180.0,
+    "price_high": 350.0,
+    "source": "estimated from comparable; HE360 retail $200-350; contractor cost slightly less"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Whole-house humidifier installation (bypass type, part + labor)",
+    "unit": "lot",
+    "price_low": 400.0,
+    "price_high": 800.0,
+    "source": "estimated from comparable; typically 2-4 hrs labor plus part"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Mini-split (ductless) wall unit installation \u2014 single zone (part + labor)",
+    "unit": "lot",
+    "price_low": 2500.0,
+    "price_high": 5500.0,
+    "source": "estimated from comparable; fixr.com mini-split install $2,000-6,000; 1-ton to 2-ton single zone"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Mitsubishi MZ-GL12NA 12,000 BTU mini-split heat pump (single zone, outdoor unit)",
+    "unit": "ea",
+    "price_low": 900.0,
+    "price_high": 1600.0,
+    "source": "estimated from comparable; Mitsubishi 12K BTU units retail $1,200-1,800; contractor cost 20-30% less"
+  },
+  {
+    "trade": "hvac",
+    "kind": "material",
+    "description": "Armaflex pipe insulation 7/8 in. ID x 3/4 in. wall x 6 ft. (per section)",
+    "unit": "ea",
+    "price_low": 5.0,
+    "price_high": 12.0,
+    "source": "estimated from comparable; Home Depot foam pipe insulation $5-10/section"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Emergency after-hours service call surcharge",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 250.0,
+    "source": "housecallpro.com 2026 \u2014 electricians/HVAC add $100-200 for after-hours; HVAC typically $100-250"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "White-Rodgers 50A55-843 universal electronic furnace control board",
+    "unit": "ea",
+    "price_low": 80.0,
+    "price_high": 220.0,
+    "source": "estimated from comparable; repairclinic.com control boards $80-250; contractor cost"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Control board replacement (furnace, part + labor)",
+    "unit": "lot",
+    "price_low": 300.0,
+    "price_high": 700.0,
+    "source": "estimated from comparable; 1-2 hrs labor plus part at $80-220"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Watts 3/4 in. pressure relief valve (30 PSI, hydronic boiler)",
+    "unit": "ea",
+    "price_low": 15.0,
+    "price_high": 45.0,
+    "source": "estimated from comparable; Home Depot/SupplyHouse boiler PRVs $15-45"
+  },
+  {
+    "trade": "hvac",
+    "kind": "part",
+    "description": "Weil-McLain pressure/altitude gauge (0-30 PSI, hydronic)",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 50.0,
+    "source": "estimated from comparable; boiler gauges $18-45 at SupplyHouse/plumbing supply"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Ductwork leak sealing (mastic + tape, per system)",
+    "unit": "lot",
+    "price_low": 200.0,
+    "price_high": 600.0,
+    "source": "estimated from comparable; duct sealing typically $200-500 per system for accessible ducts"
+  },
+  {
+    "trade": "hvac",
+    "kind": "labor",
+    "description": "Annual boiler service (clean + inspect + test safeties)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 350.0,
+    "source": "estimated from comparable; boiler service calls $150-350 in most US markets"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Electrical diagnostic / service call (first hour)",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 200.0,
+    "source": "housecallpro.com 2026; build-folio electrical pricing guide"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Electrician labor (per hour, journeyman)",
+    "unit": "hr",
+    "price_low": 85.0,
+    "price_high": 150.0,
+    "source": "housecallpro.com 2026 \u2014 journeyman $60-90 wages; loaded rate $85-150/hr burdened"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Square D QO120CP 20A single-pole circuit breaker",
+    "unit": "ea",
+    "price_low": 8.0,
+    "price_high": 18.0,
+    "source": "Lowe's QO120CP $16.98; Home Depot 12-pack ~$12.50 each"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Square D QO220CP 20A 2-pole circuit breaker",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 28.0,
+    "source": "estimated from comparable; 2-pole breakers typically 1.5-2x single pole pricing"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Square D QO230CP 30A 2-pole circuit breaker",
+    "unit": "ea",
+    "price_low": 14.0,
+    "price_high": 32.0,
+    "source": "estimated from comparable; Home Depot 30A 2-pole breakers $14-35"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Square D QO250CP 50A 2-pole circuit breaker",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 40.0,
+    "source": "estimated from comparable; Home Depot 50A 2-pole breakers $18-45"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Square D QO120CAFIC 20A single-pole AFCI combo breaker",
+    "unit": "ea",
+    "price_low": 40.0,
+    "price_high": 70.0,
+    "source": "Lowe's QO120CAFIC $64.98"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Square D QO120DFC 20A single-pole dual-function AFCI/GFCI breaker",
+    "unit": "ea",
+    "price_low": 55.0,
+    "price_high": 85.0,
+    "source": "Lowe's QO120DFC $76.98"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Circuit breaker replacement (single-pole, labor only)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 300.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Square D QO130L200PG 200A 30-space 60-circuit main breaker load center",
+    "unit": "ea",
+    "price_low": 200.0,
+    "price_high": 400.0,
+    "source": "estimated from comparable; Square D 200A 30-space panels retail $200-400 at Home Depot"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "100A to 200A panel upgrade (part + labor + permit)",
+    "unit": "lot",
+    "price_low": 1500.0,
+    "price_high": 3000.0,
+    "source": "build-folio electrical pricing guide 2026; housecallpro.com panel upgrade"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Panel replacement (same amperage, part + labor)",
+    "unit": "lot",
+    "price_low": 1200.0,
+    "price_high": 2000.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Subpanel installation (60A\u2013100A, part + labor + wiring)",
+    "unit": "lot",
+    "price_low": 800.0,
+    "price_high": 1500.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Main breaker replacement (200A, part + labor)",
+    "unit": "lot",
+    "price_low": 300.0,
+    "price_high": 500.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Leviton GFNT2-W 20A SmartlockPro Slim GFCI duplex outlet (self-test)",
+    "unit": "ea",
+    "price_low": 16.0,
+    "price_high": 28.0,
+    "source": "Home Depot Leviton GFCI outlet listings; 4-pack pricing implies ~$18-22 each"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Leviton 5325-W Decora 15A 125V duplex outlet (residential grade)",
+    "unit": "ea",
+    "price_low": 3.0,
+    "price_high": 8.0,
+    "source": "Home Depot Leviton Decora 10-pack; typical $3-7 each"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Standard 15A outlet replacement (labor, material extra)",
+    "unit": "lot",
+    "price_low": 75.0,
+    "price_high": 150.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "GFCI outlet installation (existing circuit, part + labor)",
+    "unit": "lot",
+    "price_low": 125.0,
+    "price_high": 250.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "New outlet installation (new circuit required, part + labor)",
+    "unit": "lot",
+    "price_low": 250.0,
+    "price_high": 500.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "220V/240V outlet installation (NEMA 14-30, dryer/range, part + labor)",
+    "unit": "lot",
+    "price_low": 300.0,
+    "price_high": 600.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Lutron Diva LED+ dimmer switch (single-pole, 150W max) DVCL-153P-WH",
+    "unit": "ea",
+    "price_low": 20.0,
+    "price_high": 32.0,
+    "source": "Lutron Diva LED+ Dimmer $27.99 per websearch results; discountdimmers.com"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Lutron Caseta wireless smart dimmer (with hub) PD-6WCL-WH",
+    "unit": "ea",
+    "price_low": 60.0,
+    "price_high": 95.0,
+    "source": "Lutron Caseta dimmer $78.95 per websearch results"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Dimmer switch installation (single-pole, part + labor)",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 200.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Smart switch / dimmer installation (includes app setup, part + labor)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 275.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "USB combination outlet installation (Leviton USB-A+C, part + labor)",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 175.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "material",
+    "description": "Southwire 12/2 NM-B Romex (per foot, with ground)",
+    "unit": "ft",
+    "price_low": 0.75,
+    "price_high": 1.3,
+    "source": "Home Depot Southwire 12/2 by-the-foot; 250 ft roll $188.74 (~$0.75/ft); 25 ft ~$1.25/ft"
+  },
+  {
+    "trade": "electrical",
+    "kind": "material",
+    "description": "Southwire 14/2 NM-B Romex (per foot, with ground)",
+    "unit": "ft",
+    "price_low": 0.55,
+    "price_high": 1.0,
+    "source": "estimated from comparable; 14/2 typically 20-30% less than 12/2"
+  },
+  {
+    "trade": "electrical",
+    "kind": "material",
+    "description": "Southwire 10/2 NM-B Romex (per foot, with ground)",
+    "unit": "ft",
+    "price_low": 1.1,
+    "price_high": 2.0,
+    "source": "estimated from comparable; 10/2 ~40-60% more than 12/2 per foot"
+  },
+  {
+    "trade": "electrical",
+    "kind": "material",
+    "description": "Southwire 12/3 NM-B Romex (per foot, with ground)",
+    "unit": "ft",
+    "price_low": 1.0,
+    "price_high": 1.8,
+    "source": "estimated from comparable; 12/3 runs roughly 30-40% more than 12/2"
+  },
+  {
+    "trade": "electrical",
+    "kind": "material",
+    "description": "3/4 in. x 10 ft. EMT steel conduit (Southland)",
+    "unit": "ea",
+    "price_low": 8.0,
+    "price_high": 18.0,
+    "source": "Home Depot Southland 3/4 in x 10 ft EMT conduit listing; typical $10-16"
+  },
+  {
+    "trade": "electrical",
+    "kind": "material",
+    "description": "1/2 in. x 10 ft. EMT steel conduit",
+    "unit": "ea",
+    "price_low": 6.0,
+    "price_high": 14.0,
+    "source": "estimated from comparable; 1/2 in. EMT slightly less than 3/4 in."
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Dedicated 20A circuit installation (wiring run + breaker + outlet, labor + material)",
+    "unit": "lot",
+    "price_low": 570.0,
+    "price_high": 1000.0,
+    "source": "build-folio electrical pricing guide 2026; housecallpro.com dedicated circuit $570-1000"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "EV charger Level 2 installation (240V NEMA 14-50 outlet, 50A circuit, part + labor)",
+    "unit": "lot",
+    "price_low": 500.0,
+    "price_high": 2000.0,
+    "source": "build-folio electrical pricing guide 2026; housecallpro.com EV charger $500-2000"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "ChargePoint Home Flex EVSE Level 2 charger (50A, WiFi, NEMA 14-50)",
+    "unit": "ea",
+    "price_low": 400.0,
+    "price_high": 600.0,
+    "source": "estimated from comparable; ChargePoint Home Flex MSRP $549-699; contractor cost slightly less"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Siemens FS140 whole-house surge protector (120/240V, 40kA)",
+    "unit": "ea",
+    "price_low": 50.0,
+    "price_high": 120.0,
+    "source": "estimated from comparable; whole-house surge protectors $50-120 retail; build-folio $300-500 installed"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Whole-house surge protector installation (part + labor)",
+    "unit": "lot",
+    "price_low": 300.0,
+    "price_high": 500.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Ceiling fan installation (existing ceiling box, part + labor)",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 200.0,
+    "source": "build-folio electrical pricing guide 2026; housecallpro.com $140-350"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Ceiling fan installation (new location, new wiring + box, part + labor)",
+    "unit": "lot",
+    "price_low": 250.0,
+    "price_high": 450.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Recessed light installation (retrofit, LED, existing ceiling)",
+    "unit": "ea",
+    "price_low": 200.0,
+    "price_high": 350.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Recessed light installation (new construction, rough-in)",
+    "unit": "ea",
+    "price_low": 150.0,
+    "price_high": 250.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Light fixture replacement (standard junction box, part + labor)",
+    "unit": "lot",
+    "price_low": 85.0,
+    "price_high": 200.0,
+    "source": "housecallpro.com $150-6000 range; lower end for standard fixtures; build-folio"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Switch replacement (single-pole standard, labor only)",
+    "unit": "lot",
+    "price_low": 85.0,
+    "price_high": 150.0,
+    "source": "housecallpro.com $85-200; build-folio switch replacement"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "3-way switch installation (2 switches + wiring, part + labor)",
+    "unit": "lot",
+    "price_low": 200.0,
+    "price_high": 400.0,
+    "source": "estimated from comparable; 3-way requires more wiring; 2-3 hrs labor plus parts"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Smoke / CO detector installation (hardwired, interconnected)",
+    "unit": "ea",
+    "price_low": 90.0,
+    "price_high": 250.0,
+    "source": "housecallpro.com $90-250; build-folio detector install"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Kidde 10-year sealed lithium smoke + CO combo detector (P4010ACSCO)",
+    "unit": "ea",
+    "price_low": 35.0,
+    "price_high": 60.0,
+    "source": "estimated from comparable; Kidde combo detectors $35-60 retail"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Generator interlock kit installation (panel, part + labor)",
+    "unit": "lot",
+    "price_low": 400.0,
+    "price_high": 800.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Whole-house standby generator installation (22kW, part + labor + transfer switch)",
+    "unit": "lot",
+    "price_low": 5000.0,
+    "price_high": 15000.0,
+    "source": "build-folio electrical pricing guide 2026; housecallpro.com $5,000-15,000"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Hot tub / spa 240V hookup (50A GFCI disconnect + wiring, part + labor)",
+    "unit": "lot",
+    "price_low": 800.0,
+    "price_high": 1500.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Outdoor GFCI outlet installation (weatherproof, part + labor)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 350.0,
+    "source": "estimated from comparable; outdoor install requires conduit + weatherproof box; $150-350"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Meter base replacement (residential 200A, part + labor + utility coordination)",
+    "unit": "lot",
+    "price_low": 400.0,
+    "price_high": 800.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Service entrance upgrade to 200A (includes meter, panel, wiring)",
+    "unit": "lot",
+    "price_low": 2500.0,
+    "price_high": 5000.0,
+    "source": "build-folio electrical pricing guide 2026"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "NEMA 14-50R 50A 250V flush-mount surface outlet (for EV/range)",
+    "unit": "ea",
+    "price_low": 15.0,
+    "price_high": 35.0,
+    "source": "estimated from comparable; NEMA 14-50 outlets $15-30 retail at Home Depot"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Square D QO12L100PG 100A 12-space main lug load center (subpanel)",
+    "unit": "ea",
+    "price_low": 60.0,
+    "price_high": 130.0,
+    "source": "estimated from comparable; Square D 100A subpanels retail $60-130"
+  },
+  {
+    "trade": "electrical",
+    "kind": "material",
+    "description": "3/0 aluminum service entrance cable (per foot, 200A service)",
+    "unit": "ft",
+    "price_low": 3.0,
+    "price_high": 7.0,
+    "source": "estimated from comparable; 3/0 aluminum SE cable $3-6/ft at Home Depot"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Hubbell HBL8300H 30A twist-lock outlet (NEMA L6-30R)",
+    "unit": "ea",
+    "price_low": 20.0,
+    "price_high": 45.0,
+    "source": "estimated from comparable; Hubbell twist-lock outlets $20-45 at Grainger/Lowe's"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Whole-house rewire (1,500 sq ft, 2-bed 1-bath, labor + material)",
+    "unit": "lot",
+    "price_low": 8000.0,
+    "price_high": 20000.0,
+    "source": "build-folio electrical pricing guide 2026; housecallpro.com whole-house rewire"
+  },
+  {
+    "trade": "electrical",
+    "kind": "labor",
+    "description": "Emergency surcharge (after-hours / weekend call)",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 200.0,
+    "source": "housecallpro.com 2026 \u2014 electricians add $100-200 for after-hours"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Leviton 5242-W 20A 125V duplex outlet (commercial/industrial grade, TR)",
+    "unit": "ea",
+    "price_low": 6.0,
+    "price_high": 14.0,
+    "source": "estimated from comparable; 20A commercial grade outlets $6-14 retail"
+  },
+  {
+    "trade": "electrical",
+    "kind": "part",
+    "description": "Arlington LV1 low-voltage mounting bracket (for cable/data plate)",
+    "unit": "ea",
+    "price_low": 2.0,
+    "price_high": 6.0,
+    "source": "estimated from comparable; Arlington LV1 brackets $2-5 retail at Home Depot"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Plumbing diagnostic / service call (first hour)",
+    "unit": "lot",
+    "price_low": 89.0,
+    "price_high": 175.0,
+    "source": "build-folio plumbing flat-rate pricing template 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Plumber labor (per hour, journeyman)",
+    "unit": "hr",
+    "price_low": 75.0,
+    "price_high": 160.0,
+    "source": "modernize.com plumber cost 2025: $45-200/hr; most markets $75-150; build-folio loaded $90-160"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "A.O. Smith GCR-40 40-gal natural gas water heater (6-yr, atmospheric vent)",
+    "unit": "ea",
+    "price_low": 550.0,
+    "price_high": 900.0,
+    "source": "afsupply.com GCR-40 listing; comparable models $600-850 contractor cost"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "A.O. Smith GCRL-40 40-gal natural gas water heater (10-yr, short, atmospheric vent)",
+    "unit": "ea",
+    "price_low": 700.0,
+    "price_high": 1100.0,
+    "source": "afsupply.com GCRL-40 listing; 10-yr models command premium"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "A.O. Smith GPVT-40 40-gal natural gas water heater (power vent, 50K BTU)",
+    "unit": "ea",
+    "price_low": 850.0,
+    "price_high": 1300.0,
+    "source": "afsupply.com GPVT-40 listing; power vent models more expensive"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "A.O. Smith 50-gal natural gas water heater (50K BTU, 6-yr warranty)",
+    "unit": "ea",
+    "price_low": 650.0,
+    "price_high": 1050.0,
+    "source": "estimated from comparable; 50-gal units ~15-20% more than 40-gal"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Tank water heater installation (40-50 gal gas, part + labor, Good tier)",
+    "unit": "lot",
+    "price_low": 1200.0,
+    "price_high": 1800.0,
+    "source": "build-folio plumbing flat-rate Good tier: $1,200-1,800"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Tank water heater installation (40-50 gal electric, part + labor)",
+    "unit": "lot",
+    "price_low": 900.0,
+    "price_high": 1500.0,
+    "source": "estimated from comparable; electric WH install typically $100-200 less than gas"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Rinnai RU180iN condensing tankless gas water heater (180,000 BTU, indoor)",
+    "unit": "ea",
+    "price_low": 1000.0,
+    "price_high": 1600.0,
+    "source": "estimated from comparable; Rinnai RU180 retail $1,200-1,700; contractor cost slightly less"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Tankless water heater installation (gas, condensing, part + labor, Good tier)",
+    "unit": "lot",
+    "price_low": 2500.0,
+    "price_high": 4000.0,
+    "source": "build-folio plumbing flat-rate tankless Good tier: $2,500-4,000"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Water heater flush / sediment cleaning",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 400.0,
+    "source": "homeadvisor.com water heater flush $100-400; build-folio"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Watts 3/4 in. T&P relief valve (150 PSI, 210\u00b0F, water heater)",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 30.0,
+    "source": "estimated from comparable; Watts T&P valves $12-25 at Home Depot/SupplyHouse"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "T&P relief valve replacement (water heater, part + labor)",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 250.0,
+    "source": "estimated from comparable; typical $100-200 for accessible WH; includes test"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Mueller Streamline 1/2 in. x 10 ft. Type L copper pipe",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 45.0,
+    "source": "Home Depot Mueller LH04010; soft coil Everbilt $39.62 for 10 ft; hard straight lower"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Mueller Streamline 3/4 in. x 10 ft. Type L copper pipe",
+    "unit": "ea",
+    "price_low": 30.0,
+    "price_high": 70.0,
+    "source": "estimated from comparable; 3/4 Type L roughly 50-80% more than 1/2 in. per 10 ft"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Mueller Streamline 1 in. x 10 ft. Type L copper pipe",
+    "unit": "ea",
+    "price_low": 55.0,
+    "price_high": 120.0,
+    "source": "estimated from comparable; 1 in. Type L roughly 2-3x the cost of 1/2 in. per run"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "1/2 in. copper sweat 90-degree elbow (wrot/wrought)",
+    "unit": "ea",
+    "price_low": 1.5,
+    "price_high": 4.5,
+    "source": "estimated from comparable; plumbingsupply.com copper sweat elbows $1.50-4/ea"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "3/4 in. copper sweat 90-degree elbow (wrot/wrought)",
+    "unit": "ea",
+    "price_low": 2.5,
+    "price_high": 6.5,
+    "source": "estimated from comparable; 3/4 in. copper elbows roughly 60-80% more than 1/2 in."
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "1/2 in. copper sweat coupling (full port, wrot)",
+    "unit": "ea",
+    "price_low": 1.25,
+    "price_high": 3.5,
+    "source": "estimated from comparable; copper sweat couplings $1.25-3 at plumbingsupply.com"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "3/4 in. x 1/2 in. copper sweat reducer coupling",
+    "unit": "ea",
+    "price_low": 2.0,
+    "price_high": 5.0,
+    "source": "estimated from comparable; reducer couplings slightly more than straight"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "1/2 in. copper sweat tee (wrot, straight through)",
+    "unit": "ea",
+    "price_low": 2.0,
+    "price_high": 5.5,
+    "source": "estimated from comparable; copper tees run 20-30% more than elbows"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "material",
+    "description": "Harris Stay-Brite 8 silver-bearing solder (1 lb spool, lead-free)",
+    "unit": "lb",
+    "price_low": 18.0,
+    "price_high": 45.0,
+    "source": "estimated from comparable; Harris Stay-Brite 8 solder $20-40/lb retail"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "material",
+    "description": "NSF-approved lead-free flux paste (8 oz can, copper sweat)",
+    "unit": "ea",
+    "price_low": 8.0,
+    "price_high": 18.0,
+    "source": "estimated from comparable; Oatey/Hercules flux $8-15 retail"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "SharkBite 1/2 in. x 10 ft. PEX-A pipe (blue, cold water)",
+    "unit": "ea",
+    "price_low": 8.0,
+    "price_high": 20.0,
+    "source": "Home Depot SharkBite UA60B100 100 ft PEX-A ~$0.80-1.80/ft; 10 ft increment"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "SharkBite 3/4 in. x 10 ft. PEX-B pipe (white, general purpose)",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 28.0,
+    "source": "estimated from comparable; 3/4 PEX roughly 50% more per foot than 1/2 in."
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "SharkBite 1/2 in. push-to-connect elbow (brass, no tools required)",
+    "unit": "ea",
+    "price_low": 5.0,
+    "price_high": 12.0,
+    "source": "estimated from comparable; SharkBite push-fit fittings $5-12 each retail"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "SharkBite 1/2 in. push-to-connect coupling (brass)",
+    "unit": "ea",
+    "price_low": 4.0,
+    "price_high": 10.0,
+    "source": "estimated from comparable; push-fit couplings slightly less than elbows"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Uponor 1/2 in. ProPEX EP crimp ring (bag of 10)",
+    "unit": "ea",
+    "price_low": 5.0,
+    "price_high": 12.0,
+    "source": "estimated from comparable; Uponor crimp rings $5-10 per bag of 10"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Whole-house repipe (1-bath, PEX, includes fixtures reconnect)",
+    "unit": "lot",
+    "price_low": 2500.0,
+    "price_high": 4500.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Whole-house repipe (2-bath, PEX, includes fixtures reconnect)",
+    "unit": "lot",
+    "price_low": 4000.0,
+    "price_high": 7000.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Whole-house repipe (2-bath, copper, includes fixtures reconnect)",
+    "unit": "lot",
+    "price_low": 6000.0,
+    "price_high": 10000.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Drain cleaning (cable snake, single fixture)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 300.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Drain cleaning (hydro-jetting, mainline)",
+    "unit": "lot",
+    "price_low": 350.0,
+    "price_high": 600.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Toilet clog removal (auger / snake)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 275.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Sewer camera inspection (video, up to 100 ft)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 350.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Sewer line spot repair (open excavation, up to 5 ft)",
+    "unit": "lot",
+    "price_low": 800.0,
+    "price_high": 2500.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Sewer line replacement (trenchless pipe lining, up to 50 ft)",
+    "unit": "lot",
+    "price_low": 4000.0,
+    "price_high": 10000.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Sewer line replacement (open trench excavation, up to 50 ft)",
+    "unit": "lot",
+    "price_low": 3000.0,
+    "price_high": 8000.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Pipe leak repair (exposed copper, joint re-solder)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 350.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Pipe leak repair (in-wall or slab access required)",
+    "unit": "lot",
+    "price_low": 500.0,
+    "price_high": 1500.0,
+    "source": "build-folio plumbing flat-rate guide 2026; homeadvisor.com"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Kohler Cimarron K-31648-0 2-piece elongated toilet (1.28 GPF, white, includes seat)",
+    "unit": "ea",
+    "price_low": 200.0,
+    "price_high": 320.0,
+    "source": "Home Depot K-31648-0 $269 retail; slickdeals found $130 YMMV; contractor cost $200-280"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Kohler Wellworth K-3997-0 2-piece round toilet (1.28 GPF, WaterSense, white)",
+    "unit": "ea",
+    "price_low": 150.0,
+    "price_high": 260.0,
+    "source": "Lowe's Wellworth K-3997-0 listing; Wellworth is mid-range Kohler; estimated $150-230 contractor"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Toilet replacement (standard 2-piece, part + labor, haul away old unit)",
+    "unit": "lot",
+    "price_low": 300.0,
+    "price_high": 700.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Fluidmaster 400ARHR fill valve + flapper kit (universal toilet repair kit)",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 22.0,
+    "source": "estimated from comparable; Fluidmaster 400 kits $12-20 at Home Depot"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Toilet rebuild / repair (fill valve + flapper + supply line, part + labor)",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 250.0,
+    "source": "estimated from comparable; 1 hr labor + parts; typical $100-200"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Moen 7594ESRS Arbor motionsense kitchen faucet (stainless, pull-down)",
+    "unit": "ea",
+    "price_low": 250.0,
+    "price_high": 400.0,
+    "source": "estimated from comparable; Moen Arbor high-end pull-down faucets retail $280-450"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Moen 6610BN Banbury 4 in. centerset bathroom faucet (brushed nickel)",
+    "unit": "ea",
+    "price_low": 60.0,
+    "price_high": 120.0,
+    "source": "estimated from comparable; Moen mid-range bathroom faucets $65-120"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Kitchen faucet replacement (part + labor)",
+    "unit": "lot",
+    "price_low": 250.0,
+    "price_high": 500.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Bathroom faucet replacement (part + labor)",
+    "unit": "lot",
+    "price_low": 200.0,
+    "price_high": 400.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Faucet repair (cartridge / seat / washer replacement, part + labor)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 275.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "InSinkErator Evolution Excel 1 HP garbage disposal (with SoundSeal tech)",
+    "unit": "ea",
+    "price_low": 180.0,
+    "price_high": 300.0,
+    "source": "estimated from comparable; InSinkErator Evolution Excel retail $250-350; contractor cost $180-280"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "InSinkErator Badger 5 1/2 HP garbage disposal (basic, continuous feed)",
+    "unit": "ea",
+    "price_low": 80.0,
+    "price_high": 130.0,
+    "source": "estimated from comparable; Badger 5 retail $100-130 at Home Depot"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Garbage disposal installation (part + labor)",
+    "unit": "lot",
+    "price_low": 300.0,
+    "price_high": 600.0,
+    "source": "build-folio plumbing flat-rate guide 2026"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Watts 3/4 in. ball valve (full port, lead-free brass, sweat ends)",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 30.0,
+    "source": "estimated from comparable; Watts/Apollo full-port ball valves $12-28 at SupplyHouse"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "1/2 in. ball valve (full port, lead-free brass, sweat ends)",
+    "unit": "ea",
+    "price_low": 8.0,
+    "price_high": 22.0,
+    "source": "estimated from comparable; 1/2 in. ball valves $8-20 at SupplyHouse/Home Depot"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Watts LF3-4 3/4 in. main shut-off gate valve (lead-free, sweat)",
+    "unit": "ea",
+    "price_low": 15.0,
+    "price_high": 40.0,
+    "source": "estimated from comparable; gate valves $15-35 at SupplyHouse"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Sioux Chief 3/8 in. OD compression angle stop (toilet / faucet supply shut-off)",
+    "unit": "ea",
+    "price_low": 5.0,
+    "price_high": 14.0,
+    "source": "estimated from comparable; angle stops $5-12 retail"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Watts LF25AUB-Z3 1 in. pressure reducing valve (PRV, lead-free brass)",
+    "unit": "ea",
+    "price_low": 45.0,
+    "price_high": 120.0,
+    "source": "estimated from comparable; Watts PRVs $45-110 at SupplyHouse/Grainger"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Pressure reducing valve replacement (main PRV, part + labor)",
+    "unit": "lot",
+    "price_low": 250.0,
+    "price_high": 600.0,
+    "source": "estimated from comparable; PRV replacement 1-2 hrs labor + $45-120 part"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Watts N36M expansion tank (2 gal, water heater thermal expansion, 150 PSI)",
+    "unit": "ea",
+    "price_low": 25.0,
+    "price_high": 60.0,
+    "source": "estimated from comparable; Watts/Amtrol expansion tanks $25-55 at SupplyHouse"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Expansion tank installation (water heater, part + labor)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 350.0,
+    "source": "estimated from comparable; 1 hr labor + part; typical $150-300"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Delta R10000-UNBX MultiChoice universal tub/shower valve body (rough-in)",
+    "unit": "ea",
+    "price_low": 40.0,
+    "price_high": 85.0,
+    "source": "estimated from comparable; Delta R10000 rough-in valve $45-80 retail"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Tub / shower valve replacement (cartridge, accessible, part + labor)",
+    "unit": "lot",
+    "price_low": 200.0,
+    "price_high": 450.0,
+    "source": "estimated from comparable; 1.5-2.5 hrs labor plus parts"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "4 in. ABS cleanout plug (standard, spigot end, sewer drain access)",
+    "unit": "ea",
+    "price_low": 3.0,
+    "price_high": 8.0,
+    "source": "estimated from comparable; ABS cleanout plugs $3-8 at Home Depot"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "4 in. x 10 ft. ABS DWV pipe (solid-core, schedule 40)",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 45.0,
+    "source": "estimated from comparable; Home Depot 4 in. ABS DWV pipe ~$20-40/10 ft"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "3 in. x 10 ft. ABS DWV pipe (solid-core, schedule 40)",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 30.0,
+    "source": "estimated from comparable; 3 in. ABS DWV $12-28/10 ft at Home Depot"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "4 in. ABS 1/4 bend 90-degree DWV elbow",
+    "unit": "ea",
+    "price_low": 5.0,
+    "price_high": 14.0,
+    "source": "estimated from comparable; ABS DWV fittings $5-12 at Home Depot"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "3 in. x 3 in. x 2 in. ABS DWV sanitary tee (wye/tee combination)",
+    "unit": "ea",
+    "price_low": 6.0,
+    "price_high": 16.0,
+    "source": "estimated from comparable; ABS DWV tees $6-15 at Home Depot/Lowe's"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Oatey 4 in. ABS cement (low-VOC, 8 oz can)",
+    "unit": "ea",
+    "price_low": 6.0,
+    "price_high": 14.0,
+    "source": "estimated from comparable; Oatey ABS cement $6-12 at Home Depot"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Wax ring with horn (toilet bowl seal, standard 3/4 in. wax)",
+    "unit": "ea",
+    "price_low": 5.0,
+    "price_high": 12.0,
+    "source": "estimated from comparable; Fluidmaster/Oatey wax rings $5-10 at Home Depot"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Danco closet bolts + washers kit (toilet floor bolt set, brass)",
+    "unit": "ea",
+    "price_low": 4.0,
+    "price_high": 10.0,
+    "source": "estimated from comparable; closet bolt kits $4-9 at Home Depot"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Moen 1225B single-handle cartridge (for Moen Posi-Temp tub/shower)",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 40.0,
+    "source": "estimated from comparable; Moen 1225 cartridge $20-35 retail"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Price Pfister (Pfister) cartridge for single-handle kitchen faucet (974-042)",
+    "unit": "ea",
+    "price_low": 15.0,
+    "price_high": 35.0,
+    "source": "estimated from comparable; Pfister cartridges $15-30 retail"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Watts 1 in. backflow preventer (reduced pressure zone, ASSE 1013, RPZ)",
+    "unit": "ea",
+    "price_low": 150.0,
+    "price_high": 400.0,
+    "source": "estimated from comparable; Watts RPZ backflow preventers $150-380 at SupplyHouse"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Backflow preventer installation (1 in. RPZ, part + labor)",
+    "unit": "lot",
+    "price_low": 400.0,
+    "price_high": 900.0,
+    "source": "estimated from comparable; 2-3 hrs labor + part; typical commercial/residential"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Backflow preventer annual test + certification",
+    "unit": "lot",
+    "price_low": 75.0,
+    "price_high": 200.0,
+    "source": "estimated from comparable; backflow test $75-175 in most markets"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "A.O. Smith 50-gal electric water heater (240V, 4500W elements, 9-yr warranty)",
+    "unit": "ea",
+    "price_low": 500.0,
+    "price_high": 900.0,
+    "source": "estimated from comparable; A.O. Smith 50-gal electric retail $600-950; contractor cost"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Watlow heating element (4500W 240V, screw-in, water heater replacement)",
+    "unit": "ea",
+    "price_low": 10.0,
+    "price_high": 25.0,
+    "source": "estimated from comparable; water heater elements $10-22 at Home Depot"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Water heater element replacement (electric, part + labor)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 350.0,
+    "source": "estimated from comparable; 1-2 hrs labor + $10-25 element"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Emergency after-hours plumbing call surcharge",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 300.0,
+    "source": "estimated from comparable; plumbing emergency premiums $100-300 over standard"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Bradford White MI50S6DS15 50-gal direct-vent natural gas water heater",
+    "unit": "ea",
+    "price_low": 750.0,
+    "price_high": 1200.0,
+    "source": "estimated from comparable; Bradford White 50-gal direct vent $800-1,200 contractor cost"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Navien NPE-240A2 condensing tankless gas water heater (199,000 BTU, recirculation)",
+    "unit": "ea",
+    "price_low": 1200.0,
+    "price_high": 1900.0,
+    "source": "estimated from comparable; Navien NPE-240A2 MSRP $1,400-2,000; contractor cost"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Outdoor hose bib installation (frost-free, sillcock, part + labor)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 400.0,
+    "source": "estimated from comparable; hose bib install typically $150-350"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Woodford 17 series 3/4 in. frost-free wall hydrant (sillcock, 8 in.)",
+    "unit": "ea",
+    "price_low": 20.0,
+    "price_high": 55.0,
+    "source": "estimated from comparable; Woodford frost-free sillcocks $20-50 retail"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "labor",
+    "description": "Shower pan / drain leak repair (re-caulk + test, accessible)",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 400.0,
+    "source": "estimated from comparable; shower leak repair 1-2 hrs + materials"
+  },
+  {
+    "trade": "plumbing",
+    "kind": "part",
+    "description": "Sioux Chief 828-2 2 in. PVC floor drain (cast-iron body, adjustable strainer)",
+    "unit": "ea",
+    "price_low": 25.0,
+    "price_high": 60.0,
+    "source": "estimated from comparable; Sioux Chief floor drains $25-55 at plumbing supply houses"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "2 in. x 4 in. x 8 ft. kiln-dried whitewood framing stud",
+    "unit": "ea",
+    "price_low": 3.48,
+    "price_high": 6.98,
+    "source": "Home Depot retail listing; regional variance $3.48\u2013$6.98 per stud (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "2 in. x 4 in. x 10 ft. #2 southern yellow pine framing lumber",
+    "unit": "ea",
+    "price_low": 5.25,
+    "price_high": 9.5,
+    "source": "Home Depot / Lowe's category pricing, proportional to 8 ft stud + regional lumber index (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "2 in. x 4 in. x 12 ft. #2 Douglas fir framing lumber",
+    "unit": "ea",
+    "price_low": 6.75,
+    "price_high": 11.5,
+    "source": "estimated from comparable; 50% premium over 8 ft per linear-foot basis, consistent with lumber market 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "2 in. x 6 in. x 8 ft. #2 SPF (Spruce-Pine-Fir) framing stud",
+    "unit": "ea",
+    "price_low": 5.5,
+    "price_high": 10.25,
+    "source": "countbricks.com 2025 framing cost guide; 2x6 studs ~50\u201360% more than 2x4 ($5.50 vs $3.50 baseline)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "2 in. x 6 in. x 16 ft. #2 pressure-treated lumber",
+    "unit": "ea",
+    "price_low": 14.5,
+    "price_high": 22.0,
+    "source": "estimated from comparable; PT premium 30\u201350% over standard, consistent with Home Depot PT lumber category"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "2 in. x 8 in. x 16 ft. #2 Douglas fir dimensional lumber",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 30.0,
+    "source": "estimated from comparable; lumber pricing guides 2025, $350\u2013$500 per 1,000 board-feet baseline"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "2 in. x 10 in. x 16 ft. #2 SPF floor joist lumber",
+    "unit": "ea",
+    "price_low": 22.0,
+    "price_high": 38.0,
+    "source": "estimated from comparable; proportional board-foot pricing from framing cost guides 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "2 in. x 12 in. x 16 ft. #2 southern yellow pine header/beam lumber",
+    "unit": "ea",
+    "price_low": 28.0,
+    "price_high": 48.0,
+    "source": "estimated from comparable; board-foot calculation at $350\u2013$500/MBF market rate 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "7/16 in. OSB sheathing 4 ft. x 8 ft. panel",
+    "unit": "sheet",
+    "price_low": 18.0,
+    "price_high": 26.0,
+    "source": "Home Depot; OSB prices reported $20.75 per sheet; $22.25 range also cited (2025 regional average)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "1/2 in. OSB sheathing 4 ft. x 8 ft. panel",
+    "unit": "sheet",
+    "price_low": 20.0,
+    "price_high": 30.0,
+    "source": "estimated from comparable; slight premium over 7/16 per Home Depot OSB category pricing 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "23/32 in. (3/4 in.) tongue-and-groove OSB subfloor panel 4x8",
+    "unit": "sheet",
+    "price_low": 32.0,
+    "price_high": 48.0,
+    "source": "Home Depot; 23/32 plywood priced around $53.96; OSB subfloor runs 15\u201330% below plywood"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "1/2 in. x 4 ft. x 8 ft. CDX plywood sheathing",
+    "unit": "sheet",
+    "price_low": 28.0,
+    "price_high": 42.0,
+    "source": "Home Depot plywood category; CDX mid-grade; 4x8 at $28\u2013$42 consistent with 2025 lumber market"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "3/4 in. x 4 ft. x 8 ft. ACX sanded plywood panel",
+    "unit": "sheet",
+    "price_low": 48.0,
+    "price_high": 70.0,
+    "source": "Home Depot; 23/32 plywood ~$53.96 baseline; ACX sanded adds premium \u2014 estimated from comparable"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "1/2 in. x 4 ft. x 8 ft. USG Sheetrock UltraLight drywall panel",
+    "unit": "sheet",
+    "price_low": 15.5,
+    "price_high": 21.0,
+    "source": "Home Depot listing: USG Sheetrock UltraLight 1/2 in. 4x8 at $16.68/sheet; $17.78 alternate sku (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "5/8 in. x 4 ft. x 8 ft. Type X fire-rated drywall panel",
+    "unit": "sheet",
+    "price_low": 18.0,
+    "price_high": 26.0,
+    "source": "estimated from comparable; Type X 5/8 typically 15\u201325% premium over standard 1/2 in. drywall"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "1/2 in. x 4 ft. x 8 ft. USG Sheetrock Mold Tough moisture-resistant drywall",
+    "unit": "sheet",
+    "price_low": 20.0,
+    "price_high": 28.0,
+    "source": "Home Depot listing: USG Sheetrock Mold Tough 1/2 in. at $23.58/sheet (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Drywall joint compound, all-purpose, 4.5-gallon bucket",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 28.0,
+    "source": "Home Depot / Lowe's standard drywall compound pricing; USG and Georgia-Pacific ~$20\u2013$26 (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Drywall corner bead, vinyl, 8 ft. length",
+    "unit": "ea",
+    "price_low": 0.75,
+    "price_high": 2.5,
+    "source": "estimated from comparable; vinyl corner bead $0.75\u2013$2.50/ea is standard retail range"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Drywall screw, coarse thread, 1-5/8 in., 5 lb box",
+    "unit": "ea",
+    "price_low": 9.0,
+    "price_high": 15.0,
+    "source": "Home Depot fastener aisle; 5 lb coarse drywall screws ~$9\u2013$15 per box (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Fiberglass drywall mesh tape, 1-7/8 in. x 300 ft. roll",
+    "unit": "ea",
+    "price_low": 4.5,
+    "price_high": 9.0,
+    "source": "Home Depot; standard mesh tape roll $4\u2013$9 retail (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "16d common framing nails, 50 lb box (3-1/2 in.)",
+    "unit": "ea",
+    "price_low": 55.0,
+    "price_high": 90.0,
+    "source": "estimated from comparable; 50 lb box nails ~$1.10\u2013$1.80/lb, consistent with hardware store pricing 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Framing nail gun nails, 3-1/4 in. x .131 dia. 30-degree paper tape, 2,000 ct",
+    "unit": "ea",
+    "price_low": 35.0,
+    "price_high": 58.0,
+    "source": "Home Depot / Lowe's collated framing nailer nail packs; 2,000 ct ~$35\u2013$58 (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Simpson Strong-Tie LUS26 joist hanger, 16-gauge galvanized (ea)",
+    "unit": "ea",
+    "price_low": 1.25,
+    "price_high": 2.5,
+    "source": "estimated from comparable; Simpson LUS26 joist hanger standard retail ~$1.25\u2013$2.50/ea"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Simpson Strong-Tie H2.5A hurricane tie, 18-gauge galvanized (ea)",
+    "unit": "ea",
+    "price_low": 0.85,
+    "price_high": 1.75,
+    "source": "estimated from comparable; hurricane ties retail $0.75\u2013$1.75/ea at Home Depot"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Prehung interior 6-panel hollow-core door, 30 in. x 80 in.",
+    "unit": "ea",
+    "price_low": 89.0,
+    "price_high": 185.0,
+    "source": "HomeAdvisor / Home Depot; basic hollow-core prehung interior doors $89\u2013$185 for standard 30x80"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Prehung interior solid-core MDF door, 32 in. x 80 in.",
+    "unit": "ea",
+    "price_low": 185.0,
+    "price_high": 350.0,
+    "source": "Home Depot solid-core category; solid-core prehung $185\u2013$350 range; search results confirm $400\u2013$600 premium end"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Prehung exterior fiberglass entry door, 36 in. x 80 in., insulated",
+    "unit": "ea",
+    "price_low": 350.0,
+    "price_high": 900.0,
+    "source": "HomeAdvisor / This Old House; fiberglass entry doors $350\u2013$900+ depending on style/glass (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Vinyl double-hung replacement window, 30 in. x 36 in., double-pane Low-E",
+    "unit": "ea",
+    "price_low": 150.0,
+    "price_high": 380.0,
+    "source": "HomeAdvisor double-pane window guide 2025; vinyl DH replacement $150\u2013$380 material only"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Andersen 400 Series casement window, 24 in. x 36 in., wood-clad",
+    "unit": "ea",
+    "price_low": 450.0,
+    "price_high": 850.0,
+    "source": "estimated from comparable; Andersen 400 Series casements retail $450\u2013$850 per unit"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Base molding, colonial style, 9/16 in. x 3-1/4 in., pine, per linear foot",
+    "unit": "ft",
+    "price_low": 0.85,
+    "price_high": 2.0,
+    "source": "Home Depot / Lowe's trim aisle; colonial base $0.85\u2013$2.00/LF for pine (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Crown molding, 4-1/4 in. colonial pine, per linear foot",
+    "unit": "ft",
+    "price_low": 1.25,
+    "price_high": 3.5,
+    "source": "Home Depot trim category; 4-1/4 in. crown pine $1.25\u2013$3.50/LF (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Door casing molding, ranch style, 11/16 in. x 2-1/4 in., pine, per linear foot",
+    "unit": "ft",
+    "price_low": 0.65,
+    "price_high": 1.5,
+    "source": "Home Depot / Lowe's; ranch casing trim $0.65\u2013$1.50/LF for pine (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Window stool and apron trim set, pine, 36 in. width",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 28.0,
+    "source": "estimated from comparable; pine stool & apron per 36 in. window; based on trim LF pricing + cut/style"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "1x4 pine board, 8 ft., S4S finish grade",
+    "unit": "ea",
+    "price_low": 4.5,
+    "price_high": 9.0,
+    "source": "Home Depot pine board category; 1x4x8 S4S pine ~$4.50\u2013$9.00 (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "1x6 pine board, 8 ft., S4S finish grade",
+    "unit": "ea",
+    "price_low": 6.5,
+    "price_high": 13.0,
+    "source": "Home Depot pine board category; 1x6x8 pine ~$6.50\u2013$13.00 (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Red oak hardwood board, 4/4 (1 in.) x 6 in., per board foot",
+    "unit": "bdft",
+    "price_low": 4.5,
+    "price_high": 8.0,
+    "source": "homeguide.com; oak hardwood $4\u2013$8/sq ft, equivalent pricing per board foot for 4/4 stock"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Poplar hardwood board, 4/4 (1 in.) x 6 in., per board foot",
+    "unit": "bdft",
+    "price_low": 3.25,
+    "price_high": 6.0,
+    "source": "estimated from comparable; poplar 20\u201335% less than oak; consistent with lumber yard pricing 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Maple hardwood board, 4/4 (1 in.) x 6 in., per board foot",
+    "unit": "bdft",
+    "price_low": 5.0,
+    "price_high": 9.5,
+    "source": "estimated from comparable; maple 10\u201320% premium over oak per hardwood flooring guides 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Trex Enhance Naturals composite decking board, 1 in. x 6 in. x 16 ft.",
+    "unit": "ea",
+    "price_low": 38.0,
+    "price_high": 62.0,
+    "source": "AdvantageLumber blog 2025; Trex Enhance $2.42\u2013$4.00/LF; x16 ft = $38\u2013$64 per board"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Trex Transcend composite decking board, 1 in. x 6 in. x 16 ft.",
+    "unit": "ea",
+    "price_low": 58.0,
+    "price_high": 100.0,
+    "source": "deckbros.com 2025; Trex Transcend ~$4.00\u2013$6.25/LF; x16 ft board"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Pressure-treated 5/4 in. x 6 in. x 16 ft. deck board (ground contact)",
+    "unit": "ea",
+    "price_low": 14.0,
+    "price_high": 24.0,
+    "source": "Home Depot PT decking category; 5/4x6 deck boards ~$14\u2013$24 for 16 ft (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Pressure-treated 4 in. x 4 in. x 8 ft. post (ground contact)",
+    "unit": "ea",
+    "price_low": 14.0,
+    "price_high": 24.0,
+    "source": "estimated from comparable; PT 4x4x8 ground-contact post consistent with Home Depot PT category 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Pressure-treated 6 in. x 6 in. x 8 ft. deck post (ground contact)",
+    "unit": "ea",
+    "price_low": 22.0,
+    "price_high": 38.0,
+    "source": "estimated from comparable; PT 6x6 posts ~60% more than 4x4 by board-foot, per lumber pricing guides"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Structural LVL (laminated veneer lumber) beam, 1-3/4 in. x 9-1/2 in. x 16 ft.",
+    "unit": "ea",
+    "price_low": 85.0,
+    "price_high": 140.0,
+    "source": "estimated from comparable; LVL pricing $5\u2013$9/LF, consistent with engineering lumber market 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Pre-finished base cabinet, 12 in. wide x 34-1/2 in. tall, single door",
+    "unit": "ea",
+    "price_low": 85.0,
+    "price_high": 185.0,
+    "source": "Home Depot stock cabinet category; basic RTA/stock base cabinets $85\u2013$185 per 12 in. unit"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Pre-finished wall cabinet, 30 in. wide x 30 in. tall, two door",
+    "unit": "ea",
+    "price_low": 90.0,
+    "price_high": 200.0,
+    "source": "estimated from comparable; stock wall cabinets 30 in. wide ~$90\u2013$200 at big box retail 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Pre-finished corner base cabinet, lazy Susan, 36 in. x 36 in.",
+    "unit": "ea",
+    "price_low": 180.0,
+    "price_high": 380.0,
+    "source": "estimated from comparable; corner base cabinets run 2\u20133x standard 12 in. unit price"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Laminate countertop, post-form 25-1/2 in. deep, per linear foot",
+    "unit": "ft",
+    "price_low": 18.0,
+    "price_high": 38.0,
+    "source": "estimated from comparable; post-form laminate countertop $18\u2013$38/LF (Home Depot / Lowe's)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "3-1/2 in. x 3-1/2 in. exterior post base anchor, hot-dip galvanized",
+    "unit": "ea",
+    "price_low": 8.5,
+    "price_high": 18.0,
+    "source": "estimated from comparable; Simpson ABA44 post base ~$8\u2013$18 retail at Home Depot"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Composite deck railing section, 8 ft. kit (top/bottom rail + balusters)",
+    "unit": "ea",
+    "price_low": 85.0,
+    "price_high": 175.0,
+    "source": "estimated from comparable; 8 ft composite railing section kits $85\u2013$175 at big box stores 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Deck ledger board, pressure-treated 2x10 x 16 ft.",
+    "unit": "ea",
+    "price_low": 28.0,
+    "price_high": 48.0,
+    "source": "estimated from comparable; PT 2x10 ledger per board pricing, Home Depot PT lumber 2025"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Joist hanger nails, 10d x 1-1/2 in. galvanized, 5 lb box",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 20.0,
+    "source": "estimated from comparable; joist hanger nails 5 lb box ~$12\u2013$20 at fastener suppliers"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Exterior wood screws, 3 in. #10, 1 lb box (stainless/ACQ-compatible)",
+    "unit": "ea",
+    "price_low": 8.0,
+    "price_high": 15.0,
+    "source": "Home Depot fastener aisle; ACQ-compatible screws 1 lb box ~$8\u2013$15 (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Concrete anchor bolt, 1/2 in. x 6 in. wedge anchor, 25-ct box",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 35.0,
+    "source": "estimated from comparable; wedge anchors 25-ct box $18\u2013$35 at hardware stores"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Construction adhesive, Liquid Nails Heavy Duty, 28 oz tube",
+    "unit": "ea",
+    "price_low": 4.5,
+    "price_high": 8.5,
+    "source": "Home Depot; Liquid Nails Heavy Duty standard retail $4.50\u2013$8.50/tube (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Fiberglass batt insulation, R-13, 3-1/2 in. x 15 in. x 32 ft. roll",
+    "unit": "ea",
+    "price_low": 22.0,
+    "price_high": 38.0,
+    "source": "estimated from comparable; R-13 15-in batt rolls at Home Depot ~$22\u2013$38 per roll (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Fiberglass batt insulation, R-19, 5-1/2 in. x 15 in. x 32 ft. roll",
+    "unit": "ea",
+    "price_low": 28.0,
+    "price_high": 46.0,
+    "source": "estimated from comparable; R-19 insulation batt rolls ~$28\u2013$46 per roll consistent with 2025 pricing"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Vapor barrier polyethylene film, 6 mil, 10 ft. x 25 ft.",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 32.0,
+    "source": "estimated from comparable; 6 mil poly film 250 sq ft rolls retail $18\u2013$32"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Framing carpenter \u2014 rough framing labor, wall/floor/roof systems",
+    "unit": "hr",
+    "price_low": 45.0,
+    "price_high": 85.0,
+    "source": "countbricks.com 2025; Angi 2026; framing carpenter $40\u2013$85/hr; journeyman $55\u2013$85"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Framing \u2014 exterior wall framing, per linear foot (single story, 9 ft ceiling)",
+    "unit": "ft",
+    "price_low": 6.0,
+    "price_high": 14.0,
+    "source": "countbricks.com 2025 wall framing rate; $6\u2013$14/LF labor, consistent with HomeAdvisor $7\u2013$16/sq ft"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Finish carpentry \u2014 baseboard/door casing install, per linear foot",
+    "unit": "ft",
+    "price_low": 3.5,
+    "price_high": 8.0,
+    "source": "contractortalk.com 2025 trim pricing thread; homewyse cost-to-install-trim-molding calc"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Crown molding installation, per linear foot (finish carpenter)",
+    "unit": "ft",
+    "price_low": 5.0,
+    "price_high": 12.0,
+    "source": "Willamette Carpentry guide; homewyse; crown install $5\u2013$12/LF labor for standard rooms (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Drywall installation \u2014 hang and tape, per 4x8 sheet",
+    "unit": "sheet",
+    "price_low": 22.0,
+    "price_high": 45.0,
+    "source": "estimated from comparable; $1.50\u2013$3.00/sq ft drywall labor = $19\u2013$38 per 4x8 sheet (32 sq ft)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Drywall finish \u2014 skim coat and sand, per 4x8 sheet",
+    "unit": "sheet",
+    "price_low": 12.0,
+    "price_high": 25.0,
+    "source": "estimated from comparable; skim/sand finish averages $0.75\u2013$1.50/sq ft additional labor"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Interior door install \u2014 prehung door, includes shimming and hardware",
+    "unit": "ea",
+    "price_low": 100.0,
+    "price_high": 250.0,
+    "source": "HomeAdvisor; interior door installation labor $100\u2013$250 depending on prep needed (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Exterior door install \u2014 prehung entry door, includes weatherstrip and threshold",
+    "unit": "ea",
+    "price_low": 200.0,
+    "price_high": 500.0,
+    "source": "estimated from comparable; exterior door install is more complex, $200\u2013$500 labor range (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Window installation \u2014 replacement window, per window (labor only)",
+    "unit": "ea",
+    "price_low": 75.0,
+    "price_high": 300.0,
+    "source": "Elevate Construction / Mr. Handyman 2025; window replacement install $75\u2013$300/window depending on size"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Cabinet installation \u2014 kitchen base and wall cabinets, per linear foot",
+    "unit": "ft",
+    "price_low": 35.0,
+    "price_high": 75.0,
+    "source": "countbricks.com / modernize.com 2025; cabinet install labor $35\u2013$75/LF mid-market range"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Deck build \u2014 pressure-treated or composite framing + decking labor, per sq ft",
+    "unit": "ft",
+    "price_low": 8.0,
+    "price_high": 20.0,
+    "source": "homeguide.com / deckcostguide.com 2025; deck build labor $8\u2013$20/sq ft depending on complexity"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Subfloor installation \u2014 OSB/plywood over joists, per sq ft",
+    "unit": "ft",
+    "price_low": 2.5,
+    "price_high": 5.5,
+    "source": "estimated from comparable; subfloor labor $1.50\u2013$3.00 material + $1.00\u2013$2.50 labor typical range"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Hardwood floor installation \u2014 nail-down solid hardwood, per sq ft (labor only)",
+    "unit": "ft",
+    "price_low": 3.0,
+    "price_high": 8.0,
+    "source": "homeguide.com 2025; hardwood floor install labor $3\u2013$8/sq ft; hallmarkfloors.com cost guide"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Stair installation \u2014 pre-built box stair unit, 3-4 risers, per unit",
+    "unit": "ea",
+    "price_low": 250.0,
+    "price_high": 600.0,
+    "source": "estimated from comparable; stair unit install 4\u20138 hrs framing labor at $45\u2013$75/hr"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Insulation \u2014 batt insulation installation in walls, per sq ft (labor only)",
+    "unit": "ft",
+    "price_low": 0.5,
+    "price_high": 1.25,
+    "source": "estimated from comparable; batt install labor $0.50\u2013$1.25/sq ft per industry standard estimates"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Demo / rough carpentry tearout \u2014 remove existing framing, walls, per hour",
+    "unit": "hr",
+    "price_low": 40.0,
+    "price_high": 75.0,
+    "source": "estimated from comparable; demolition/tearout billed at framing labor rate $40\u2013$75/hr (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Finish carpenter \u2014 general finish work, per hour",
+    "unit": "hr",
+    "price_low": 55.0,
+    "price_high": 110.0,
+    "source": "Angi 2026; Willamette Carpentry; finish carpenter $55\u2013$110/hr for detailed work"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Master carpenter / lead carpenter \u2014 per hour",
+    "unit": "hr",
+    "price_low": 85.0,
+    "price_high": 175.0,
+    "source": "Angi 2026; Thumbtack 2025; master carpenter $85\u2013$175/hr for complex custom work"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Carpentry helper / laborer \u2014 material handling, per hour",
+    "unit": "hr",
+    "price_low": 22.0,
+    "price_high": 40.0,
+    "source": "Payscale; construction laborer $22\u2013$40/hr for general assist (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Deck ledger board attachment to house \u2014 flashing and lag bolts, per lot",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 350.0,
+    "source": "estimated from comparable; ledger attachment 3\u20135 hrs carpentry labor + hardware materials"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Closet shelving installation \u2014 wire shelf system, standard reach-in, per lot",
+    "unit": "lot",
+    "price_low": 120.0,
+    "price_high": 280.0,
+    "source": "estimated from comparable; closet shelf install 2\u20134 hrs at $40\u2013$70/hr (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "labor",
+    "description": "Countertop installation \u2014 laminate or solid surface, per lot",
+    "unit": "lot",
+    "price_low": 150.0,
+    "price_high": 400.0,
+    "source": "estimated from comparable; countertop set and plumb 3\u20136 hrs at $50\u2013$70/hr"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Pocket door hardware kit, Johnson 1500 series, 30\u201336 in. door",
+    "unit": "ea",
+    "price_low": 38.0,
+    "price_high": 75.0,
+    "source": "estimated from comparable; pocket door frame kits retail $38\u2013$75 at Home Depot / Lowe's"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Interior door knob set, passage function (Kwikset/Schlage), per ea",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 55.0,
+    "source": "Home Depot hardware aisle; passage knobs $18\u2013$55 depending on finish (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Exterior door lockset, deadbolt + handleset combo, keyed entry",
+    "unit": "ea",
+    "price_low": 45.0,
+    "price_high": 150.0,
+    "source": "Home Depot security aisle; exterior deadbolt+handleset combos $45\u2013$150 (Schlage B-series)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Window trim set (casing + stool), pine, per window opening",
+    "unit": "lot",
+    "price_low": 18.0,
+    "price_high": 45.0,
+    "source": "estimated from comparable; one window opening ~20\u201330 LF trim at $0.85\u2013$1.50/LF material"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Stair riser, pine, 1 in. x 7-1/2 in. x 36 in.",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 22.0,
+    "source": "estimated from comparable; stair risers at lumber yards $10\u2013$22/ea pine unfinished"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Stair tread, red oak, 1-1/16 in. x 11-1/2 in. x 36 in.",
+    "unit": "ea",
+    "price_low": 30.0,
+    "price_high": 65.0,
+    "source": "estimated from comparable; oak stair treads retail $30\u2013$65 per tread at lumber specialty"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Wood shim, cedar, 12-count bundle",
+    "unit": "ea",
+    "price_low": 4.0,
+    "price_high": 7.5,
+    "source": "Home Depot; cedar shim packs $4\u2013$7.50 per bundle (2025)"
+  },
+  {
+    "trade": "carpentry",
+    "kind": "material",
+    "description": "Biscuit joining plate, #20, 50-count",
+    "unit": "ea",
+    "price_low": 6.0,
+    "price_high": 12.0,
+    "source": "estimated from comparable; 50-ct biscuit packs retail $6\u2013$12 at hardware stores"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "GAF Timberline HDZ architectural laminated shingles (per square, 3 bundles)",
+    "unit": "sq",
+    "price_low": 105.0,
+    "price_high": 150.0,
+    "source": "roofingcalc.com; GAF Timberline HDZ $35.97\u2013$39.97/bundle at Home Depot/Lowe's, x3 bundles/square"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "GAF Timberline HDZ architectural shingles \u2014 per bundle (33.3 sq ft)",
+    "unit": "ea",
+    "price_low": 35.0,
+    "price_high": 50.0,
+    "source": "Home Depot product listing; GAF Timberline HDZ $35.97\u2013$39.97/bundle; premium colors up to $50"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Owens Corning Duration architectural shingles (per square, 3 bundles)",
+    "unit": "sq",
+    "price_low": 100.0,
+    "price_high": 145.0,
+    "source": "roofcalc.org 2025; architectural shingles $84\u2013$135/sq; OC Duration mid-range brand"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "CertainTeed Landmark architectural shingles (per square, 3 bundles)",
+    "unit": "sq",
+    "price_low": 98.0,
+    "price_high": 140.0,
+    "source": "roofcalc.org 2025; CertainTeed Landmark competitive with OC Duration; $84\u2013$135/sq retail band"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "3-tab asphalt shingles, standard, per square (3 bundles)",
+    "unit": "sq",
+    "price_low": 75.0,
+    "price_high": 95.0,
+    "source": "roofingcalc.com; 3-tab shingles $25\u2013$27/bundle; $75\u2013$81/square (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Designer/premium laminated architectural shingles (e.g. GAF Slateline), per square",
+    "unit": "sq",
+    "price_low": 150.0,
+    "price_high": 250.0,
+    "source": "Home Depot; GAF Slateline at $83.98/bundle x3 = $251.94/sq; premium designer tier"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "GAF Seal-A-Ridge hip and ridge cap shingles (25 lin. ft. per bundle)",
+    "unit": "ea",
+    "price_low": 55.0,
+    "price_high": 80.0,
+    "source": "Home Depot listing: GAF Seal-A-Ridge $61.09\u2013$75/bundle; Lowe's confirms similar pricing (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "GAF Timbertex double-layer hip and ridge cap shingles (20 lin. ft. per bundle)",
+    "unit": "ea",
+    "price_low": 50.0,
+    "price_high": 75.0,
+    "source": "Home Depot listing; GAF Timbertex at $55.50/bundle (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Starter shingle strip (ProStart or equivalent), 105 lin. ft. per bundle",
+    "unit": "ea",
+    "price_low": 22.0,
+    "price_high": 40.0,
+    "source": "roofingcalc.com; starter shingles $22.60\u2013$36.90 per bundle (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "#15 felt roofing underlayment, 432 sq ft roll (ASTM D226 Type I)",
+    "unit": "ea",
+    "price_low": 28.0,
+    "price_high": 45.0,
+    "source": "Home Depot product listing; #15 ASTM D226 432 sq ft roll at $32.98; regional variation $28\u2013$45"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "#15 felt roofing underlayment, per square covered (4.32 sq coverage per roll)",
+    "unit": "sq",
+    "price_low": 6.5,
+    "price_high": 11.0,
+    "source": "derived from Home Depot $32.98/roll \u00f7 4.32 squares = ~$7.63/sq; range accounts for waste"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "GAF FeltBuster synthetic roofing underlayment (1,000 sq ft roll)",
+    "unit": "ea",
+    "price_low": 95.0,
+    "price_high": 125.0,
+    "source": "Home Depot product listing; GAF FeltBuster 1000 sq ft at $107.00/roll (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Synthetic roofing underlayment, per square (based on 1,000 sq ft roll pricing)",
+    "unit": "sq",
+    "price_low": 9.5,
+    "price_high": 15.0,
+    "source": "derived from Home Depot GAF FeltBuster $107/1000 sq ft = $10.70/sq; band from multiple brands"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "GAF Deck-Armor premium breathable synthetic underlayment (400 sq ft roll)",
+    "unit": "ea",
+    "price_low": 145.0,
+    "price_high": 185.0,
+    "source": "Home Depot product listing; GAF Deck-Armor 400 sq ft at $158.00/roll (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Grace Ice & Water Shield HT self-adhering underlayment (225 sq ft roll, 36 in. x 75 ft.)",
+    "unit": "ea",
+    "price_low": 85.0,
+    "price_high": 130.0,
+    "source": "Home Depot and roofingcalc.com; Grace Ice&Water Shield HT 225 sq ft $85\u2013$130/roll (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Ice and water shield self-adhering underlayment, per square covered",
+    "unit": "sq",
+    "price_low": 38.0,
+    "price_high": 62.0,
+    "source": "latestcost.com; Grace roll $85\u2013$130/roll \u00f7 2.25 squares; aligns with $60\u2013$125/sq range cited"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Aluminum drip edge flashing, 2 in. x 2 in. x 10 ft. (Type D / F-style)",
+    "unit": "ea",
+    "price_low": 4.5,
+    "price_high": 9.0,
+    "source": "estimated from comparable; drip edge $0.45\u2013$0.90/LF x 10 ft per piece, Home Depot aluminum flashing"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Aluminum drip edge flashing, per linear foot installed",
+    "unit": "ft",
+    "price_low": 0.45,
+    "price_high": 1.0,
+    "source": "homeguide.com / Angi 2025; drip edge material $0.50\u2013$1.00/LF aluminum standard stock"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Galvanized step flashing, 3 in. x 4 in. x 7 in., 25-count pack",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 32.0,
+    "source": "estimated from comparable; galvanized step flashing 25-piece pack $18\u2013$32 at roofing supply"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Pipe boot (lead-free) roof penetration flashing, 1.5\u20133 in. stack",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 28.0,
+    "source": "estimated from comparable; pipe boot flashings retail $12\u2013$28/ea standard size at Home Depot"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Valley flashing, 20 in. wide galvanized sheet metal, per linear foot",
+    "unit": "ft",
+    "price_low": 2.0,
+    "price_high": 5.0,
+    "source": "estimated from comparable; valley flashing $2\u2013$5/LF galvanized; consistent with flashing cost guides"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Roof-to-wall step flashing, aluminum, per linear foot",
+    "unit": "ft",
+    "price_low": 1.5,
+    "price_high": 4.0,
+    "source": "estimated from comparable; step flashing on a per-LF basis from 25-count packs; $1.50\u2013$4.00/LF"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Chimney saddle/cricket flashing, pre-fabricated aluminum, per ea",
+    "unit": "ea",
+    "price_low": 65.0,
+    "price_high": 145.0,
+    "source": "estimated from comparable; chimney cricket flashings custom fab $65\u2013$145 depending on chimney width"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "GAF Cobra ridge vent, low-profile, 20 ft. roll",
+    "unit": "ea",
+    "price_low": 45.0,
+    "price_high": 65.0,
+    "source": "roofingcalc.com; GAF Cobra Low Profile 20 ft roll $49.00 (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Owens Corning VentSure ridge vent, 20 ft. roll",
+    "unit": "ea",
+    "price_low": 52.0,
+    "price_high": 75.0,
+    "source": "roofingcalc.com; Owens Corning VentSure 20 ft roll $60.10 (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Static roof vent, painted aluminum, 50 sq in. NFA, per ea",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 28.0,
+    "source": "estimated from comparable; static box vents retail $12\u2013$28/ea at Home Depot roofing aisle"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Power attic ventilator (PAV), electric, gable or roof mount",
+    "unit": "ea",
+    "price_low": 85.0,
+    "price_high": 185.0,
+    "source": "estimated from comparable; electric attic fans $85\u2013$185 at Home Depot / Lowe's (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Roofing nails, galvanized coil, 1-3/4 in., 7,200-ct coil",
+    "unit": "ea",
+    "price_low": 38.0,
+    "price_high": 65.0,
+    "source": "estimated from comparable; roofing nail coil 7,200-ct $38\u2013$65 at roofing supply distributors"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Roofing staples, galvanized, 1 in. x 7/16 in., 5,000-ct box",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 35.0,
+    "source": "estimated from comparable; roofing staples 5k-ct box retail $18\u2013$35 at fastener supply"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Roof deck nails, 8d galvanized common, 5 lb box",
+    "unit": "ea",
+    "price_low": 10.0,
+    "price_high": 18.0,
+    "source": "Home Depot fastener; 8d galv common nails 5 lb box ~$10\u2013$18 (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Roofing caulk / sealant, Geocel 2300 tripolymer, 10 oz tube",
+    "unit": "ea",
+    "price_low": 8.0,
+    "price_high": 16.0,
+    "source": "estimated from comparable; roofing-grade sealant $8\u2013$16/tube at roofing supply (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Fibered roof cement, asphalt-based, 1-gallon can",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 22.0,
+    "source": "Home Depot roofing aisle; fibered roof cement $12\u2013$22/gallon for plastic/flashing use"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Seamless aluminum gutter, 5 in. K-style, per linear foot (material only)",
+    "unit": "ft",
+    "price_low": 2.5,
+    "price_high": 5.0,
+    "source": "estimated from comparable; gutter material $2\u2013$6/LF; install total $6\u2013$20/LF; material portion 30\u201350%"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Aluminum gutter downspout, 3 in. x 4 in. K-style, per linear foot",
+    "unit": "ft",
+    "price_low": 1.5,
+    "price_high": 4.0,
+    "source": "estimated from comparable; downspout material $1.50\u2013$4.00/LF consistent with gutter material pricing"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Gutter hanger, aluminum hidden, 1/4 in. screw type, per ea",
+    "unit": "ea",
+    "price_low": 0.35,
+    "price_high": 0.9,
+    "source": "estimated from comparable; gutter hanger clips $0.35\u2013$0.90/ea at Home Depot gutter aisle"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Gutter end cap, aluminum 5 in. K-style, per ea",
+    "unit": "ea",
+    "price_low": 2.5,
+    "price_high": 6.0,
+    "source": "estimated from comparable; gutter end caps $2.50\u2013$6.00/ea retail"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Gutter downspout elbow, aluminum 3 in. x 4 in. A-style, per ea",
+    "unit": "ea",
+    "price_low": 3.0,
+    "price_high": 7.0,
+    "source": "estimated from comparable; downspout elbows retail $3\u2013$7/ea at Home Depot"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "LeafGuard gutter protection / gutter guard, per linear foot (material)",
+    "unit": "ft",
+    "price_low": 1.5,
+    "price_high": 5.0,
+    "source": "estimated from comparable; micro-mesh gutter guards retail $1.50\u2013$5/LF material; install adds more"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "7/16 in. OSB roof decking, 4 ft. x 8 ft. panel",
+    "unit": "sheet",
+    "price_low": 18.0,
+    "price_high": 26.0,
+    "source": "Home Depot; LP OSB sheathing 4x8; same as wall sheathing; $18\u2013$26 per sheet (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "5/8 in. plywood roof decking, 4 ft. x 8 ft. CDX",
+    "unit": "sheet",
+    "price_low": 32.0,
+    "price_high": 50.0,
+    "source": "estimated from comparable; 5/8 CDX plywood ~$32\u2013$50 consistent with lumber market 2025"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Copper valley flashing, 16 in. wide, per linear foot",
+    "unit": "ft",
+    "price_low": 12.0,
+    "price_high": 25.0,
+    "source": "estimated from comparable; copper flashing $4\u2013$8/LF material; 16 in. wide doubles to $12\u2013$25/LF"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Closure strips, foam eaves/ridge closure for metal panels, per linear foot",
+    "unit": "ft",
+    "price_low": 0.8,
+    "price_high": 2.0,
+    "source": "estimated from comparable; foam closure strips retail $0.80\u2013$2.00/LF at roofing supply"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Roofing labor \u2014 asphalt shingle installation, per square (100 sq ft)",
+    "unit": "sq",
+    "price_low": 150.0,
+    "price_high": 300.0,
+    "source": "homeguide.com 2025; roofing install labor $150\u2013$300/square; gorillaroofing.com confirms $200\u2013$350/sq"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Roofing labor \u2014 architectural shingle installation, steep pitch (>7/12), per square",
+    "unit": "sq",
+    "price_low": 250.0,
+    "price_high": 450.0,
+    "source": "homeguide.com / IBEX roof 2025; steep pitch premium 50\u2013100% over standard install rate"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Tear-off / removal of existing asphalt shingles, per square (1 layer)",
+    "unit": "sq",
+    "price_low": 100.0,
+    "price_high": 175.0,
+    "source": "homeguide.com 2025; tear-off $1\u2013$3/sq ft = $100\u2013$300/sq; basic 1-layer $100\u2013$175"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Tear-off \u2014 double layer shingle removal, per square",
+    "unit": "sq",
+    "price_low": 175.0,
+    "price_high": 300.0,
+    "source": "homeguide.com 2025; double-layer tearoff premium 50\u201375% over single layer; $1.75\u2013$3.00/sq ft"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Roof deck repair \u2014 replace damaged OSB/plywood sections, per sheet",
+    "unit": "sheet",
+    "price_low": 85.0,
+    "price_high": 175.0,
+    "source": "estimated from comparable; deck repair $65\u2013$125 labor + $20\u2013$50 material per sheet"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Drip edge installation \u2014 per linear foot (labor + material)",
+    "unit": "ft",
+    "price_low": 1.5,
+    "price_high": 3.5,
+    "source": "homeguide.com 2025; drip edge install during reroof $1.50\u2013$3.00/LF; retrofit $5\u2013$9/LF"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Ice and water shield installation \u2014 per square (labor only)",
+    "unit": "sq",
+    "price_low": 45.0,
+    "price_high": 95.0,
+    "source": "estimated from comparable; I&W labor 30\u201345 min/sq at $75\u2013$125/hr roofing crew rate"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Underlayment (felt or synthetic) installation \u2014 per square (labor only)",
+    "unit": "sq",
+    "price_low": 20.0,
+    "price_high": 55.0,
+    "source": "estimated from comparable; underlayment alone 15\u201330 min/sq; bundled in full reroof unit rates"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Ridge vent installation \u2014 per linear foot (labor + material)",
+    "unit": "ft",
+    "price_low": 4.5,
+    "price_high": 9.0,
+    "source": "estimated from comparable; ridge vent material $2.45\u2013$3.00/LF + 30 min/20 ft crew at roofing rate"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Flashing installation (step/counter) \u2014 per linear foot (labor only)",
+    "unit": "ft",
+    "price_low": 6.0,
+    "price_high": 18.0,
+    "source": "aroconllc.com flashing guide; mcclellandsroofing.com; step flashing labor $6\u2013$18/LF (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Chimney flashing replacement \u2014 base + step + counter, per chimney",
+    "unit": "ea",
+    "price_low": 350.0,
+    "price_high": 900.0,
+    "source": "estimated from comparable; chimney reflash 4\u20138 hrs at $75\u2013$115/hr crew; typical $350\u2013$900/unit"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Pipe boot flashing install \u2014 per ea (labor + material)",
+    "unit": "ea",
+    "price_low": 45.0,
+    "price_high": 100.0,
+    "source": "estimated from comparable; pipe boot $12\u2013$28 material + 30\u201345 min labor at roofing rate"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Gutter installation \u2014 seamless aluminum 5 in. K-style, per linear foot (labor + material)",
+    "unit": "ft",
+    "price_low": 7.0,
+    "price_high": 13.0,
+    "source": "modernize.com / Angi 2025-2026; aluminum gutter install $7\u2013$13/LF including materials"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Gutter downspout installation, per linear foot (labor + material)",
+    "unit": "ft",
+    "price_low": 5.0,
+    "price_high": 11.0,
+    "source": "estimated from comparable; downspout install at comparable rate to gutter section install"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Gutter guard / leaf protection installation, per linear foot",
+    "unit": "ft",
+    "price_low": 3.0,
+    "price_high": 12.0,
+    "source": "estimated from comparable; gutter guard install $3\u2013$12/LF depending on type (snap-in vs. micro-mesh)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Roofing laborer \u2014 general assist, per hour",
+    "unit": "hr",
+    "price_low": 22.0,
+    "price_high": 42.0,
+    "source": "estimated from comparable; roofing laborer $22\u2013$42/hr; roofing crew helper range"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Journeyman roofer \u2014 per hour",
+    "unit": "hr",
+    "price_low": 45.0,
+    "price_high": 85.0,
+    "source": "estimated from comparable; journeyman roofer hourly $45\u2013$85 consistent with labor cost guides 2025"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Roofing foreman / lead roofer \u2014 per hour",
+    "unit": "hr",
+    "price_low": 65.0,
+    "price_high": 110.0,
+    "source": "estimated from comparable; roofing foreman/lead $65\u2013$110/hr (US market range 2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Full reroof \u2014 tear-off, deck inspection/repair, underlayment, shingles, flashing (per square all-in)",
+    "unit": "sq",
+    "price_low": 350.0,
+    "price_high": 700.0,
+    "source": "homeguide.com 2025; full reroof $300\u2013$900/sq all-in; $350\u2013$700 is the typical mid-market band"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Emergency roof repair \u2014 tarping and temporary cover, per lot",
+    "unit": "lot",
+    "price_low": 200.0,
+    "price_high": 600.0,
+    "source": "estimated from comparable; emergency tarp service $200\u2013$600 typical 1-3 hr crew call-out"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Minor shingle repair \u2014 patch/replace 1\u20133 squares of damaged shingles",
+    "unit": "lot",
+    "price_low": 250.0,
+    "price_high": 650.0,
+    "source": "estimated from comparable; small patch repairs 2\u20135 hrs crew + materials; consistent with repair guides"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Valley reline \u2014 remove old valley, install new open metal valley, per linear foot",
+    "unit": "ft",
+    "price_low": 8.0,
+    "price_high": 20.0,
+    "source": "estimated from comparable; valley reline labor + material $8\u2013$20/LF consistent with flashing guides"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Skylight flashing / re-flash existing skylight, per ea",
+    "unit": "ea",
+    "price_low": 250.0,
+    "price_high": 600.0,
+    "source": "estimated from comparable; skylight reflash 2\u20135 hrs labor at $75\u2013$115/hr + materials"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Attic ventilation \u2014 install power/passive vent during reroof, per ea",
+    "unit": "ea",
+    "price_low": 75.0,
+    "price_high": 200.0,
+    "source": "estimated from comparable; vent install $75\u2013$200 per unit labor; material add-on separate"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Dumpster / debris haul-away \u2014 full reroof waste, per lot",
+    "unit": "lot",
+    "price_low": 300.0,
+    "price_high": 600.0,
+    "source": "estimated from comparable; roofing tear-off dumpster rental + haul $300\u2013$600 for average house"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Plastic cap nails / cap staples for underlayment, 1-3/4 in., 1,000-ct box",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 22.0,
+    "source": "estimated from comparable; cap nails 1000-ct $12\u2013$22 at roofing supply/Home Depot"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Metal roofing panel, Galvalume standing seam, 29 gauge, per sq ft",
+    "unit": "ft",
+    "price_low": 1.5,
+    "price_high": 4.0,
+    "source": "estimated from comparable; metal roofing panels material $1.50\u2013$4.00/sq ft; installed $5\u2013$15"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Peel-and-stick starter tape, 4 in. wide, 100 ft. roll",
+    "unit": "ea",
+    "price_low": 22.0,
+    "price_high": 45.0,
+    "source": "estimated from comparable; seaming tape/starter adhesive rolls retail $22\u2013$45 for 100 ft"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Eave protection membrane (1-layer), per square (eaves and rakes)",
+    "unit": "sq",
+    "price_low": 55.0,
+    "price_high": 90.0,
+    "source": "estimated from comparable; eave membrane similar to I&W shield; mid-tier product $55\u2013$90/sq"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Gutter cleaning \u2014 standard residential, per lot (1\u20132 story)",
+    "unit": "lot",
+    "price_low": 100.0,
+    "price_high": 250.0,
+    "source": "estimated from comparable; gutter cleaning service $100\u2013$250 typical 1-2 story home (2025)"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Fascia board replacement (rot/damage) \u2014 per linear foot, labor + material",
+    "unit": "ft",
+    "price_low": 6.0,
+    "price_high": 14.0,
+    "source": "estimated from comparable; fascia board replace $6\u2013$14/LF labor + 1x6 board material"
+  },
+  {
+    "trade": "roofing",
+    "kind": "labor",
+    "description": "Soffit repair / replace \u2014 per linear foot, labor + material",
+    "unit": "ft",
+    "price_low": 5.0,
+    "price_high": 12.0,
+    "source": "estimated from comparable; soffit repair $5\u2013$12/LF consistent with trim carpentry rates"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Aluminum fascia cover, 1 ft. x 12 ft. coil stock (per piece)",
+    "unit": "ea",
+    "price_low": 18.0,
+    "price_high": 35.0,
+    "source": "estimated from comparable; aluminum coil stock fascia cover 12 ft pieces retail $18\u2013$35"
+  },
+  {
+    "trade": "roofing",
+    "kind": "material",
+    "description": "Vented soffit panel, aluminum, 12 in. x 12 ft. panel",
+    "unit": "ea",
+    "price_low": 12.0,
+    "price_high": 28.0,
+    "source": "estimated from comparable; aluminum soffit panels retail $12\u2013$28 per 12-ft panel at suppliers"
+  }
+]

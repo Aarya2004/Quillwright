@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 11px;
+        color: #111;
+        background: #fffff8;
+        padding: 20px 12px;
+      }
+      .page {
+        max-width: 320px;
+        margin: 0 auto;
+      }
+
+      .co-name {
+        font-size: 13px;
+        font-weight: bold;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+      .co-sub {
+        font-size: 9px;
+        text-align: center;
+        color: #555;
+        margin-top: 1px;
+      }
+      .co-contact {
+        font-size: 9px;
+        text-align: center;
+        color: #555;
+        margin-top: 2px;
+      }
+
+      .divider-star {
+        text-align: center;
+        font-size: 10px;
+        color: #bbb;
+        margin: 6px 0;
+        letter-spacing: 4px;
+      }
+      .divider-dash {
+        border: none;
+        border-top: 1px dashed #999;
+        margin: 6px 0;
+      }
+
+      .doc-title {
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        margin: 4px 0;
+      }
+
+      .kv-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        margin: 2px 0;
+      }
+      .kv-row .k {
+        color: #555;
+      }
+      .kv-row .v {
+        font-weight: bold;
+      }
+
+      .section-label {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #777;
+        margin: 6px 0 2px;
+      }
+
+      table.items {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
+      }
+      table.items thead th {
+        text-align: left;
+        padding: 2px 0;
+        border-bottom: 1px solid #333;
+        font-size: 9px;
+        text-transform: uppercase;
+      }
+      table.items thead th.r {
+        text-align: right;
+      }
+      table.items tbody td {
+        padding: 3px 0;
+        vertical-align: top;
+        border-bottom: 1px dotted #ccc;
+        word-break: break-word;
+      }
+      table.items tbody td.r {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      table.items tbody .desc-row td {
+        border-bottom: none;
+        padding-bottom: 0;
+        font-weight: bold;
+        font-size: 10px;
+      }
+      table.items tbody .detail-row td {
+        padding-top: 0;
+        font-size: 9px;
+        color: #555;
+        border-bottom: 1px dotted #ccc;
+      }
+
+      .total-block {
+        margin-top: 4px;
+      }
+      .total-block .kv-row {
+        font-size: 10px;
+      }
+      .total-block .grand {
+        font-size: 12px;
+        font-weight: bold;
+        border-top: 2px solid #111;
+        padding-top: 3px;
+        margin-top: 3px;
+      }
+      .total-block .grand .k {
+        color: #111;
+      }
+
+      .thank-you {
+        text-align: center;
+        font-size: 9px;
+        color: #555;
+        margin-top: 8px;
+        font-style: italic;
+      }
+      .barcode-sim {
+        text-align: center;
+        font-size: 18px;
+        letter-spacing: -2px;
+        color: #222;
+        margin: 6px 0 2px;
+        font-family: monospace;
+      }
+      .inv-code {
+        text-align: center;
+        font-size: 8px;
+        color: #888;
+        letter-spacing: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="co-name">{{ company_name }}</div>
+      <div class="co-sub">{{ trade | title }} Services</div>
+      <div class="co-contact">{{ company_phone }}</div>
+      <div class="co-contact">{{ company_email }}</div>
+
+      <div class="divider-star">* * * * * * * *</div>
+
+      <div class="doc-title">Invoice</div>
+
+      <hr class="divider-dash" />
+
+      <div class="kv-row">
+        <span class="k">Inv #:</span><span class="v">{{ invoice_number }}</span>
+      </div>
+      <div class="kv-row">
+        <span class="k">Date:</span><span class="v">{{ invoice_date }}</span>
+      </div>
+      <div class="kv-row"><span class="k">Due:</span><span class="v">{{ due_date }}</span></div>
+      <div class="kv-row">
+        <span class="k">Customer:</span><span class="v">{{ customer_name }}</span>
+      </div>
+      <div class="kv-row">
+        <span class="k">Job:</span><span class="v">{{ job_type | title }}</span>
+      </div>
+
+      <hr class="divider-dash" />
+      <div class="section-label">Line Items</div>
+
+      <table class="items">
+        <thead>
+          <tr>
+            <th style="width: 56%">Description</th>
+            <th class="r" style="width: 20%">Qty x Rate</th>
+            <th class="r" style="width: 20%">Amt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in line_items %}
+          <tr>
+            <td style="font-size: 10px; word-break: break-word">{{ item.description }}</td>
+            <td class="r" style="font-size: 9px; white-space: nowrap">
+              {{ item.quantity }}{{ item.unit }}<br />@${{ "%.2f" | format(item.rate) }}
+            </td>
+            <td class="r">${{ "%.2f" | format(item.amount) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <hr class="divider-dash" />
+
+      <div class="total-block">
+        <div class="kv-row">
+          <span class="k">Subtotal</span><span class="v">${{ "%.2f" | format(total) }}</span>
+        </div>
+        <div class="kv-row"><span class="k">Tax</span><span class="v">$0.00</span></div>
+        <div class="kv-row grand">
+          <span class="k">TOTAL DUE</span><span class="v">${{ "%.2f" | format(total) }}</span>
+        </div>
+      </div>
+
+      <div class="divider-star">* * * * * * * *</div>
+
+      <div class="thank-you">Thank you for your business!</div>
+      <div class="barcode-sim">||| || ||| | || ||| || | |||</div>
+      <div class="inv-code">{{ invoice_number }}</div>
+    </div>
+  </body>
+</html>

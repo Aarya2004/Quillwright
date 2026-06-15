@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      /* Simulate handwriting with a cursive-ish font stack */
+      body {
+        font-family: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+        font-size: 12px;
+        color: #1a1209;
+        background: #fdfaf3;
+        padding: 36px 44px;
+      }
+      .page {
+        max-width: 720px;
+        margin: 0 auto;
+        position: relative;
+      }
+
+      /* Ruled-paper lines behind content */
+      .page::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: repeating-linear-gradient(
+          to bottom,
+          transparent 0px,
+          transparent 23px,
+          #d4cdb8 23px,
+          #d4cdb8 24px
+        );
+        pointer-events: none;
+        z-index: 0;
+      }
+      .content {
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Pre-printed form heading */
+      .form-title {
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        color: #3b2a10;
+        border-bottom: 2px solid #8b6914;
+        padding-bottom: 6px;
+        margin-bottom: 16px;
+      }
+      .form-subtitle {
+        text-align: center;
+        font-size: 10px;
+        color: #7a6030;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 18px;
+      }
+
+      /* Pre-printed field labels with underline fill areas */
+      .field-row {
+        display: flex;
+        gap: 24px;
+        margin-bottom: 12px;
+        align-items: flex-end;
+      }
+      .field {
+        flex: 1;
+      }
+      .field .fl {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #7a6030;
+        display: block;
+        margin-bottom: 1px;
+      }
+      /* The "filled" value sits on an underline to simulate a typed form */
+      .field .fv {
+        display: block;
+        border-bottom: 1px solid #3b2a10;
+        padding-bottom: 2px;
+        font-size: 12.5px;
+        color: #1a3a6e; /* blue ink color */
+        font-style: italic;
+        min-height: 18px;
+      }
+      .field.wide {
+        flex: 2;
+      }
+      .field.narrow {
+        flex: 0.6;
+      }
+
+      /* Section divider — pre-printed */
+      .section-head {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #7a6030;
+        border-top: 1px solid #c4a95a;
+        border-bottom: 1px solid #c4a95a;
+        padding: 3px 0;
+        margin: 14px 0 8px;
+        font-weight: bold;
+      }
+
+      /* Line-item table styled as a ruled form */
+      table.items {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11.5px;
+        margin-bottom: 8px;
+      }
+      table.items thead th {
+        font-size: 8.5px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #7a6030;
+        text-align: left;
+        padding: 4px 6px;
+        border-bottom: 1.5px solid #3b2a10;
+        font-weight: normal;
+        font-style: normal;
+      }
+      table.items thead th.r {
+        text-align: right;
+      }
+      table.items tbody tr td {
+        border-bottom: 1px solid #c4a95a;
+        padding: 5px 6px;
+        vertical-align: bottom;
+        color: #1a3a6e;
+        font-style: italic;
+      }
+      table.items tbody tr td.r {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      /* Empty filler rows so the form looks like a real partially-filled sheet */
+      table.items tbody tr.filler td {
+        color: transparent;
+        border-bottom: 1px solid #d4cdb8;
+        height: 22px;
+      }
+
+      /* Totals as pre-printed boxes */
+      .totals-grid {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 8px;
+      }
+      .totals-inner {
+        border: 1px solid #c4a95a;
+        min-width: 260px;
+      }
+      .tr-row {
+        display: flex;
+        border-bottom: 1px solid #c4a95a;
+      }
+      .tr-row:last-child {
+        border-bottom: none;
+      }
+      .tr-label {
+        flex: 1;
+        padding: 5px 10px;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #7a6030;
+        border-right: 1px solid #c4a95a;
+      }
+      .tr-val {
+        min-width: 100px;
+        padding: 5px 10px;
+        text-align: right;
+        font-style: italic;
+        color: #1a3a6e;
+        font-size: 12px;
+      }
+      .tr-row.grand .tr-label {
+        font-weight: bold;
+        color: #3b2a10;
+        font-size: 10px;
+      }
+      .tr-row.grand .tr-val {
+        font-weight: bold;
+        font-size: 14px;
+        color: #1a3a6e;
+      }
+      .tr-row.grand {
+        border-top: 2px solid #3b2a10;
+        background: #fdf0cc;
+      }
+
+      /* Signature area */
+      .sig-section {
+        display: flex;
+        gap: 30px;
+        margin-top: 24px;
+      }
+      .sig-field {
+        flex: 1;
+      }
+      .sig-field .sl {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #7a6030;
+        display: block;
+        margin-bottom: 20px;
+      }
+      .sig-field .su {
+        border-bottom: 1px solid #3b2a10;
+        display: block;
+      }
+
+      .form-number {
+        position: absolute;
+        top: 0;
+        right: 0;
+        font-size: 8px;
+        color: #bbb;
+        letter-spacing: 1px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="content">
+        <div class="form-number">FORM QW-{{ invoice_number }}</div>
+
+        <div class="form-title">Work Order / Invoice</div>
+        <div class="form-subtitle">{{ company_name }} &bull; {{ trade | title }} Services</div>
+
+        <div class="field-row">
+          <div class="field wide">
+            <span class="fl">Company</span>
+            <span class="fv">{{ company_name }}</span>
+          </div>
+          <div class="field">
+            <span class="fl">Phone</span>
+            <span class="fv">{{ company_phone }}</span>
+          </div>
+          <div class="field narrow">
+            <span class="fl">Lic #</span>
+            <span class="fv">{{ license_number }}</span>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field narrow">
+            <span class="fl">Invoice #</span>
+            <span class="fv">{{ invoice_number }}</span>
+          </div>
+          <div class="field narrow">
+            <span class="fl">Date</span>
+            <span class="fv">{{ invoice_date }}</span>
+          </div>
+          <div class="field narrow">
+            <span class="fl">Due Date</span>
+            <span class="fv">{{ due_date }}</span>
+          </div>
+          <div class="field">
+            <span class="fl">Job Type</span>
+            <span class="fv">{{ job_type | title }}</span>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field wide">
+            <span class="fl">Customer / Bill To</span>
+            <span class="fv">{{ customer_name }}</span>
+          </div>
+          <div class="field wide">
+            <span class="fl">Service Address</span>
+            <span class="fv">{{ customer_address }}</span>
+          </div>
+        </div>
+
+        <div class="section-head">Description of Services &amp; Materials</div>
+
+        <table class="items">
+          <thead>
+            <tr>
+              <th style="width: 45%">Item / Description</th>
+              <th class="r" style="width: 9%">Qty</th>
+              <th style="width: 8%">Unit</th>
+              <th class="r" style="width: 17%">Rate</th>
+              <th class="r" style="width: 17%">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in line_items %}
+            <tr>
+              <td>{{ item.description }}</td>
+              <td class="r">{{ item.quantity }}</td>
+              <td>{{ item.unit }}</td>
+              <td class="r">${{ "%.2f" | format(item.rate) }}</td>
+              <td class="r">${{ "%.2f" | format(item.amount) }}</td>
+            </tr>
+            {% endfor %} {# pad with a couple of blank ruled lines #}
+            <tr class="filler">
+              <td>&nbsp;</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr class="filler">
+              <td>&nbsp;</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="totals-grid">
+          <div class="totals-inner">
+            <div class="tr-row">
+              <div class="tr-label">Subtotal</div>
+              <div class="tr-val">${{ "%.2f" | format(total) }}</div>
+            </div>
+            <div class="tr-row">
+              <div class="tr-label">Tax</div>
+              <div class="tr-val">$0.00</div>
+            </div>
+            <div class="tr-row grand">
+              <div class="tr-label">Total Due</div>
+              <div class="tr-val">${{ "%.2f" | format(total) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sig-section">
+          <div class="sig-field">
+            <span class="sl">Customer Signature</span>
+            <span class="su">&nbsp;</span>
+          </div>
+          <div class="sig-field">
+            <span class="sl">Tech / Contractor</span>
+            <span class="su">&nbsp;</span>
+          </div>
+          <div class="sig-field">
+            <span class="sl">Date Completed</span>
+            <span class="su">&nbsp;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1164 @@
+/* Forge Estimate workspace — sidebar + two-pane layout. */
+
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* Sidebar. */
+.sidebar {
+  flex: 0 0 256px;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 16px;
+  background: var(--surface-container);
+  border-right: 1px solid var(--outline-variant);
+}
+.sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px;
+  margin-bottom: 40px;
+}
+.sidebar .brand-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex: none;
+}
+.sidebar .brand-text {
+  min-width: 0;
+}
+.sidebar .brand h2 {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--on-surface);
+}
+.sidebar .brand p {
+  margin: 2px 0 0;
+  color: var(--secondary);
+  font-size: 14px;
+}
+.sidebar nav {
+  flex: 1;
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--secondary);
+  font-weight: 400;
+}
+.nav-link {
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.nav-link:hover {
+  background: var(--surface-container-high);
+  color: var(--on-surface);
+}
+.nav-link.active {
+  color: var(--primary);
+  font-weight: 700;
+  background: var(--surface-container-high);
+}
+.sidebar .new-estimate {
+  width: 100%;
+  margin-top: 24px;
+}
+
+/* Main column. */
+.main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Top bar — job title only. */
+.topbar {
+  height: 64px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--outline-variant);
+}
+.topbar h1 {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--primary);
+  margin: 0;
+}
+
+/* Capture row. */
+.capture {
+  padding: 16px 32px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.capture input[type="text"],
+.capture input#transcript {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  font-family: var(--font-body);
+}
+.thumbs {
+  display: flex;
+  gap: 8px;
+  padding: 0 32px 8px;
+  flex-wrap: wrap;
+}
+.thumbs img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--outline-variant);
+}
+
+/* Panes. */
+.panes {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.pane--log {
+  flex: 0 0 40%;
+  background: var(--surface-container-low);
+  border-right: 1px solid var(--outline-variant);
+}
+.pane--estimate {
+  flex: 1 1 60%;
+  background: var(--surface);
+}
+.pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.pane-head h2 {
+  font-family: var(--font-head);
+  margin: 0;
+  font-size: 22px;
+  color: var(--on-surface);
+}
+.pane-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* Digital Apprentice header. The badge wraps onto its own line under the title
+   when the pane is narrow, so it never collides with the run-state label. */
+.apprentice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  min-width: 0;
+}
+.apprentice h2 {
+  margin-right: 2px;
+}
+.apprentice .material-symbols-outlined {
+  color: var(--primary);
+  animation: pulse 2s infinite;
+}
+/* Model-mode badge: which models are actually running (stub/local/modal/mixed)
+   + per-role labels. Honest at-a-glance answer to "am I on the real models?". */
+.model-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--secondary);
+  background: var(--surface);
+}
+.model-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--outline-variant);
+  flex: none;
+}
+.model-badge-roles {
+  font-weight: 400;
+  color: var(--secondary);
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+}
+/* Dot color per mode: stub = neutral, local = green (on-device), modal = orange
+   (hosted accent), mixed = amber (a spread of backends). */
+.model-badge[data-mode="local"] .model-badge-dot {
+  background: var(--ok);
+}
+.model-badge[data-mode="modal"] .model-badge-dot {
+  background: var(--primary);
+}
+.model-badge[data-mode="mixed"] .model-badge-dot {
+  background: #d9920a;
+}
+
+.live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  color: var(--secondary);
+  font-size: 14px;
+}
+/* The dot reflects the run state (data-state on .live) instead of always glowing
+   green — "Idle" with a live-green dot read as a lie. */
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--outline-variant);
+  transition:
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.live[data-state="working"] .live-dot {
+  background: var(--primary-container);
+  animation: dot-breathe 1.1s ease-in-out infinite;
+}
+.live[data-state="needs-you"] .live-dot {
+  background: var(--on-tertiary-container);
+  box-shadow: 0 0 8px rgba(39, 55, 63, 0.5);
+}
+.live[data-state="done"] .live-dot {
+  background: var(--ok);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+/* (The original "Apprentice step cards" block lived here — fully superseded by the
+   unified-stream section below; removed rather than shadowed by the cascade.) */
+
+/* Estimate table. */
+.est-actions {
+  display: flex;
+  gap: 8px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--outline);
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  color: var(--on-surface);
+  transition:
+    background 0.15s ease,
+    opacity 0.15s ease,
+    transform 0.12s ease;
+}
+.btn:hover {
+  background: var(--surface-container);
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  border: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.btn--primary:hover {
+  opacity: 0.92;
+}
+/* Forge while a run streams: held down, bolt pulsing — also blocks a double-forge. */
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+#forge-btn:disabled .material-symbols-outlined {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+}
+thead tr {
+  background: var(--secondary);
+  color: #fff;
+  font-family: var(--font-head);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: left;
+}
+th,
+td {
+  padding: 14px 16px;
+}
+tbody tr {
+  border-bottom: 1px solid var(--outline-variant);
+}
+tbody tr:nth-child(odd) {
+  background: var(--surface-container-low);
+}
+td.num {
+  text-align: right;
+}
+td.desc {
+  font-weight: 700;
+}
+td[contenteditable]:focus {
+  outline: 2px solid var(--primary-container);
+  background: #fff;
+}
+/* Empty estimate: say so instead of a header floating over nothing. */
+.table-empty td {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--secondary);
+  padding: 28px 16px;
+}
+
+/* Agent-Pause card. Entrance animation re-fires on each display:none -> flex. */
+.pause-card {
+  margin-top: 24px;
+  background: var(--tertiary-fixed);
+  border: 1px solid var(--tertiary-container);
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  gap: 16px;
+  animation: step-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.pause-card .pause-body {
+  flex: 1;
+}
+.pause-card .pause-price {
+  width: 120px;
+  padding: 8px;
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  font-family: var(--font-body);
+}
+.pause-card .bot {
+  background: var(--on-tertiary-container);
+  color: #fff;
+  padding: 8px;
+  border-radius: 8px;
+  height: fit-content;
+}
+.pause-card p {
+  font-weight: 700;
+  color: var(--on-tertiary-container);
+  margin: 0 0 16px;
+}
+.pause-card .opts {
+  display: flex;
+  gap: 12px;
+}
+
+/* Document Capture: Proposed-Line-Items confirm card (rides the Agent-Pause surface). */
+.doc-confirm {
+  flex: 1;
+  min-width: 0;
+}
+.doc-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.doc-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 72px 96px;
+  gap: 12px;
+  align-items: center;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+  animation: row-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--doc-delay, 0ms);
+}
+.doc-item:has(input[type="checkbox"]:not(:checked)) {
+  opacity: 0.45;
+}
+.doc-item .doc-desc {
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+.doc-item .doc-desc small {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.doc-item input[type="number"] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--outline);
+  border-radius: 6px;
+  font-family: var(--font-body);
+}
+.doc-item input[type="checkbox"] {
+  accent-color: var(--primary-container);
+}
+
+/* Financial summary. */
+.summary {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+}
+.summary .rows {
+  width: 256px;
+}
+.summary .row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--secondary);
+  padding: 4px 0;
+}
+.summary .row--total {
+  color: var(--on-surface);
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 22px;
+  border-top: 1px solid var(--outline-variant);
+  padding-top: 12px;
+  margin-top: 8px;
+}
+
+/* Footer action bar. */
+.footer {
+  height: 80px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  background: var(--surface);
+  border-top: 1px solid var(--outline-variant);
+}
+.footer .right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.link-btn {
+  background: none;
+  border: 0;
+  color: var(--secondary);
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.link-btn:hover {
+  color: var(--primary);
+}
+select {
+  border: 1px solid var(--outline);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-weight: 700;
+  font-size: 14px;
+  background: var(--surface);
+  font-family: var(--font-body);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+/* ============================================================
+   Apprentice pane — unified stream (trace + chat) + motion
+   ============================================================ */
+
+/* The scrolling stream holds the step cards then the chat turns. */
+.stream {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 20px;
+}
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0; /* the connector rail bridges the gap between cards */
+}
+
+/* --- Step cards: JetBrains-Mono terminal feel with a connector rail --- */
+.step-card {
+  display: flex;
+  gap: 14px;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.step-card.working {
+  background: #fff8f2;
+  border-color: rgba(150, 73, 0, 0.22);
+}
+
+/* Rail: marker + a line that drops toward the next card. */
+.step-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.step-rail .check {
+  color: var(--ok);
+  font-variation-settings: "FILL" 1;
+  font-size: 22px;
+}
+.step-rail .rail-line {
+  flex: 1 1 auto;
+  width: 2px;
+  margin-top: 6px;
+  background: var(--outline-variant);
+  border-radius: 2px;
+}
+.step-card:last-of-type .step-rail .rail-line {
+  display: none;
+}
+.step-rail .working-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: dot-breathe 1.1s ease-in-out infinite;
+}
+.step-rail .working-dot::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.step-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.step-body .title {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--on-surface);
+  margin: 0 0 4px;
+}
+.step-card.working .title {
+  color: var(--primary);
+}
+/* Detail + item lines use the mono face — the "console output" look. */
+.step-body .detail,
+.step-items {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--secondary);
+  margin: 0;
+}
+.step-items {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.step-items li {
+  margin: 3px 0;
+}
+.step-card.working .detail {
+  color: var(--on-primary-container);
+}
+.step-empty {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--secondary);
+}
+
+/* --- Chat turns live in the same stream, below the steps --- */
+.chat-msg {
+  display: flex;
+  margin-bottom: 12px;
+  animation: msg-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.chat-msg.user {
+  justify-content: flex-end;
+}
+.chat-msg .bubble {
+  max-width: 82%;
+  padding: 11px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.chat-msg.bot .bubble {
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-bottom-left-radius: 4px;
+  color: var(--on-surface);
+}
+.chat-msg.user .bubble {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-bottom-right-radius: 4px;
+}
+/* A thin divider introduces the conversation once the trace is done. */
+.chat-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 16px;
+  color: var(--secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.chat-divider::before,
+.chat-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--outline-variant);
+}
+
+/* Typing indicator. */
+.typing .bubble {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+.typing .bubble i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--secondary);
+  display: inline-block;
+  animation: typing 1.2s ease-in-out infinite;
+}
+.typing .bubble i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing .bubble i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* --- Docked chat input at the bottom of the pane --- */
+.chat-input {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--outline-variant);
+  background: var(--surface);
+}
+.chat-input input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: var(--surface-container-low);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+.chat-input input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(150, 73, 0, 0.12);
+}
+.chat-input input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.chat-send {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.12s ease,
+    opacity 0.18s ease;
+}
+.chat-send:hover:not(:disabled) {
+  opacity: 0.92;
+}
+.chat-send:active:not(:disabled) {
+  transform: scale(0.92);
+}
+.chat-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* --- Animations --- */
+.step-card.enter {
+  animation: step-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes dot-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 124, 0, 0.45);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 6px rgba(245, 124, 0, 0);
+  }
+}
+.step-card.just-done .step-rail .check {
+  animation: check-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes check-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+tbody tr.row-enter {
+  animation: row-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--row-delay, 0ms);
+}
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.summary .row--total span:last-child.bump {
+  animation: total-bump 0.45s ease;
+  display: inline-block;
+}
+@keyframes total-bump {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.12);
+    color: var(--primary);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+/* A rate cell the apprentice just changed via chat: a brief highlight so the eye
+   lands on what moved (the table re-renders, so this draws attention to the new value). */
+td.cell-pulse {
+  animation: cell-pulse 1s ease;
+}
+@keyframes cell-pulse {
+  0% {
+    background: var(--primary-container);
+    box-shadow: inset 0 0 0 2px var(--primary);
+  }
+  100% {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px transparent;
+  }
+}
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-card.enter,
+  .step-card.just-done .check,
+  tbody tr.row-enter,
+  .chat-msg,
+  .summary .row--total span.bump,
+  .step-rail .working-dot,
+  .typing .bubble i,
+  .pause-card,
+  .doc-item,
+  .live .live-dot,
+  td.cell-pulse,
+  .send-overlay,
+  .send-modal,
+  .send-confirm-icon,
+  #forge-btn:disabled .material-symbols-outlined {
+    animation: none !important;
+  }
+}
+
+/* --- Finalize & Send modal (S10) --- */
+.send-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(24, 28, 30, 0.55);
+  backdrop-filter: blur(2px);
+  padding: 20px;
+  animation: send-fade 0.18s ease;
+}
+.send-overlay[hidden] {
+  display: none;
+}
+@keyframes send-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.send-modal {
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  width: 100%;
+  max-width: 420px;
+  padding: 22px;
+  animation: send-rise 0.2s ease;
+}
+@keyframes send-rise {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.send-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.send-head h2 {
+  font-family: var(--font-head);
+  font-size: 19px;
+  margin: 0;
+  color: var(--on-surface);
+}
+.send-x {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--on-surface-variant);
+  display: flex;
+  padding: 4px;
+  border-radius: 8px;
+}
+.send-x:hover {
+  background: var(--surface-container);
+}
+.send-channels {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.send-chan {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--outline-variant);
+  border-radius: 10px;
+  background: var(--surface-container-low);
+  color: var(--on-surface-variant);
+  font-family: var(--font-head);
+  font-size: 14px;
+  cursor: pointer;
+}
+.send-chan .material-symbols-outlined {
+  font-size: 18px;
+}
+.send-chan.is-active {
+  border-color: var(--primary);
+  background: var(--primary-fixed);
+  color: var(--on-primary-fixed-variant);
+}
+.send-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--on-surface-variant);
+  margin-bottom: 6px;
+}
+.send-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 12px;
+  border: 1px solid var(--outline);
+  border-radius: 10px;
+  font-size: 15px;
+  background: var(--surface-container-lowest);
+  color: var(--on-surface);
+}
+.send-input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 0;
+  border-color: var(--primary);
+}
+.send-error {
+  color: var(--error);
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+.send-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+}
+.send-note {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  margin: 12px 0 0;
+}
+#send-go.is-busy .material-symbols-outlined {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+/* Confirmation view */
+.send-confirm {
+  text-align: center;
+  padding: 8px 4px 4px;
+}
+.send-confirm-icon {
+  font-size: 52px;
+}
+.send-confirm.is-sent .send-confirm-icon {
+  color: #2e7d32;
+}
+.send-confirm.is-draft .send-confirm-icon {
+  color: var(--primary-container);
+}
+.send-confirm h2 {
+  font-family: var(--font-head);
+  margin: 8px 0 4px;
+  color: var(--on-surface);
+}
+.send-summary {
+  font-family: var(--font-mono, monospace);
+  font-size: 14px;
+  color: var(--on-surface);
+  margin: 4px 0 10px;
+}
+.send-confirm-sub {
+  font-size: 13px;
+  color: var(--on-surface-variant);
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+.send-ref {
+  font-size: 11px;
+  color: var(--on-surface-variant);
+  margin: -8px 0 14px;
+}
+
+/* Mic button — recording state pulses red so it's obvious it's live. */
+#mic-btn.recording {
+  background: #ba1a1a;
+  color: #fff;
+  border-color: #ba1a1a;
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(186, 26, 26, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(186, 26, 26, 0);
+  }
+}
+
+/* Phone-capture pairing (Tier 3): QR + link inside the reused send-modal shell. */
+.phone-qr {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+}
+.phone-qr svg {
+  width: 200px;
+  height: 200px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+}
+.phone-link {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted, #b3a796);
+  word-break: break-all;
+}
+.phone-link a {
+  color: var(--orange, #ff7a1a);
+}
+
+/* Cold-start banner (HF Space scale-to-zero): waking → ready → fade. Honest feedback
+   so a visitor on a cold load sees the app acknowledge itself, not a blank/hung page. */
+.boot-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  background: #2c2620;
+  border: 1px solid var(--line, #3a322a);
+  color: var(--muted, #b3a796);
+  transition: opacity 0.4s ease;
+}
+.boot-banner[data-state="ready"] {
+  background: #14361f;
+  border-color: #2e7d4f;
+  color: #b8e6c8;
+}
+.boot-banner[data-state="slow"] {
+  background: #3a2a14;
+  border-color: #8a6a2a;
+  color: #e6cfa0;
+}
+.boot-banner[hidden] {
+  display: none;
+}
+.boot-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--line, #3a322a);
+  border-top-color: var(--orange, #ff7a1a);
+  animation: boot-spin 0.8s linear infinite;
+  flex: none;
+}
+.boot-banner[data-state="ready"] .boot-spinner,
+.boot-banner[data-state="slow"] .boot-spinner {
+  display: none;
+}
+@keyframes boot-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-spinner {
+    animation: none;
+  }
+}

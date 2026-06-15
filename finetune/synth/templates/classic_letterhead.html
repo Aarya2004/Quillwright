@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Times New Roman", Times, Georgia, serif;
+        font-size: 12px;
+        color: #111;
+        background: #fffef9;
+        padding: 50px 60px;
+      }
+      .page {
+        max-width: 720px;
+        margin: 0 auto;
+      }
+
+      /* Letterhead top */
+      .letterhead {
+        text-align: center;
+        border-bottom: 3px double #333;
+        padding-bottom: 18px;
+        margin-bottom: 22px;
+      }
+      .letterhead .company-name {
+        font-size: 26px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+      .letterhead .subtitle {
+        font-size: 11px;
+        font-style: italic;
+        color: #555;
+        margin-top: 3px;
+        letter-spacing: 1px;
+      }
+      .letterhead .contact-line {
+        font-size: 10px;
+        color: #444;
+        margin-top: 6px;
+      }
+
+      /* Invoice meta block */
+      .meta-block {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 22px;
+      }
+      .meta-left .label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #777;
+      }
+      .meta-left .value {
+        font-size: 12px;
+        font-weight: bold;
+        color: #111;
+        margin-bottom: 4px;
+      }
+      .meta-right {
+        text-align: right;
+      }
+      .meta-right table {
+        font-size: 11px;
+      }
+      .meta-right td {
+        padding: 2px 6px;
+      }
+      .meta-right .field-label {
+        font-style: italic;
+        color: #555;
+        text-align: right;
+      }
+
+      /* Bill-to */
+      .bill-to {
+        margin-bottom: 22px;
+      }
+      .bill-to .heading {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #777;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 3px;
+        margin-bottom: 6px;
+      }
+      .bill-to .customer {
+        font-size: 12px;
+        line-height: 1.7;
+      }
+      .bill-to .customer strong {
+        font-size: 13px;
+      }
+
+      /* Subject line */
+      .subject {
+        font-size: 12px;
+        margin-bottom: 18px;
+      }
+      .subject strong {
+        font-weight: bold;
+      }
+
+      /* Table */
+      table.items {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 18px;
+        font-size: 11.5px;
+      }
+      table.items thead tr {
+        border-top: 1.5px solid #111;
+        border-bottom: 1.5px solid #111;
+      }
+      table.items thead th {
+        padding: 7px 8px;
+        text-align: left;
+        font-weight: bold;
+        font-style: italic;
+      }
+      table.items thead th.r {
+        text-align: right;
+      }
+      table.items tbody tr {
+        border-bottom: 1px solid #ccc;
+      }
+      table.items tbody td {
+        padding: 7px 8px;
+        vertical-align: top;
+      }
+      table.items tbody td.r {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      table.items tfoot tr {
+        border-top: 1.5px solid #111;
+      }
+      table.items tfoot td {
+        padding: 7px 8px;
+        font-weight: bold;
+      }
+      table.items tfoot td.r {
+        text-align: right;
+      }
+
+      /* Totals sub-section */
+      .totals {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 30px;
+      }
+      .totals table {
+        font-size: 11.5px;
+      }
+      .totals td {
+        padding: 3px 10px;
+      }
+      .totals td:last-child {
+        text-align: right;
+        min-width: 90px;
+        font-variant-numeric: tabular-nums;
+      }
+      .totals .total-row td {
+        font-size: 13px;
+        font-weight: bold;
+        border-top: 1.5px solid #111;
+        padding-top: 6px;
+      }
+
+      /* Sig block */
+      .sig-block {
+        margin-top: 36px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+      }
+      .sig-line {
+        border-top: 1px solid #555;
+        width: 200px;
+        margin-top: 30px;
+        text-align: center;
+        padding-top: 4px;
+        color: #555;
+        font-style: italic;
+      }
+
+      /* Footer */
+      .footer {
+        margin-top: 24px;
+        text-align: center;
+        font-size: 9.5px;
+        color: #888;
+        border-top: 1px solid #ccc;
+        padding-top: 8px;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="letterhead">
+        <div class="company-name">{{ company_name }}</div>
+        <div class="subtitle">Licensed &amp; Insured {{ trade | title }} Contractor</div>
+        <div class="contact-line">
+          {{ company_address }} &bull; {{ company_phone }} &bull; {{ company_email }}
+        </div>
+      </div>
+
+      <div class="meta-block">
+        <div class="meta-left">
+          <div class="label">Invoice</div>
+          <div class="value">#{{ invoice_number }}</div>
+        </div>
+        <div class="meta-right">
+          <table>
+            <tr>
+              <td class="field-label">Date:</td>
+              <td>{{ invoice_date }}</td>
+            </tr>
+            <tr>
+              <td class="field-label">Due Date:</td>
+              <td>{{ due_date }}</td>
+            </tr>
+            <tr>
+              <td class="field-label">Job Type:</td>
+              <td>{{ job_type | title }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="bill-to">
+        <div class="heading">Bill To</div>
+        <div class="customer">
+          <strong>{{ customer_name }}</strong><br />
+          {{ customer_address }}
+        </div>
+      </div>
+
+      <div class="subject">
+        <strong>RE:</strong> {{ trade | title }} Services — {{ job_type | title }}
+      </div>
+
+      <table class="items">
+        <thead>
+          <tr>
+            <th style="width: 44%">Description of Work / Materials</th>
+            <th class="r" style="width: 9%">Qty</th>
+            <th style="width: 9%">Unit</th>
+            <th class="r" style="width: 17%">Unit Price</th>
+            <th class="r" style="width: 17%">Line Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in line_items %}
+          <tr>
+            <td>{{ item.description }}</td>
+            <td class="r">{{ item.quantity }}</td>
+            <td>{{ item.unit }}</td>
+            <td class="r">${{ "%.2f" | format(item.rate) }}</td>
+            <td class="r">${{ "%.2f" | format(item.amount) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="totals">
+        <table>
+          <tbody>
+            <tr>
+              <td>Subtotal</td>
+              <td>${{ "%.2f" | format(total) }}</td>
+            </tr>
+            <tr>
+              <td>Sales Tax</td>
+              <td>—</td>
+            </tr>
+            <tr class="total-row">
+              <td>Amount Due</td>
+              <td>${{ "%.2f" | format(total) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sig-block">
+        <div>
+          <p>Payment due within 30 days of invoice date.</p>
+          <p style="margin-top: 6px">Checks payable to: <strong>{{ company_name }}</strong></p>
+        </div>
+        <div>
+          <div class="sig-line">Authorized Signature</div>
+        </div>
+      </div>
+
+      <div class="footer">
+        Thank you for choosing {{ company_name }}. All work guaranteed. Lic #{{ license_number }}.
+      </div>
+    </div>
+  </body>
+</html>

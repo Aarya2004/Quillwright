@@ -1,7 +1,7 @@
-from fieldforge.catalog import Catalog
-from fieldforge.resolver import StubModel
-from fieldforge.tools import compute, lookup_price, perceive, draft_line_item, flag_for_human
-from fieldforge.models import Observation, LineItem
+from quillwright.catalog import Catalog
+from quillwright.resolver import StubModel
+from quillwright.tools import compute, lookup_price, perceive, draft_line_item, flag_for_human
+from quillwright.models import Observation, LineItem
 
 
 def test_compute_evaluates_arithmetic_safely():
@@ -33,6 +33,32 @@ def test_perceive_parses_observations_from_model_json():
     model = StubModel(responses=['[{"kind":"part","text":"dual run capacitor","confidence":0.8}]'])
     obs = perceive("/tmp/a.jpg", model)
     assert len(obs) == 1 and isinstance(obs[0], Observation) and obs[0].kind == "part"
+
+
+def test_perceive_extracts_json_from_markdown_fence_with_prose():
+    # MiniCPM-V often wraps the array in a ```json fence with a prose preamble — the
+    # real cause of "found 0 observations". The parser must dig the array out.
+    raw = (
+        "Based on my analysis, here is the requested information:\n\n"
+        "```json\n"
+        '[{"kind":"equipment","text":"Carrier AC unit"},'
+        '{"kind":"part","text":"dual run capacitor"}]\n'
+        "```\n"
+    )
+    obs = perceive("/tmp/a.jpg", StubModel(responses=[raw]))
+    assert [o.text for o in obs] == ["Carrier AC unit", "dual run capacitor"]
+    assert obs[1].confidence == 1.0  # missing confidence defaults, doesn't crash
+
+
+def test_perceive_skips_bad_rows_keeps_good_ones():
+    raw = '[{"kind":"part","text":"capacitor"},{"kind":"NONSENSE","text":"x"}]'
+    obs = perceive("/tmp/a.jpg", StubModel(responses=[raw]))
+    assert [o.text for o in obs] == ["capacitor"]  # bad-kind row dropped, not a crash
+
+
+def test_perceive_returns_empty_on_pure_prose():
+    obs = perceive("/tmp/a.jpg", StubModel(responses=["I see an air conditioner."]))
+    assert obs == []  # no array at all → empty, never an exception
 
 
 def test_perceive_passes_image_path_to_vision_capable_model():

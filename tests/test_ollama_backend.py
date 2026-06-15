@@ -1,4 +1,4 @@
-from fieldforge.backends.ollama import OllamaModel
+from quillwright.backends.ollama import OllamaModel
 
 
 class _FakeResp:
@@ -20,7 +20,7 @@ def test_generate_text_calls_ollama_and_returns_response(monkeypatch):
         captured["json"] = json
         return _FakeResp({"response": "hello from nemotron"})
 
-    monkeypatch.setattr("fieldforge.backends.ollama.requests.post", fake_post)
+    monkeypatch.setattr("quillwright.backends.ollama.requests.post", fake_post)
     m = OllamaModel("nemotron-3-nano:4b")
     out = m.generate("Say hello")
     assert out == "hello from nemotron"
@@ -38,7 +38,7 @@ def test_generate_with_image_path_attaches_base64(monkeypatch, tmp_path):
         captured["json"] = json
         return _FakeResp({"response": "[]"})
 
-    monkeypatch.setattr("fieldforge.backends.ollama.requests.post", fake_post)
+    monkeypatch.setattr("quillwright.backends.ollama.requests.post", fake_post)
     m = OllamaModel("minicpm-v")
     m.generate("describe this", image_path=str(img))
     # image is sent as a base64 string in the images list
@@ -60,7 +60,7 @@ def test_chat_sends_messages_and_tools_and_returns_message(monkeypatch):
             {"message": {"role": "assistant", "tool_calls": [{"function": {"name": "finish"}}]}}
         )
 
-    monkeypatch.setattr("fieldforge.backends.ollama.requests.post", fake_post)
+    monkeypatch.setattr("quillwright.backends.ollama.requests.post", fake_post)
     m = OllamaModel("nemotron-3-nano:4b")
     msg = m.chat([{"role": "user", "content": "hi"}], tools=[{"type": "function"}])
     assert captured["url"].endswith("/api/chat")

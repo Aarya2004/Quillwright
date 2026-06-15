@@ -1,0 +1,27 @@
+# Fine-tune training/eval dependencies — DELIBERATELY SEPARATE from the app's
+# requirements.txt. These are heavy (torch/transformers/peft) and run only on
+# Modal GPUs for the 🎯 fine-tune (ADR-0006); they must never leak into the app's
+# runtime deps or the HF Space image.
+#
+# THE AUTHORITATIVE PINNED TRAINING ENV LIVES IN train_modal.py's Modal image
+# (RESEARCH.md "Pinned environment", primary): python 3.10, torch==2.1.2,
+# torchvision==0.16.2, transformers==4.40.0, accelerate==0.30.1, peft==0.11.1,
+# sentencepiece==0.1.99, Pillow==10.1.0, timm==0.9.10, huggingface_hub. NO trl,
+# NO bitsandbytes, NO flash-attn, NO deepspeed, NO datasets at train time.
+#
+# Recipe: OpenBMB's vendored finetune.py + CPMTrainer (finetune/vendor/),
+# single-GPU, no DeepSpeed, bf16 LoRA (NOT 4-bit). Why not TRL / 4-bit: see
+# RESEARCH.md §2/§1. This file is the local-dev reference set only — edit pins in
+# train_modal.py's image (and eval.py's), which are the source of truth.
+modal
+datasets        # CORD download in prepare_data.py only (NOT a train-time dep)
+pillow
+huggingface_hub
+# GPU-only (installed in the Modal images, not locally) — pinned in train_modal.py:
+torch
+torchvision
+transformers
+peft
+accelerate
+sentencepiece
+timm

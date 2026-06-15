@@ -1,4 +1,4 @@
-from fieldforge.api.translate import translate_estimate
+from quillwright.api.translate import translate_estimate
 
 
 class _FakeAya:

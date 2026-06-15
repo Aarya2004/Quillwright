@@ -1,5 +1,5 @@
-from fieldforge.models import LineItem, Estimate, TraceStep
-from fieldforge.ui import trace_html, estimate_rows, summary_text
+from quillwright.models import LineItem, Estimate, TraceStep
+from quillwright.ui import trace_html, estimate_rows, summary_text
 
 
 def test_trace_html_marks_done_and_active_steps():

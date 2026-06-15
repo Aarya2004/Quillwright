@@ -1,4 +1,4 @@
-# FieldForge
+# Quillwright
 
 An on-device, human-supervised AI agent for tradespeople that turns a field capture (photos + voice note) into a finished, editable estimate or service report — the paperwork techs otherwise hand-write after a job.
 
@@ -12,6 +12,14 @@ _Avoid_: upload, input, submission
 A single fact the perception model extracts from a photo — an item, part, damage, or piece of read text (e.g. a nameplate model number).
 _Avoid_: detection, finding, result
 
+**Document Capture**:
+A second capture path: a document the tech or customer hands over — a spec sheet, supplier quote, or old written estimate — read by the Extraction Model Role (Nemotron Parse) into structured text + tables that feed the same Estimate pipeline. Distinct from a job-site photo (different input, different model); entered via its own control, never auto-classified.
+_Avoid_: scan, OCR (Document Capture is the agent-facing capability; OCR is one mechanism)
+
+**Proposed Line Item**:
+A Line Item whose price came from a Document Capture, not the catalog — surfaced to the human as a proposal to confirm or edit before it enters the Estimate. The document is the _source_, but the price only becomes customer-facing once a human confirms it (an Agent Pause), preserving Facts-from-Tools.
+_Avoid_: draft line (a Line Item is already a draft; "Proposed" specifically means awaiting human confirmation of a document-read price)
+
 **Agent Brain**:
 The orchestrator model that runs the plan → act → self-check loop and decides which Tools to call. There is exactly one.
 _Avoid_: orchestrator, controller, LLM
@@ -21,7 +29,7 @@ A callable capability the Agent Brain invokes. Tools are where facts (prices, ma
 _Avoid_: function, plugin, skill
 
 **Facts-from-Tools**:
-The correctness rule: any number that reaches the customer (price, quantity, markup, tax, total) must come from a Tool (`lookup_price`, `compute`) or user-confirmed data — never from the Agent Brain's free generation.
+The correctness rule: any number that reaches the customer (price, quantity, markup, tax, total) must come from a Tool (`lookup_price`, `compute`) or user-confirmed data — never from the Agent Brain's free generation. This extends to **Document Capture**: a price read off a document by Nemotron Parse is a _model_ output, so it is never used directly — it becomes a Proposed Line Item the human confirms (the document is the source; the human is the gate).
 _Avoid_: no-hallucination (too vague)
 
 **Line Item**:
@@ -84,6 +92,26 @@ _Avoid_: history, log, cache
 The agent retrieving relevant past Runs from Episodic Memory via hybrid search — a keyword/structured pre-filter then a semantic re-rank — exposed as the `search_past_jobs` Tool.
 _Avoid_: lookup, query, retrieval (use "Recall" for this specific agent-facing capability)
 
+**Account**:
+The single owner of all stored data — saved Estimates, their Refinement Threads, and Profile Memory. The product targets solo tradespeople, so an Account == the one Tech == the business; there is no organization layer and no multi-tech sharing. Multi-tenant-_shaped_ (everything is keyed by `account_id`) but bound to one fixed demo Account (`account_id = "demo"`) — no login, no auth. A real login that swaps the fixed key for a session lookup is a deliberate post-hackathon extension (ADR-0013).
+_Avoid_: User, organization, workspace (Workspace is the screen), Customer (the homeowner the Estimate is _sent to_ — a different party)
+
+**Saved Estimate**:
+An Estimate persisted to the Estimate Store under an Account so the Tech can reopen, edit, and re-export it across sessions — distinct from a Run (the lossy Episodic-Memory record that feeds Recall). Auto-saved when the forge finishes and explicitly Save-able mid-draft; updated in place on edit; deleted by Discard. No "finalized/locked" status (an Estimate is not an invoice).
+_Avoid_: invoice, quote (an Estimate stays an editable draft), Run (a Run is the agent's memory record, not a reopenable Deliverable)
+
+**Estimate Store**:
+The per-Account store of Saved Estimates + their Refinement Threads — separate from Episodic Memory (which stays a pure, append-only Recall corpus). The two have different jobs: Episodic Memory serves the _agent_ (gets smarter), the Estimate Store serves the _user_ (file and reopen work).
+_Avoid_: database, history (Episodic Memory is the history-for-the-agent)
+
+**Refinement Thread**:
+The persisted, ordered record of post-forge chat turns for one Saved Estimate (human message + the operation taken, e.g. "set labor to 2h → qty 2"). Stored _sanitized_ — intents and operations only, never dollar figures — so resuming the conversation can never feed a stale number back to the model (Facts-from-Tools). A sibling of Trace, not part of it: Trace is the Agent Brain's forge steps; the Refinement Thread is the human-driven editing conversation that follows.
+_Avoid_: chat log, conversation history, Trace (Trace is the forge-step record)
+
+**Thread Compaction**:
+Keeping a long Refinement Thread inside the small model's context window by folding the oldest turns into one mechanical "earlier in this estimate: …" line — done _deterministically in code_ from the stored operations (the last K turns stay verbatim), never by asking a model to summarize. A second instance of Facts-from-Tools: even the conversation's own compression is code-owned, so the model never restates its own pricing history.
+_Avoid_: summarization (implies a model writes it — it does not), truncation (compaction folds, it doesn't drop facts)
+
 ## Relationships
 
 - A **Capture** is turned into **Observations** by the Perception **Model Role**.
@@ -91,6 +119,9 @@ _Avoid_: lookup, query, retrieval (use "Recall" for this specific agent-facing c
 - Every **Model Role** resolves to a concrete model based on the active **Mode**.
 - The **Agent Brain** emits a **Trace** of its steps.
 - A human supervises: confirms **Observations**, answers low-confidence prompts, edits the **Deliverable** before export.
+- An **Account** owns its **Saved Estimates**, **Profile Memory**, and **Episodic Memory**; everything stored is keyed by `account_id` (one fixed demo Account in the hackathon).
+- A **Saved Estimate** lives in the **Estimate Store** and has one **Refinement Thread** (its post-forge chat turns); the Thread is sanitized and **Thread Compaction** keeps it bounded.
+- The **Refinement Thread** is replayed to the **Agent Brain** on resume for reference (pronoun) resolution; the model gets sanitized history for _context_ but the **current Line Items** for _numbers_ — never historical dollars (**Facts-from-Tools**).
 
 ## Flagged ambiguities
 
@@ -99,6 +130,9 @@ _Avoid_: lookup, query, retrieval (use "Recall" for this specific agent-facing c
 - "adapt prices" was ambiguous — resolved: deterministic learning from user-confirmed edits/prefs only; novel items are flagged, never LLM-guessed (**Facts-from-Tools**).
 - "translate tool vs language toggle" overlapped — resolved: one underlying translate function, two entry points (human toggle + autonomous agent call).
 - "Local/on-device" (the hero) vs hosting reality — resolved: real compute on Modal; "small/private" = open models + no third-party APIs; literal offline = the filmed **Airplane-Mode Proof**.
+- "account" (previously listed as a term to _avoid_ under **Customer**) — resolved: **Account** is now the data-owner term (the Tech/business), distinct from **Customer** (the homeowner an Estimate is sent to). For a solo-tradesperson product, Account == Tech == business; no organization layer.
+- "remember the chat" was ambiguous (audit trail vs resumable) — resolved: the **Refinement Thread** is both _persisted_ (reopen shows it) and _resumable_ (replayed to the model on continue), but **sanitized** (no dollars) with numbers always taken live from current Line Items. Cross-session resume is bounded by deterministic **Thread Compaction**.
+- "chat history vs Trace" overlapped — resolved: **Trace** = the Agent Brain's forge steps; the **Refinement Thread** = the human-driven post-forge editing conversation. Siblings, separately stored.
 
 ## Scope note
 

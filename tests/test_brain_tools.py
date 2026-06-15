@@ -1,6 +1,6 @@
-from fieldforge.brain_tools import BRAIN_TOOLS, dispatch
-from fieldforge.catalog import Catalog
-from fieldforge.models import LineItem
+from quillwright.brain_tools import BRAIN_TOOLS, dispatch
+from quillwright.catalog import Catalog
+from quillwright.models import LineItem
 
 CAT = Catalog.from_file("data/sample_catalog.json")
 

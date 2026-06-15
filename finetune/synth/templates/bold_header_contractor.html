@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        color: #111;
+        background: #fff;
+        padding: 0;
+      }
+      .page {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+
+      /* Bold hero header bar */
+      .hero {
+        background: #1c2b3a;
+        color: #fff;
+        padding: 22px 36px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .hero .company {
+      }
+      .hero .company-name {
+        font-size: 24px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+      .hero .company-trade {
+        font-size: 11px;
+        color: #f97316;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-top: 3px;
+        font-weight: 700;
+      }
+      .hero .company-contact {
+        font-size: 10px;
+        color: #94a3b8;
+        margin-top: 6px;
+        line-height: 1.6;
+      }
+      .hero .invoice-badge {
+        text-align: right;
+      }
+      .hero .inv-word {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: #f97316;
+        font-weight: 700;
+      }
+      .hero .inv-num {
+        font-size: 28px;
+        font-weight: 900;
+        color: #fff;
+        line-height: 1;
+      }
+      .hero .inv-date {
+        font-size: 10px;
+        color: #94a3b8;
+        margin-top: 4px;
+      }
+
+      /* Orange accent bar */
+      .accent-bar {
+        height: 5px;
+        background: #f97316;
+      }
+
+      .body-wrap {
+        padding: 24px 36px;
+      }
+
+      /* Customer / project info */
+      .info-strip {
+        display: flex;
+        gap: 0;
+        margin-bottom: 22px;
+        border: 1px solid #e2e8f0;
+      }
+      .info-strip .is-cell {
+        flex: 1;
+        padding: 10px 14px;
+        border-right: 1px solid #e2e8f0;
+      }
+      .info-strip .is-cell:last-child {
+        border-right: none;
+      }
+      .is-cell .ic-label {
+        font-size: 8px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #f97316;
+        margin-bottom: 3px;
+      }
+      .is-cell .ic-val {
+        font-size: 12px;
+        font-weight: 600;
+        color: #1c2b3a;
+        line-height: 1.4;
+      }
+
+      /* Table */
+      table.items {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11.5px;
+      }
+      table.items thead {
+        background: #1c2b3a;
+      }
+      table.items thead th {
+        color: #fff;
+        padding: 9px 12px;
+        text-align: left;
+        font-weight: 700;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+      table.items thead th.r {
+        text-align: right;
+      }
+      table.items tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+      }
+      table.items tbody tr:nth-child(even) {
+        background: #f8fafc;
+      }
+      table.items tbody td {
+        padding: 9px 12px;
+        vertical-align: top;
+      }
+      table.items tbody td.r {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      table.items tfoot {
+        background: #f1f5f9;
+      }
+      table.items tfoot td {
+        padding: 8px 12px;
+        font-weight: 700;
+        font-size: 12px;
+      }
+      table.items tfoot td.r {
+        text-align: right;
+      }
+
+      /* Totals block */
+      .totals-section {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 0;
+      }
+      .totals-inner {
+        border: 1px solid #e2e8f0;
+        min-width: 280px;
+      }
+      .totals-inner .t-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 7px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 12px;
+      }
+      .totals-inner .t-row:last-child {
+        border-bottom: none;
+      }
+      .totals-inner .t-row.grand {
+        background: #1c2b3a;
+        color: #fff;
+        font-weight: 800;
+        font-size: 15px;
+      }
+      .totals-inner .t-row.grand .t-val {
+        color: #f97316;
+      }
+      .t-val {
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Terms / payment block */
+      .terms-block {
+        margin-top: 22px;
+        display: flex;
+        gap: 24px;
+      }
+      .terms-box {
+        flex: 1;
+        background: #f8fafc;
+        border-left: 4px solid #f97316;
+        padding: 10px 14px;
+        font-size: 10.5px;
+        color: #475569;
+      }
+      .terms-box .tb-heading {
+        font-weight: 800;
+        color: #1c2b3a;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+      }
+
+      /* Footer */
+      .footer-bar {
+        background: #1c2b3a;
+        color: #94a3b8;
+        font-size: 9.5px;
+        text-align: center;
+        padding: 8px 36px;
+        margin-top: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="hero">
+        <div class="company">
+          <div class="company-name">{{ company_name }}</div>
+          <div class="company-trade">{{ trade | title }} Contractor</div>
+          <div class="company-contact">
+            {{ company_phone }}<br />
+            {{ company_email }}<br />
+            {{ company_address }}
+          </div>
+        </div>
+        <div class="invoice-badge">
+          <div class="inv-word">Invoice</div>
+          <div class="inv-num">#{{ invoice_number }}</div>
+          <div class="inv-date">{{ invoice_date }}</div>
+          <div class="inv-date">Due: {{ due_date }}</div>
+        </div>
+      </div>
+      <div class="accent-bar"></div>
+
+      <div class="body-wrap">
+        <div class="info-strip">
+          <div class="is-cell">
+            <div class="ic-label">Bill To</div>
+            <div class="ic-val">
+              {{ customer_name }}<br /><span
+                style="font-weight: 400; font-size: 11px; color: #64748b"
+                >{{ customer_address }}</span
+              >
+            </div>
+          </div>
+          <div class="is-cell">
+            <div class="ic-label">Job Type</div>
+            <div class="ic-val">{{ job_type | title }}</div>
+          </div>
+          <div class="is-cell">
+            <div class="ic-label">Trade</div>
+            <div class="ic-val">{{ trade | title }}</div>
+          </div>
+          <div class="is-cell">
+            <div class="ic-label">License #</div>
+            <div class="ic-val">{{ license_number }}</div>
+          </div>
+        </div>
+
+        <table class="items">
+          <thead>
+            <tr>
+              <th style="width: 42%">Description</th>
+              <th class="r" style="width: 9%">Qty</th>
+              <th style="width: 9%">Unit</th>
+              <th class="r" style="width: 18%">Unit Price</th>
+              <th class="r" style="width: 18%">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in line_items %}
+            <tr>
+              <td>{{ item.description }}</td>
+              <td class="r">{{ item.quantity }}</td>
+              <td>{{ item.unit }}</td>
+              <td class="r">${{ "%.2f" | format(item.rate) }}</td>
+              <td class="r">${{ "%.2f" | format(item.amount) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="totals-section">
+          <div class="totals-inner">
+            <div class="t-row">
+              <span>Subtotal</span><span class="t-val">${{ "%.2f" | format(total) }}</span>
+            </div>
+            <div class="t-row"><span>Tax (exempt)</span><span class="t-val">$0.00</span></div>
+            <div class="t-row grand">
+              <span>AMOUNT DUE</span><span class="t-val">${{ "%.2f" | format(total) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="terms-block">
+          <div class="terms-box">
+            <div class="tb-heading">Payment Terms</div>
+            Payment due within 30 days. Late payments subject to 1.5% monthly fee. Checks payable to
+            <strong>{{ company_name }}</strong>.
+          </div>
+          <div class="terms-box">
+            <div class="tb-heading">Warranty</div>
+            All labor warranted for 12 months. Parts covered by manufacturer warranty. Call us with
+            any concerns.
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bar">
+        {{ company_name }} &bull; {{ company_address }} &bull; {{ company_phone }} &bull; Lic # {{
+        license_number }}
+      </div>
+    </div>
+  </body>
+</html>

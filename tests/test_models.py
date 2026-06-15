@@ -1,4 +1,4 @@
-from fieldforge.models import Capture, Observation, LineItem, Estimate, TraceStep
+from quillwright.models import Capture, Observation, LineItem, Estimate, TraceStep
 
 
 def test_line_item_subtotal_is_qty_times_rate():

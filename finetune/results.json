@@ -1,0 +1,25 @@
+{
+  "model": "openbmb/MiniCPM-V-2_6",
+  "adapter": "Aarya2004/minicpmv-cord-lora",
+  "dataset": "naver-clova-ix/cord-v2",
+  "split": "test",
+  "n": 100,
+  "baseline": {
+    "item_f1": 0.588,
+    "qty_accuracy": 0.715,
+    "price_accuracy": 0.575,
+    "precision": 0.567,
+    "recall": 0.647,
+    "n": 100
+  },
+  "tuned": {
+    "item_f1": 0.681,
+    "qty_accuracy": 0.782,
+    "price_accuracy": 0.726,
+    "precision": 0.666,
+    "recall": 0.728,
+    "n": 100
+  },
+  "delta_item_f1": 0.093,
+  "generation_failures": 0
+}
