@@ -77,6 +77,26 @@ both tiers: the model never invents a price.
 - **Phone capture** — call a Twilio number (it forges a draft + texts the PDF) or scan a QR to capture a photo + voice note on your phone and forge live on the desktop.
 - **Frontend** — a bespoke web UI served by `gradio.Server` (FastAPI under the hood): streaming "Digital Apprentice" trace, editable estimate, PDF export.
 
+## Artifacts
+
+**Fine-tuned models** (MiniCPM-V LoRA adapters, on the Hub):
+
+- 🎯 [`Aarya2004/minicpmv-trade-lora`](https://huggingface.co/Aarya2004/minicpmv-trade-lora) — fine-tuned on a grounded-synthetic set of trade invoices (built from a real 381-entry catalog). In-distribution item F1 **0.703 → 0.933** (+0.23), price accuracy → 1.00.
+- [`Aarya2004/minicpmv-cord-lora`](https://huggingface.co/Aarya2004/minicpmv-cord-lora) — the conservative, out-of-domain baseline on the public [CORD](https://huggingface.co/datasets/naver-clova-ix/cord-v2) receipt benchmark: item F1 **0.588 → 0.681** (+0.09).
+
+**Evals** — every headline number is reproducible (`scripts/run_brain_eval.py`, `scripts/run_recall_eval.py`):
+
+| Metric                               | Before | After |
+| ------------------------------------ | ------ | ----- |
+| Agent Brain item F1                  | 0.367  | 0.967 |
+| Episodic recall@1                    | 0.750  | 0.875 |
+| MiniCPM-V item F1 (trade, in-domain) | 0.703  | 0.933 |
+| MiniCPM-V item F1 (CORD, OOD)        | 0.588  | 0.681 |
+
+![Agent Brain item F1](docs/img/brain_f1.png)
+![Episodic recall](docs/img/recall.png)
+![MiniCPM-V fine-tune](docs/img/finetune.png)
+
 ## Run
 
 ```
