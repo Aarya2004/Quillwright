@@ -5,3 +5,5 @@ __pycache__/
 /tmp/
 *.egg-info/
 node_modules/
+demo/
+.mcp.json
