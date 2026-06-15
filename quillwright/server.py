@@ -210,6 +210,42 @@ def api_send_estimate(request: Request, payload: dict = Body(...)):
         return Response(content=f"sms send failed: {exc}", status_code=400, media_type="text/plain")
 
 
+@app.post("/api/voice/incoming")
+async def api_voice_incoming(request: Request):
+    """Twilio Voice inbound webhook (S12): answer the call with greeting + <Record>.
+    Returns TwiML; the recording posts to /api/voice/recording on hang-up."""
+    from quillwright.api.voice import greeting_twiml
+
+    base = os.environ.get("FF_PUBLIC_BASE_URL") or str(request.base_url).rstrip("/")
+    return Response(content=greeting_twiml(base_url=base), media_type="application/xml")
+
+
+@app.post("/api/voice/recording")
+async def api_voice_recording(request: Request):
+    """Twilio recording-complete webhook (S12): transcribe → forge → save draft →
+    speak the total back → text the caller the PDF. Reads RecordingUrl + From from
+    Twilio's form post."""
+    from quillwright.api.voice import handle_recording
+
+    form = await request.form()
+    recording_url = str(form.get("RecordingUrl", ""))
+    from_number = str(form.get("From", ""))
+    base = os.environ.get("FF_PUBLIC_BASE_URL") or str(request.base_url).rstrip("/")
+    try:
+        result = handle_recording(
+            recording_url=recording_url, from_number=from_number, base_url=base
+        )
+        twiml = result["twiml"]
+    except Exception as exc:  # noqa: BLE001 — always answer Twilio with valid TwiML
+        from quillwright.api.voice import _say_response
+
+        print(f"[quillwright] voice recording handler failed: {exc}", flush=True)
+        twiml = _say_response(
+            "Sorry, something went wrong forging your estimate. Please try again."
+        )
+    return Response(content=twiml, media_type="application/xml")
+
+
 @app.get("/api/estimate_pdf/{token}")
 def api_estimate_pdf(token: str):
     """Serve a previously-rendered estimate PDF by token, so Twilio MMS can fetch
