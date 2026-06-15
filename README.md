@@ -27,7 +27,7 @@ tags:
 
 A human-supervised, small-model agent for tradespeople: snap a job photo + voice note → a team of **local** small models forges a finished, itemized **estimate**. No cloud, runs on your machine. Build Small Hackathon entry (Backyard AI track).
 
-**▶ [Demo video](https://youtu.be/KqTJc9vYlb0)** · **[Build write-up on DEV](https://dev.to/aarya_prakash_1328e1617f6/build-small-hackathon-quillwright-573f)** · **[Launch post on X](https://x.com/APrak2022/status/2066633276379255060)**
+**▶ [Demo video](https://youtu.be/KqTJc9vYlb0)** · **[Build write-up on DEV](https://dev.to/aarya_prakash_1328e1617f6/build-small-hackathon-quillwright-573f)** · **[Launch post on X](https://x.com/APrak2022/status/2066633276379255060)** · **[Source on GitHub](https://github.com/Aarya2004/Quillwright)**
 
 > **⏳ Cold start (please wait ~30–60s on first load).** This Space scales to zero when idle,
 > so the **first** visit after a quiet period has to boot the container before the app
