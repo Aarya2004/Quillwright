@@ -534,5 +534,9 @@ def chat_about_estimate(
 
     brain = model if model is not None else _resolve_brain()
     if brain is not None:
-        return _model_chat(message, rows, tax_rate, brain, thread)
+        try:
+            return _model_chat(message, rows, tax_rate, brain, thread)
+        except Exception as exc:  # noqa: BLE001 — model down (e.g. Ollama 500): degrade
+            # Fall back to the deterministic keyword path so a chat turn never 500s the UI.
+            print(f"[quillwright] chat brain failed ({exc}); using keyword fallback.")
     return _keyword_chat(message, rows, tax_rate, thread)

@@ -1,4 +1,5 @@
 from typing import TypedDict, Optional
+from langgraph.errors import GraphInterrupt
 from langgraph.graph import StateGraph, START, END
 from langgraph.types import interrupt
 from quillwright.models import Capture, Observation, LineItem, Estimate, TraceStep
@@ -67,12 +68,30 @@ def build_agent(perception_model: Model, catalog: Catalog, checkpointer, brain_m
         obs_text = ", ".join(ob.text for ob in state["observations"])
         priced_extra: list[LineItem] = []
         while True:
-            items, brain_trace, pause = run_brain(
-                brain_model,
-                catalog,
-                observations_text=obs_text,
-                transcript=state["capture"].transcript,
-            )
+            try:
+                items, brain_trace, pause = run_brain(
+                    brain_model,
+                    catalog,
+                    observations_text=obs_text,
+                    transcript=state["capture"].transcript,
+                )
+            except GraphInterrupt:
+                raise  # an Agent Pause is control flow, not a failure — let it propagate
+            except Exception as exc:  # noqa: BLE001 — brain/model failure: degrade, don't crash
+                # The LLM brain is unavailable (e.g. Ollama 500). Fall back to the
+                # deterministic catalog pricer so the forge still produces an estimate
+                # instead of crashing the stream. Facts-from-Tools still holds.
+                print(f"[quillwright] brain failed ({exc}); falling back to deterministic pricing.")
+                out = deterministic_price(state)
+                out["trace"] = out["trace"] + [
+                    TraceStep(
+                        action="price",
+                        model="fallback",
+                        detail="Brain unavailable — priced from the catalog directly.",
+                        status="ok",
+                    )
+                ]
+                return out
             if pause is None:
                 trace = state["trace"] + brain_trace
                 return {

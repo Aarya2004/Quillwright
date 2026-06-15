@@ -307,3 +307,16 @@ def test_keyword_question_records_no_edit_op():
     out = chat_about_estimate("how much is it", _rows_with_contactor())
     # asking is not an edit; thread gets a question turn at most, estimate unchanged
     assert len(out["estimate"]["line_items"]) == 2
+
+
+def test_chat_falls_back_to_keyword_when_model_errors():
+    class BoomBrain:
+        name = "boom"
+
+        def chat(self, messages, tools):
+            raise RuntimeError("500 from Ollama")
+
+    out = chat_about_estimate("add a contactor", _rows_with_contactor(), model=BoomBrain())
+    # Degrades to the keyword path → still adds the contactor, no exception.
+    descs = [r["description"] for r in out["estimate"]["line_items"]]
+    assert descs.count("Compressor contactor") == 2  # the add succeeded via fallback
