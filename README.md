@@ -28,6 +28,8 @@ See `docs/superpowers/specs/` and `docs/adr/` for the design.
 - **Brain** — Nemotron-3-Nano (NVIDIA) drives the tool-calling agent loop (which items, quantities, when done), locally via Ollama. Tuned to ~0.97 item-F1 on the eval set (`scripts/run_brain_eval.py`).
 - **Facts-from-Tools** — every price/total comes from the catalog + deterministic `compute`, never the LLM. Holds even for human edits.
 - **Human-in-the-loop** — the agent pauses to ask when a price is missing; you answer and it resumes.
+- **Saved Estimates** — per-account persistence: auto-save on forge, reopen from "My Estimates", resume the (sanitized) refinement chat (ADR-0013).
+- **Phone capture** — call a Twilio number (it forges a draft + texts the PDF) or scan a QR to capture a photo + voice note on your phone and forge live on the desktop.
 - **Frontend** — a bespoke web UI served by `gradio.Server` (FastAPI under the hood): streaming "Digital Apprentice" trace, editable estimate, PDF export.
 
 ## Run
@@ -103,8 +105,33 @@ through `recalc_estimate`, the same server-authoritative totals the PDF/JSON alr
 SMS needs a public PDF URL (MMS attaches by URL); the server mints one at
 `/api/estimate_pdf/{token}`.
 
-> **Inbound voice-call capture (S12)** — "call a number → it forges an estimate" — is a
-> high-priority deferred stretch (a Twilio Voice webhook); see `docs/PROGRESS.md` §5.
+## Saved Estimates (ADR-0013)
+
+Estimates persist per **Account** (one fixed demo account, `account_id="demo"`, no auth).
+A finished forge **auto-saves**; **Save** persists mid-draft; edits **update in place**;
+**Discard** deletes. **My Estimates** lists them (newest first) and reopens a frozen
+snapshot — existing lines never silently re-price; only newly-added lines hit the live
+catalog. Each saved estimate carries a **Refinement Thread**: the post-forge chat turns,
+stored **sanitized** (intents/operations, never dollar figures), so resuming the chat can
+never feed a stale number back to the model — Facts-from-Tools holds on the resume path.
+Long threads are kept in-context by **deterministic compaction** done in code, not by a
+model summary. JSON-on-disk behind a swappable `EstimateStore`; durable locally, per-session
+on the Space (`FF_ESTIMATE_STORE`).
+
+## Phone capture (two inbound paths)
+
+Both reuse the same pipeline + Facts-from-Tools; both are real on a tunneled local machine
+(`FF_PUBLIC_BASE_URL` = the ngrok/cloudflared URL), honestly framed everywhere else.
+
+- **Call a number (S12)** — a Twilio Voice webhook. The caller describes the job; Quillwright
+  transcribes the recording (Audio role — same resolution as the mic button), forges an
+  estimate, saves it as a **draft** (a human approves later), reads the spoken total back on
+  the call, and texts the PDF via the same SMS path as Finalize & Send. Webhooks:
+  `POST /api/voice/incoming` (greeting + `<Record>`) → `POST /api/voice/recording`.
+- **Scan a QR (phone capture)** — the desktop shows a QR (tunnel URL + a pairing code). The
+  phone opens a dedicated mobile capture page (`/m/<code>`), takes a photo and/or a voice
+  note, and the **desktop forges it live on screen**. QR via the optional `[capture]` extra
+  (segno) — local/tunnel only, not on the Space.
 
 ## Test
 
