@@ -191,3 +191,35 @@ def test_keyword_path_change_rate_applies_explicit_dollar_amount():
     assert cap["rate"] == 30.0
     assert cap["price_source"] == "user"
     assert out["changed"] == "Dual run capacitor"
+
+
+# --- Refinement Thread (ADR-0013): chat records sanitized ops into a thread ---
+
+ROWS = [
+    {"description": "Dual run capacitor", "quantity": 1, "unit": "ea", "rate": 24.0},
+    {"description": "Labor", "quantity": 1, "unit": "hr", "rate": 90.0},
+]
+
+
+def test_chat_returns_updated_thread_with_op():
+    out = chat_about_estimate("add a contactor", [dict(r) for r in ROWS], thread=[])
+    assert "thread" in out
+    assert len(out["thread"]) == 1
+    assert out["thread"][0]["message"] == "add a contactor"
+    assert out["thread"][0]["op"]  # a non-empty intent line
+    assert "$" not in out["thread"][0]["op"]  # invariant: no dollars in the op
+
+
+def test_chat_thread_accumulates_across_turns():
+    out1 = chat_about_estimate("add a contactor", [dict(r) for r in ROWS], thread=[])
+    out2 = chat_about_estimate(
+        "remove the capacitor",
+        out1["estimate"]["line_items"],
+        thread=out1["thread"],
+    )
+    assert len(out2["thread"]) == 2
+
+
+def test_chat_thread_default_empty_when_omitted():
+    out = chat_about_estimate("change labor to 2 hours", [dict(r) for r in ROWS])
+    assert out["thread"][0]["op"]

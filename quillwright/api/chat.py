@@ -19,6 +19,7 @@ import re
 
 from quillwright.api.recalc import recalc_estimate
 from quillwright.catalog import Catalog
+from quillwright.thread import append_turn, compact
 
 CATALOG = Catalog.from_file("data/sample_catalog.json")
 REAL_MODELS = os.environ.get("FF_REAL_MODELS") == "1"
@@ -62,10 +63,22 @@ def _finish(
     reply: str,
     needs_price: bool = False,
     changed: str | None = None,
+    thread: list[dict] | None = None,
+    message: str = "",
+    op: str = "",
 ) -> dict:
     est = recalc_estimate(rows, job_title="Estimate", tax_rate=tax_rate)
     # `changed` names the line whose rate just changed, so the UI can pulse that cell.
-    return {"estimate": est, "reply": reply, "needs_price": needs_price, "changed": changed}
+    # The Refinement Thread (ADR-0013) records the human message + a dollar-free op,
+    # so resuming can never feed a stale number back to the model (Facts-from-Tools).
+    new_thread = append_turn(thread or [], message=message, op=op) if op else (thread or [])
+    return {
+        "estimate": est,
+        "reply": reply,
+        "needs_price": needs_price,
+        "changed": changed,
+        "thread": new_thread,
+    }
 
 
 def _find_row(rows: list[dict], text: str) -> int | None:
@@ -94,6 +107,7 @@ def _op_add(rows: list[dict], item: str, quantity: float | None) -> dict:
                 "Add it manually with a rate and I'll keep the math straight."
             ),
             "needs_price": True,
+            "op": "tried to add an unknown part",
         }
     qty = quantity if (quantity and quantity > 0) else 1
     rows.append(
@@ -105,26 +119,37 @@ def _op_add(rows: list[dict], item: str, quantity: float | None) -> dict:
         }
     )
     return {
-        "reply": f"Added {qty:g} × {priced['description']} at ${priced['rate']:.2f} from the catalog."
+        "reply": f"Added {qty:g} × {priced['description']} at ${priced['rate']:.2f} from the catalog.",
+        "op": f"added {priced['description']}",
     }
 
 
 def _op_remove(rows: list[dict], item: str) -> dict:
     i = _find_row(rows, item)
     if i is None:
-        return {"reply": "I couldn't tell which line to remove — which item did you mean?"}
+        return {
+            "reply": "I couldn't tell which line to remove — which item did you mean?",
+            "op": "tried to remove an unmatched item",
+        }
     removed = rows.pop(i)
-    return {"reply": f"Removed {removed['description']}. Updated the total for you."}
+    return {
+        "reply": f"Removed {removed['description']}. Updated the total for you.",
+        "op": f"removed {removed['description']}",
+    }
 
 
 def _op_change_qty(rows: list[dict], item: str, quantity: float | None) -> dict:
     i = _find_row(rows, item)
     if i is None or quantity is None:
         return {
-            "reply": "Tell me which item and the new quantity — e.g. “change labor to 2 hours”."
+            "reply": "Tell me which item and the new quantity — e.g. “change labor to 2 hours”.",
+            "op": "asked to change a quantity (unclear)",
         }
     rows[i]["quantity"] = quantity
-    return {"reply": f"Set {rows[i]['description']} to {quantity:g}. Recalculated the total."}
+    return {
+        "reply": f"Set {rows[i]['description']} to {quantity:g}. Recalculated the total.",
+        "op": f"set {rows[i]['description']} to {quantity:g}",
+    }
 
 
 def _op_change_rate(rows: list[dict], item: str, rate: float | None, scope: str | None) -> dict:
@@ -138,7 +163,8 @@ def _op_change_rate(rows: list[dict], item: str, rate: float | None, scope: str 
     i = _find_row(rows, item)
     if i is None or rate is None:
         return {
-            "reply": "Tell me which line and the exact rate — e.g. “set the capacitor rate to $30”."
+            "reply": "Tell me which line and the exact rate — e.g. “set the capacitor rate to $30”.",
+            "op": "asked to change a rate (unclear)",
         }
     if scope not in ("estimate", "catalog"):
         # Numbers are user-confirmed, but we still ask WHERE it applies before changing.
@@ -147,7 +173,8 @@ def _op_change_rate(rows: list[dict], item: str, rate: float | None, scope: str 
                 f"Should ${rate:.2f} for {rows[i]['description']} apply to just this "
                 "estimate, or update the catalog price for future jobs too? "
                 "Say “this estimate” or “the catalog”."
-            )
+            ),
+            "op": "asked where a rate applies",
         }
     rows[i]["rate"] = rate
     rows[i]["price_source"] = "user"  # a human-confirmed price, not catalog/computed
@@ -167,6 +194,8 @@ def _op_change_rate(rows: list[dict], item: str, rate: float | None, scope: str 
     return {
         "reply": f"Set {desc} to ${rate:.2f} for {where}. Recalculated the total.",
         "changed": desc,
+        # Op is dollar-free by construction (Facts-from-Tools holds in the thread too).
+        "op": f"set the rate for {desc} ({where})",
     }
 
 
@@ -282,21 +311,36 @@ def _apply_model_call(name: str, args: dict, rows: list[dict]) -> dict:
     return {"reply": "I'm not sure how to do that — try add, remove, or change a quantity or rate."}
 
 
-def _model_chat(message: str, rows: list[dict], tax_rate: float, model) -> dict:
-    """Let the tool-calling model pick the edit; execute it through the shared ops."""
+def _model_chat(message: str, rows: list[dict], tax_rate: float, model, thread: list[dict]) -> dict:
+    """Let the tool-calling model pick the edit; execute it through the shared ops.
+
+    The compacted, sanitized thread (ops only, no dollars — ADR-0013) is replayed for
+    reference resolution ("make *it* 2 hours"); numbers always come from the current rows.
+    """
     rows_summary = (
         ", ".join(f"{r['description']} (qty {r['quantity']:g})" for r in rows) or "(empty)"
     )
+    history = compact(thread)
+    user = (
+        f"Earlier edits:\n{history}\n\n" if history else ""
+    ) + f"Current estimate: {rows_summary}\nRequest: {message}"
     messages = [
         {"role": "system", "content": _CHAT_SYSTEM},
-        {"role": "user", "content": f"Current estimate: {rows_summary}\nRequest: {message}"},
+        {"role": "user", "content": user},
     ]
     msg = model.chat(messages, CHAT_TOOLS)
     tool_calls = msg.get("tool_calls") or []
     if not tool_calls:
         # No edit — the model answered a question. Estimate stays untouched.
         text = (msg.get("content") or "").strip()
-        return _finish(rows, tax_rate, text or "Let me know what you'd like to change.")
+        return _finish(
+            rows,
+            tax_rate,
+            text or "Let me know what you'd like to change.",
+            thread=thread,
+            message=message,
+            op="asked a question",
+        )
 
     fn = tool_calls[0].get("function", {})
     result = _apply_model_call(fn.get("name", ""), fn.get("arguments", {}) or {}, rows)
@@ -306,20 +350,28 @@ def _model_chat(message: str, rows: list[dict], tax_rate: float, model) -> dict:
         result["reply"],
         needs_price=result.get("needs_price", False),
         changed=result.get("changed"),
+        thread=thread,
+        message=message,
+        op=result.get("op", ""),
     )
 
 
-def _keyword_chat(message: str, rows: list[dict], tax_rate: float) -> dict:
+def _keyword_chat(message: str, rows: list[dict], tax_rate: float, thread: list[dict]) -> dict:
     """Zero-model fallback: a keyword intent parser drives the same shared ops."""
     msg = message.strip().lower()
     if not msg:
         return _finish(
-            rows, tax_rate, "Tell me what to change — add a part, drop one, or adjust a quantity."
+            rows,
+            tax_rate,
+            "Tell me what to change — add a part, drop one, or adjust a quantity.",
+            thread=thread,
         )
 
     if re.search(r"\b(remove|delete|drop|take off|get rid of)\b", msg):
         result = _op_remove(rows, msg)
-        return _finish(rows, tax_rate, result["reply"])
+        return _finish(
+            rows, tax_rate, result["reply"], thread=thread, message=message, op=result.get("op", "")
+        )
 
     # An explicit dollar amount ("set the capacitor rate to $30") is a user-confirmed
     # rate change. Checked BEFORE the quantity branch so the "$30" isn't read as a qty.
@@ -330,7 +382,15 @@ def _keyword_chat(message: str, rows: list[dict], tax_rate: float) -> dict:
         i = _find_row(rows, msg)
         if i is not None:
             result = _op_change_rate(rows, rows[i]["description"], rate_amount, scope="estimate")
-            return _finish(rows, tax_rate, result["reply"], changed=result.get("changed"))
+            return _finish(
+                rows,
+                tax_rate,
+                result["reply"],
+                changed=result.get("changed"),
+                thread=thread,
+                message=message,
+                op=result.get("op", ""),
+            )
 
     if re.search(r"\b(change|set|make|update)\b", msg) or re.search(
         r"\bto\b.*\b(hour|hr|unit|lb|pound)", msg
@@ -339,12 +399,25 @@ def _keyword_chat(message: str, rows: list[dict], tax_rate: float) -> dict:
         qty = _to_qty(msg)
         if i is not None and qty is not None:
             result = _op_change_qty(rows, rows[i]["description"], qty)
-            return _finish(rows, tax_rate, result["reply"])
+            return _finish(
+                rows,
+                tax_rate,
+                result["reply"],
+                thread=thread,
+                message=message,
+                op=result.get("op", ""),
+            )
 
     if re.search(r"\b(add|include|put in|need|another|more)\b", msg):
         result = _op_add(rows, msg, _to_qty(msg))
         return _finish(
-            rows, tax_rate, result["reply"], needs_price=result.get("needs_price", False)
+            rows,
+            tax_rate,
+            result["reply"],
+            needs_price=result.get("needs_price", False),
+            thread=thread,
+            message=message,
+            op=result.get("op", ""),
         )
 
     return _finish(
@@ -352,6 +425,7 @@ def _keyword_chat(message: str, rows: list[dict], tax_rate: float) -> dict:
         tax_rate,
         "I can add a part, remove one, or change a quantity — e.g. “add a contactor” or "
         "“change labor to 2 hours”. What would you like to adjust?",
+        thread=thread,
     )
 
 
@@ -364,13 +438,19 @@ def _resolve_brain():
     return None
 
 
-def chat_about_estimate(message: str, rows: list[dict], tax_rate: float = 0.13, model=None) -> dict:
-    """Apply a conversational edit to the estimate. Returns {estimate, reply, needs_price}.
+def chat_about_estimate(
+    message: str, rows: list[dict], tax_rate: float = 0.13, model=None, thread=None
+) -> dict:
+    """Apply a conversational edit to the estimate. Returns
+    {estimate, reply, needs_price, changed, thread}.
 
     `model` is injectable for tests; in production it's resolved from FF_REAL_MODELS.
+    `thread` is the Refinement Thread (ADR-0013): sanitized, dollar-free history that
+    is replayed for reference resolution and grows by one turn per edit/question.
     """
     rows = [dict(r) for r in rows]  # don't mutate the caller's list
+    thread = list(thread or [])
     brain = model if model is not None else _resolve_brain()
     if brain is not None:
-        return _model_chat(message, rows, tax_rate, brain)
-    return _keyword_chat(message, rows, tax_rate)
+        return _model_chat(message, rows, tax_rate, brain, thread)
+    return _keyword_chat(message, rows, tax_rate, thread)
