@@ -88,14 +88,46 @@ export async function transcribeNote(dataUrl, filename) {
 }
 
 // Refine the current estimate conversationally (the Digital Apprentice chat).
-// Returns {estimate, reply, needs_price}.
-export async function chatAboutEstimate(message, rows, taxRate) {
+// Carries the Refinement Thread (ADR-0013) in and back out. Returns
+// {estimate, reply, needs_price, changed, thread}.
+export async function chatAboutEstimate(message, rows, taxRate, thread) {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, rows, tax_rate: taxRate }),
+    body: JSON.stringify({ message, rows, tax_rate: taxRate, thread }),
   });
   return res.json();
+}
+
+// --- Saved Estimates (ADR-0013): per-account Estimate Store. ---
+
+// Persist (create or update-in-place via `id`) a Saved Estimate + its thread.
+// Returns {id}.
+export async function saveEstimate(rows, jobTitle, taxRate, thread, id) {
+  const res = await fetch("/api/save_estimate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rows, job_title: jobTitle, tax_rate: taxRate, thread, id }),
+  });
+  return res.json();
+}
+
+// The account's saved estimates, newest first ({estimates: [{id, job_title, total}]}).
+export async function listEstimates() {
+  const res = await fetch("/api/estimates");
+  return res.json();
+}
+
+// Reopen one saved estimate (frozen snapshot + thread), or null if missing.
+export async function loadEstimate(id) {
+  const res = await fetch(`/api/estimate/${id}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+// Discard a saved estimate.
+export async function deleteEstimate(id) {
+  await fetch(`/api/estimate/${id}`, { method: "DELETE" });
 }
 
 // Translate the customer-facing estimate copy into a language (Cohere Aya).

@@ -12,6 +12,9 @@ import {
   transcribeNote,
   parseDocument,
   modelInfo,
+  saveEstimate,
+  loadEstimate,
+  deleteEstimate,
 } from "./client.js";
 import { resetTrace, addStep } from "./trace.js";
 import { escapeHtml } from "./util.js";
@@ -32,6 +35,10 @@ let imagePaths = [];
 let rows = [];
 // English source descriptions, so language switches re-translate from English.
 let sourceDescriptions = [];
+// ADR-0013: the sanitized post-forge chat turns, and this estimate's id in the store
+// (null until it has been forged/saved). Thread + id travel together on save/reopen.
+let refinementThread = [];
+let savedId = null;
 
 function readAsDataURL(file) {
   return new Promise((resolve) => {
@@ -356,7 +363,21 @@ function newEstimate() {
   $("thumbs").innerHTML = "";
   imagePaths = [];
   chatStarted = false;
+  refinementThread = [];
+  savedId = null;
   $("transcript").focus();
+}
+
+// Discard the current draft: delete its saved row (if any), then clear the workspace.
+async function discardDraft() {
+  if (savedId) {
+    try {
+      await deleteEstimate(savedId);
+    } catch {
+      /* best-effort */
+    }
+  }
+  newEstimate();
 }
 
 // --- Chat: refine the estimate, in the SAME stream as the trace ---
@@ -416,15 +437,18 @@ async function sendChat(e) {
   appendMsg("user", text);
   const typing = showTyping();
   try {
-    const out = await chatAboutEstimate(text, rows, TAX_RATE);
+    const out = await chatAboutEstimate(text, rows, TAX_RATE, refinementThread);
     typing.remove();
     appendMsg("bot", out.reply);
+    if (out.thread) refinementThread = out.thread;
     if (out.estimate) {
       // Adopt the refined estimate; the right pane updates + total bumps.
       setEstimate(out.estimate);
       // If a rate changed via chat, pulse that cell so the eye lands on it.
       if (out.changed) pulseRateCell(out.changed);
     }
+    // Persist the refined estimate + thread in place (best-effort).
+    saveCurrent();
   } catch (err) {
     typing.remove();
     appendMsg("bot", "Sorry — I couldn't process that just now. Try again?");
@@ -439,6 +463,20 @@ function addItem() {
   rows.push({ description: "New item", quantity: 1, unit: "ea", rate: 0, subtotal: 0 });
   renderRows();
   recalcFromRows();
+}
+
+// --- Saved Estimates (ADR-0013): persist in place; Discard deletes the saved row. ---
+
+// Save (create-or-update via savedId) the current estimate + thread. Best-effort:
+// never block the UI on persistence.
+async function saveCurrent() {
+  if (!rows.length) return;
+  try {
+    const out = await saveEstimate(rows, JOB_TITLE, TAX_RATE, refinementThread, savedId);
+    if (out && out.id) savedId = out.id;
+  } catch {
+    /* best-effort */
+  }
 }
 
 // --- Finalize & Send (S10): channel + recipient modal -> /api/send_estimate ---
@@ -531,9 +569,10 @@ $("photo-input").addEventListener("change", onPhotos);
 $("doc-input").addEventListener("change", onDocument);
 $("mic-btn").addEventListener("click", toggleRecording);
 $("add-item-btn").addEventListener("click", addItem);
+$("save-btn").addEventListener("click", saveCurrent);
 $("pdf-btn").addEventListener("click", () => downloadPdf(rows, JOB_TITLE, TAX_RATE));
 $("json-btn").addEventListener("click", () => downloadJson(rows, JOB_TITLE, TAX_RATE));
-$("discard-btn").addEventListener("click", newEstimate);
+$("discard-btn").addEventListener("click", discardDraft);
 $("finalize-btn").addEventListener("click", openSendModal);
 $("chan-sms").addEventListener("click", () => setSendChannel("sms"));
 $("chan-email").addEventListener("click", () => setSendChannel("email"));
@@ -577,3 +616,16 @@ showModelBadge();
 
 // First paint: show the empty-estimate state rather than a bare table header.
 renderRows();
+
+// Reopen flow (ADR-0013): /?estimate=<id> loads the frozen snapshot + its thread.
+const reopenId = new URLSearchParams(location.search).get("estimate");
+if (reopenId) {
+  loadEstimate(reopenId).then((rec) => {
+    if (!rec) return;
+    savedId = rec.id;
+    refinementThread = rec.thread || [];
+    setEstimate(rec.estimate, true);
+    // Replay the saved thread as chat bubbles (read-only history on reopen).
+    (rec.thread || []).forEach((t) => appendMsg("user", t.message));
+  });
+}

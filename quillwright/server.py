@@ -312,6 +312,11 @@ def dashboard_page() -> str:
     return (WEB / "dashboard.html").read_text()
 
 
+@app.get("/estimates", response_class=HTMLResponse)
+def estimates_page() -> str:
+    return (WEB / "estimates.html").read_text()
+
+
 @app.get("/jobs", response_class=HTMLResponse)
 def jobs_page() -> str:
     return (WEB / "jobs.html").read_text()

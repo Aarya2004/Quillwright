@@ -51,3 +51,13 @@ def test_inventory_reads_seeded_json_with_real_low_stock_flags():
         assert "rate" in p and "stock" in p and "low" in p
     # the low-stock count is derived, not hardcoded
     assert data["low_stock_count"] == sum(1 for p in parts if p["low"])
+
+
+def test_estimates_page_served():
+    from fastapi.testclient import TestClient
+
+    from quillwright.server import app
+
+    r = TestClient(app).get("/estimates")
+    assert r.status_code == 200
+    assert "My Estimates" in r.text
