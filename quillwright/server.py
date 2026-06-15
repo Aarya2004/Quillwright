@@ -13,9 +13,11 @@ from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingRes
 from gradio import Server
 
 from quillwright.api.estimate import (
+    estimate_store,
     forge_estimate,
     forge_estimate_stream,
     resume_estimate_stream,
+    save_estimate_record,
 )
 from quillwright.api.chat import chat_about_estimate
 from quillwright.api.document import parse_document_capture
@@ -230,12 +232,54 @@ def api_export_json(payload: dict = Body(...)) -> dict:
 
 @app.post("/api/chat")
 def api_chat(payload: dict = Body(...)) -> dict:
-    """Conversational refinement of the current estimate (Facts-from-Tools holds)."""
+    """Conversational refinement of the current estimate (Facts-from-Tools holds).
+
+    Carries the Refinement Thread (ADR-0013) in and back out so the conversation is
+    resumable: sanitized history (no dollars) is replayed for reference resolution."""
     return chat_about_estimate(
         payload.get("message", ""),
         payload.get("rows", []),
         tax_rate=payload.get("tax_rate", 0.13),
+        thread=payload.get("thread", []),
     )
+
+
+# --- Saved Estimates (ADR-0013): per-account Estimate Store. ---
+
+
+@app.post("/api/save_estimate")
+def api_save_estimate(payload: dict = Body(...)) -> dict:
+    """Persist (create or update-in-place) a Saved Estimate + its Refinement Thread."""
+    rec = save_estimate_record(
+        payload.get("rows", []),
+        job_title=payload.get("job_title", "Estimate"),
+        tax_rate=payload.get("tax_rate", 0.13),
+        thread=payload.get("thread", []),
+        id=payload.get("id"),
+    )
+    return {"id": rec["id"]}
+
+
+@app.get("/api/estimates")
+def api_estimates() -> dict:
+    """The account's Saved Estimates, newest first (id + title + total summaries)."""
+    return {"estimates": estimate_store().list_estimates()}
+
+
+@app.get("/api/estimate/{id}")
+def api_estimate(id: str):
+    """Reopen one Saved Estimate (frozen snapshot + its Refinement Thread)."""
+    rec = estimate_store().load(id)
+    if rec is None:
+        return HTMLResponse("not found", status_code=404)
+    return rec
+
+
+@app.delete("/api/estimate/{id}")
+def api_delete_estimate(id: str) -> dict:
+    """Discard a Saved Estimate."""
+    estimate_store().delete(id)
+    return {"ok": True}
 
 
 @app.post("/api/forge_estimate_stream")

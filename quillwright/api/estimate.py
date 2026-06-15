@@ -12,6 +12,7 @@ from langgraph.types import Command
 
 from quillwright.agent import build_agent
 from quillwright.catalog import Catalog
+from quillwright.estimate_store import EstimateStore
 from quillwright.memory import Memory
 from quillwright.models import Capture
 from quillwright.resolver import ModelResolver, StubModel
@@ -34,6 +35,32 @@ def reset_memory() -> None:
     """Drop the in-process memory (re-reads MEMORY_PATH next use). For tests."""
     global _MEMORY
     _MEMORY = None
+
+
+# Per-Account Estimate Store (ADR-0013) — separate from Episodic Memory above.
+# A singleton mirroring _memory(); re-reads its env path after reset_estimate_store().
+_ESTIMATE_STORE: EstimateStore | None = None
+
+
+def estimate_store() -> EstimateStore:
+    global _ESTIMATE_STORE
+    if _ESTIMATE_STORE is None:
+        _ESTIMATE_STORE = EstimateStore()
+    return _ESTIMATE_STORE
+
+
+def reset_estimate_store() -> None:
+    """Drop the in-process store (re-reads env path next use). For tests."""
+    global _ESTIMATE_STORE
+    _ESTIMATE_STORE = None
+
+
+def save_estimate_record(rows, job_title, tax_rate, thread, id=None) -> dict:
+    """Recalc to authoritative numbers (Facts-from-Tools), then persist the snapshot."""
+    from quillwright.api.recalc import recalc_estimate
+
+    est = recalc_estimate(rows, job_title=job_title, tax_rate=tax_rate)
+    return estimate_store().save(estimate=est, thread=thread, id=id)
 
 
 # FF_REAL_MODELS=1 uses real local models via Ollama; otherwise the demo stub.
@@ -129,10 +156,22 @@ def forge_estimate(
         {"configurable": {"thread_id": "ui"}},
     )
     est = out.get("estimate")
-    return {
+    payload = {
         "trace": _trace_payload(out["trace"]),
         "estimate": _estimate_payload(est) if est is not None else None,
     }
+    if payload["estimate"] is not None:
+        _autosave(payload["estimate"])
+    return payload
+
+
+def _autosave(estimate: dict) -> None:
+    """Auto-save a finished estimate so 'My Estimates' populates (ADR-0013 lifecycle).
+    Best-effort: persistence must never fail a forge."""
+    try:
+        estimate_store().save(estimate=estimate, thread=[])
+    except Exception:  # noqa: BLE001 — persistence is best-effort
+        pass
 
 
 # Active runs by thread_id, so a paused run can be resumed with the same agent + checkpointer.
@@ -188,9 +227,12 @@ def _drive(agent, payload, thread_id: str):
             total=estimate.total,
         )
 
+    est_payload = _estimate_payload(estimate) if estimate is not None else None
+    if est_payload is not None:
+        _autosave(est_payload)  # ADR-0013: finished forge auto-saves to the store
     yield {
         "type": "estimate",
-        "estimate": _estimate_payload(estimate) if estimate is not None else None,
+        "estimate": est_payload,
     }
     _RUNS.pop(thread_id, None)
 
