@@ -35,6 +35,32 @@ def test_perceive_parses_observations_from_model_json():
     assert len(obs) == 1 and isinstance(obs[0], Observation) and obs[0].kind == "part"
 
 
+def test_perceive_extracts_json_from_markdown_fence_with_prose():
+    # MiniCPM-V often wraps the array in a ```json fence with a prose preamble — the
+    # real cause of "found 0 observations". The parser must dig the array out.
+    raw = (
+        "Based on my analysis, here is the requested information:\n\n"
+        "```json\n"
+        '[{"kind":"equipment","text":"Carrier AC unit"},'
+        '{"kind":"part","text":"dual run capacitor"}]\n'
+        "```\n"
+    )
+    obs = perceive("/tmp/a.jpg", StubModel(responses=[raw]))
+    assert [o.text for o in obs] == ["Carrier AC unit", "dual run capacitor"]
+    assert obs[1].confidence == 1.0  # missing confidence defaults, doesn't crash
+
+
+def test_perceive_skips_bad_rows_keeps_good_ones():
+    raw = '[{"kind":"part","text":"capacitor"},{"kind":"NONSENSE","text":"x"}]'
+    obs = perceive("/tmp/a.jpg", StubModel(responses=[raw]))
+    assert [o.text for o in obs] == ["capacitor"]  # bad-kind row dropped, not a crash
+
+
+def test_perceive_returns_empty_on_pure_prose():
+    obs = perceive("/tmp/a.jpg", StubModel(responses=["I see an air conditioner."]))
+    assert obs == []  # no array at all → empty, never an exception
+
+
 def test_perceive_passes_image_path_to_vision_capable_model():
     seen = {}
 

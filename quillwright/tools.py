@@ -1,6 +1,9 @@
 import ast
 import json
 import operator
+
+from pydantic import ValidationError
+
 from quillwright.models import Observation, LineItem
 from quillwright.catalog import Catalog
 from quillwright.resolver import Model
@@ -55,17 +58,48 @@ _PERCEIVE_PROMPT = (
 )
 
 
+def _extract_json_array(raw: str):
+    """Pull a JSON array out of a model reply, or return None.
+
+    Vision models (MiniCPM-V) routinely wrap the array in a ```json fence with a prose
+    preamble ("Based on my analysis, here is …") instead of replying with ONLY the array
+    as asked. Parsing `raw` directly then fails and we'd silently see 0 observations. So:
+    try the whole string first, then the first balanced [...] slice we can find.
+    """
+    try:
+        parsed = json.loads(raw)
+        return parsed if isinstance(parsed, list) else None
+    except (json.JSONDecodeError, TypeError):
+        pass
+    start = raw.find("[")
+    end = raw.rfind("]")
+    if start == -1 or end <= start:
+        return None
+    try:
+        parsed = json.loads(raw[start : end + 1])
+        return parsed if isinstance(parsed, list) else None
+    except json.JSONDecodeError:
+        return None
+
+
 def perceive(image_path: str, model: Model) -> list[Observation]:
     # Vision-capable backends accept image_path; text stubs ignore the kwarg.
     try:
         raw = model.generate(_PERCEIVE_PROMPT, image_path=image_path)
     except TypeError:
         raw = model.generate(f"List observations as JSON for image: {image_path}")
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
+    data = _extract_json_array(raw)
+    if data is None:
         return []
-    return [Observation(**o) for o in data]
+    # Skip rows that don't validate (e.g. a kind outside the allowed set) rather than
+    # letting one bad row drop the whole estimate to zero observations.
+    obs = []
+    for o in data:
+        try:
+            obs.append(Observation(**o))
+        except (TypeError, ValidationError):
+            continue
+    return obs
 
 
 def draft_line_item(
