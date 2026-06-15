@@ -12,6 +12,13 @@ tags:
   - agent
   - small-models
   - off-the-grid
+  - track:backyard
+  - sponsor:openbmb
+  - sponsor:nvidia
+  - sponsor:modal
+  - achievement:welltuned
+  - achievement:offbrand
+  - achievement:llama
 ---
 
 # Quillwright
@@ -21,11 +28,13 @@ A human-supervised, small-model agent for tradespeople: snap a job photo + voice
 > **⏳ Cold start (please wait ~30–60s on first load).** This Space scales to zero when idle,
 > so the **first** visit after a quiet period has to boot the container before the app
 > responds — you may see Hugging Face's "Building / Starting" screen, then a moment where
-> the page is warming up. **The app is not broken — it's waking up.** Once it's up it's
-> instant (it runs in stub mode on CPU, so there's no model to load). Reload once if the
-> first paint hangs; the UI shows a "waking up → ready" banner when it reconnects.
+> the page is warming up. **The app is not broken — it's waking up.** The container (CPU)
+> hosts the UI; the models themselves run on Modal GPUs that also scale to zero, so the
+> **first forge** pays a separate model cold-start (up to a minute or two for the 30B
+> brain). Reload once if the first paint hangs; the UI shows a "waking up → ready" banner
+> when it reconnects and a "Waking the models" card on the first forge.
 
-> **This hosted Space runs in stub mode** (CPU, no GPU): the agent flow, trace, editable estimate, and PDF all work, but the small models are stubbed. The real models (MiniCPM-V, Nemotron, Aya) run locally via Ollama — see the demo video / Airplane-Mode Proof for them in action. Live models reach the hosted Space via Modal (in progress).
+> **This hosted Space is wired live to Modal** (CPU container → Modal GPUs): the real small models run on hosted NVIDIA GPUs — brain on Nemotron-3-Nano-30B, vision/audio on Nemotron-Omni-30B, multilingual on Aya-Expanse-8B, Document Capture on the fine-tuned Parse extractor. The full local stack (MiniCPM-V, Nemotron, Aya via Ollama) is the Airplane-Mode story — see the demo video / Airplane-Mode Proof. The apps scale to zero when idle; to fall back to instant CPU stub mode, unset the `FF_BACKEND` Space secret.
 
 See `docs/superpowers/specs/` and `docs/adr/` for the design.
 
