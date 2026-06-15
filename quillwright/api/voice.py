@@ -9,7 +9,12 @@ Flow (all reuse; no new business logic):
      — Nemotron Omni on the Best Stack, Cohere Transcribe on the Private Stack, same
      ``transcribe_audio`` resolution as the mic button), forges an estimate, and saves
      it as a **DRAFT** under ``account_id="demo"`` (ADR-0013). It then ``<Say>``s the
-     spoken total back on the call and texts the caller the PDF by SMS.
+     spoken total and ``<Gather>``s the caller's reply (Tier A — a conversation).
+  3. Each reply hits ``POST /api/voice/refine`` with Twilio's own ``SpeechResult``
+     transcript. "Done/no" → recalc, persist, text the PDF, end the call. Otherwise the
+     spoken edit runs through the SAME ``chat_about_estimate`` ops (add / remove / change)
+     the desktop chat uses, the new total is read back, and we ``<Gather>`` again. Per-call
+     state is held under the Twilio ``CallSid`` (in-process, demo-scoped).
 
 Honesty (ADR-0004, ADR-0013): the estimate's numbers all come from the catalog +
 ``recalc`` (Facts-from-Tools); the call produces a draft a human approves later. On a
@@ -49,7 +54,8 @@ def greeting_twiml(base_url: str | None = None) -> str:
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         "<Response>"
         "<Say>Welcome to Quillwright. After the beep, describe the job — the parts you "
-        "used and the labor — then hang up. I'll forge an estimate and text it to you.</Say>"
+        "used and the labor — then stop talking. I'll forge an estimate, read it back, "
+        "and you can tell me what to change.</Say>"
         f'<Record action="{escape(action)}" method="POST" maxLength="120" '
         'playBeep="true" timeout="5" />'
         "<Say>I didn't catch a recording. Goodbye.</Say>"
@@ -61,6 +67,61 @@ def _say_response(message: str) -> str:
     """A bare spoken TwiML response (no recording)."""
     return (
         f'<?xml version="1.0" encoding="UTF-8"?>\n<Response><Say>{escape(message)}</Say></Response>'
+    )
+
+
+# --- Conversational refine loop (Tier A): after forging, the agent reads the total and
+#     keeps the call open, asking "anything else?" via <Gather input="speech">. Each reply
+#     is a new /api/voice/refine turn that runs the SAME chat_about_estimate ops (add /
+#     remove / change), so Facts-from-Tools holds — the agent only READS totals that recalc
+#     produced. State is held per Twilio CallSid (in-process, demo-scoped, like pairing). ---
+
+# call_sid -> {"rows": list[dict], "job_title": str, "tax_rate": float, "from_number": str}
+_CALLS: dict[str, dict] = {}
+
+# Phrases that end the conversation (caller says they're done).
+_DONE_WORDS = (
+    "no",
+    "nope",
+    "nothing",
+    "that's it",
+    "thats it",
+    "done",
+    "all set",
+    "good",
+    "send it",
+)
+
+
+def _call_state(call_sid: str) -> dict | None:
+    return _CALLS.get(call_sid)
+
+
+def reset_calls() -> None:
+    """Drop all in-flight call state (tests)."""
+    _CALLS.clear()
+
+
+def _is_done(speech: str) -> bool:
+    s = (speech or "").strip().lower()
+    if not s:
+        return False
+    return any(w in s for w in _DONE_WORDS)
+
+
+def _ask_twiml(message: str, base_url: str | None = None) -> str:
+    """Speak `message`, then <Gather> the caller's spoken reply to /api/voice/refine.
+    If they stay silent, end politely (the Gather falls through to the closing Say)."""
+    action = _action_url("/api/voice/refine", base_url)
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        "<Response>"
+        f'<Gather input="speech" method="POST" action="{escape(action)}" '
+        'speechTimeout="auto" timeout="6">'
+        f"<Say>{escape(message)}</Say>"
+        "</Gather>"
+        "<Say>I didn't catch that — I'll text you what I have. Goodbye.</Say>"
+        "</Response>"
     )
 
 
@@ -98,28 +159,74 @@ def _send_sms(*, to: str, body: str, media_url: str) -> dict:
     return {"sid": msg.sid}
 
 
+def _rows_from_est(est: dict) -> list[dict]:
+    """The editable rows (no subtotal/source) the chat ops + PDF renderer expect."""
+    return [
+        {
+            "description": li["description"],
+            "quantity": li["quantity"],
+            "unit": li["unit"],
+            "rate": li["rate"],
+        }
+        for li in est["line_items"]
+    ]
+
+
+def _summary(est: dict) -> str:
+    n = len(est["line_items"])
+    items = "item" if n == 1 else "items"
+    return f"{n} {items}, totaling {est['total']:.2f} dollars"
+
+
+def _text_pdf(*, rows, job_title, tax_rate, total, n, from_number, base, sms) -> bool:
+    """Render + register the PDF and text it to the caller. Best-effort: returns True on
+    a send, False on any failure (the draft is already saved either way)."""
+    from quillwright.api.pdf_links import public_pdf_url, register_pdf
+    from quillwright.api.send import _render_pdf_bytes
+
+    if not from_number:
+        return False
+    try:
+        pdf_bytes = _render_pdf_bytes(rows, job_title=job_title, tax_rate=tax_rate)
+        token = register_pdf(pdf_bytes)
+        media_url = public_pdf_url(token, base_url=base or "")
+        items = "item" if n == 1 else "items"
+        sms(
+            to=from_number,
+            body=(
+                f"Your Quillwright estimate: {n} {items}, total ${total:.2f}. "
+                "AI-generated draft — review before accepting."
+            ),
+            media_url=media_url,
+        )
+        return True
+    except Exception:  # noqa: BLE001 — texting is best-effort; the draft is saved
+        return False
+
+
 def handle_recording(
     *,
     recording_url: str,
     from_number: str,
+    call_sid: str = "default",
     download: Callable[[str], str] | None = None,
     transcribe: Callable[[str], dict] | None = None,
     sms: Callable | None = None,
     base_url: str | None = None,
 ) -> dict:
-    """Transcribe the recording, forge + save a draft estimate, and text it.
+    """Transcribe the recording, forge + save a draft estimate, then ASK the caller if
+    they want to change anything (the conversational refine loop — Tier A).
 
-    Returns ``{"estimate": <dict|None>, "twiml": <spoken summary>, "transcript": str}``.
-    Side-effects (download / SMS) are injectable so tests need no network or twilio.
+    Returns ``{"estimate": <dict|None>, "twiml": <spoken+gather>, "transcript": str}``.
+    The PDF is NOT texted here — it goes out when the caller says they're done (see
+    ``handle_refine``). Per-call state is held under ``call_sid``. Side-effects
+    (download / SMS) are injectable so tests need no network or twilio.
     """
     from quillwright.api.estimate import estimate_store, forge_estimate
-    from quillwright.api.pdf_links import public_pdf_url, register_pdf
-    from quillwright.api.send import _render_pdf_bytes
     from quillwright.api.transcribe import transcribe_audio
 
     download = download or _download_recording
     transcribe = transcribe or (lambda path: transcribe_audio(path))
-    sms = sms or _send_sms
     base = (base_url if base_url is not None else public_base_url()).rstrip("/")
 
     path = download(recording_url)
@@ -146,44 +253,83 @@ def handle_recording(
             ),
         }
 
-    # Save as a DRAFT (the call never finalizes; a human approves later — ADR-0013).
-    # forge_estimate already auto-saved it; this is the same store the desktop reads.
-    n = len(est["line_items"])
-    items = "item" if n == 1 else "items"
+    # Hold the rows for this call so refine turns edit the same estimate (forge_estimate
+    # already auto-saved a DRAFT — ADR-0013; this is the same store the desktop reads).
+    _CALLS[call_sid] = {
+        "rows": _rows_from_est(est),
+        "job_title": est["job_title"],
+        "tax_rate": est["tax_rate"],
+        "from_number": from_number,
+    }
+    estimate_store()  # touch so a misconfigured store surfaces in logs
     spoken = (
-        f"Done. I forged an estimate with {n} {items}, totaling "
-        f"{est['total']:.2f} dollars. It's a draft — I'll text it to you to review and approve."
+        f"Done. I forged an estimate with {_summary(est)}. "
+        "Want to add or change anything, or should I text it to you?"
     )
+    return {"estimate": est, "transcript": transcript, "twiml": _ask_twiml(spoken, base)}
 
-    # Text the PDF (reuse S10's renderer + tokenized public link). Best-effort: a send
-    # failure must not break the spoken reply (the draft is already saved on the desktop).
-    if from_number:
-        try:
-            rows = [
-                {
-                    "description": li["description"],
-                    "quantity": li["quantity"],
-                    "unit": li["unit"],
-                    "rate": li["rate"],
-                }
-                for li in est["line_items"]
-            ]
-            pdf_bytes = _render_pdf_bytes(
-                rows, job_title=est["job_title"], tax_rate=est["tax_rate"]
-            )
-            token = register_pdf(pdf_bytes)
-            media_url = public_pdf_url(token, base_url=base or "")
-            sms(
-                to=from_number,
-                body=(
-                    f"Your Quillwright estimate: {n} {items}, total ${est['total']:.2f}. "
-                    "AI-generated draft — review before accepting."
-                ),
-                media_url=media_url,
-            )
-        except Exception:  # noqa: BLE001 — texting is best-effort; the draft is saved
-            spoken += " I couldn't text it just now, but it's saved on your dashboard."
 
-    # Touch estimate_store so a misconfigured store surfaces in logs (no-op otherwise).
-    estimate_store()
-    return {"estimate": est, "transcript": transcript, "twiml": _say_response(spoken)}
+def handle_refine(
+    *,
+    call_sid: str,
+    speech_result: str,
+    base_url: str | None = None,
+    sms: Callable | None = None,
+) -> dict:
+    """One caller turn in the refine loop. If they're done, text the PDF and end; else
+    apply the spoken edit through the SAME chat_about_estimate ops (Facts-from-Tools —
+    the catalog owns every price) and ask again.
+
+    Returns ``{"estimate": <dict|None>, "twiml": str}``. ``sms`` is injectable for tests.
+    """
+    from quillwright.api.chat import chat_about_estimate
+    from quillwright.api.estimate import save_estimate_record
+
+    sms = sms or _send_sms
+    base = (base_url if base_url is not None else public_base_url()).rstrip("/")
+    state = _CALLS.get(call_sid)
+    if state is None:
+        # Lost the thread (server restart / stale call) — fail politely, don't crash.
+        return {
+            "estimate": None,
+            "twiml": _say_response(
+                "Sorry, I lost track of that estimate. Please call back to start again."
+            ),
+        }
+
+    rows = state["rows"]
+    job_title, tax_rate = state["job_title"], state["tax_rate"]
+
+    # Caller signalled they're finished → recalc to authoritative numbers, persist the
+    # final draft, text the PDF, and end the call.
+    if _is_done(speech_result):
+        from quillwright.api.recalc import recalc_estimate
+
+        est = recalc_estimate(rows, job_title=job_title, tax_rate=tax_rate)
+        save_estimate_record(rows, job_title, tax_rate, thread=[])  # update the saved draft
+        n = len(est["line_items"])
+        sent = _text_pdf(
+            rows=rows,
+            job_title=job_title,
+            tax_rate=tax_rate,
+            total=est["total"],
+            n=n,
+            from_number=state.get("from_number", ""),
+            base=base,
+            sms=sms,
+        )
+        _CALLS.pop(call_sid, None)
+        tail = (
+            "I've texted you the PDF. It's a draft — review before sending it on. Goodbye."
+            if sent
+            else "It's saved as a draft on your dashboard. Goodbye."
+        )
+        return {"estimate": est, "twiml": _say_response(f"Got it. {tail}")}
+
+    # Otherwise it's an edit: run it through the shared chat ops (catalog owns the price).
+    out = chat_about_estimate(speech_result, rows, tax_rate=tax_rate)
+    est = out["estimate"]
+    state["rows"] = _rows_from_est(est)  # carry the edit forward to the next turn
+    save_estimate_record(state["rows"], job_title, tax_rate, thread=[])  # keep the draft current
+    spoken = f"{out['reply']} That's now {est['total']:.2f} dollars. Anything else?"
+    return {"estimate": est, "twiml": _ask_twiml(spoken, base)}

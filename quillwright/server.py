@@ -223,17 +223,21 @@ async def api_voice_incoming(request: Request):
 @app.post("/api/voice/recording")
 async def api_voice_recording(request: Request):
     """Twilio recording-complete webhook (S12): transcribe → forge → save draft →
-    speak the total back → text the caller the PDF. Reads RecordingUrl + From from
-    Twilio's form post."""
+    speak the total back → ASK if they want to refine (conversational loop). Reads
+    RecordingUrl + From + CallSid from Twilio's form post."""
     from quillwright.api.voice import handle_recording
 
     form = await request.form()
     recording_url = str(form.get("RecordingUrl", ""))
     from_number = str(form.get("From", ""))
+    call_sid = str(form.get("CallSid", "default"))
     base = os.environ.get("FF_PUBLIC_BASE_URL") or str(request.base_url).rstrip("/")
     try:
         result = handle_recording(
-            recording_url=recording_url, from_number=from_number, base_url=base
+            recording_url=recording_url,
+            from_number=from_number,
+            call_sid=call_sid,
+            base_url=base,
         )
         twiml = result["twiml"]
     except Exception as exc:  # noqa: BLE001 — always answer Twilio with valid TwiML
@@ -243,6 +247,28 @@ async def api_voice_recording(request: Request):
         twiml = _say_response(
             "Sorry, something went wrong forging your estimate. Please try again."
         )
+    return Response(content=twiml, media_type="application/xml")
+
+
+@app.post("/api/voice/refine")
+async def api_voice_refine(request: Request):
+    """Twilio <Gather> webhook (S12, Tier A): one caller turn in the refine loop. Reads
+    the spoken SpeechResult + CallSid; applies the edit (or finishes + texts the PDF)."""
+    from quillwright.api.voice import handle_refine
+
+    form = await request.form()
+    call_sid = str(form.get("CallSid", "default"))
+    speech_result = str(form.get("SpeechResult", ""))
+    base = os.environ.get("FF_PUBLIC_BASE_URL") or str(request.base_url).rstrip("/")
+    try:
+        twiml = handle_refine(call_sid=call_sid, speech_result=speech_result, base_url=base)[
+            "twiml"
+        ]
+    except Exception as exc:  # noqa: BLE001 — always answer Twilio with valid TwiML
+        from quillwright.api.voice import _say_response
+
+        print(f"[quillwright] voice refine handler failed: {exc}", flush=True)
+        twiml = _say_response("Sorry, something went wrong. It's saved as a draft. Goodbye.")
     return Response(content=twiml, media_type="application/xml")
 
 

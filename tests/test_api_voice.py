@@ -16,8 +16,10 @@ from quillwright.api import voice
 def fresh_store(tmp_path, monkeypatch):
     monkeypatch.setenv("FF_ESTIMATE_STORE", str(tmp_path))
     est_api.reset_estimate_store()
+    voice.reset_calls()
     yield
     est_api.reset_estimate_store()
+    voice.reset_calls()
 
 
 def test_greeting_twiml_records_to_the_recording_endpoint(monkeypatch):
@@ -53,6 +55,7 @@ def test_handle_recording_forges_saves_draft_and_summarizes():
     result = voice.handle_recording(
         recording_url="https://api.twilio.com/rec/abc",
         from_number="+15551234567",
+        call_sid="CA_test",
         download=fake_download,
         transcribe=fake_transcribe,
         sms=fake_sms,
@@ -65,18 +68,22 @@ def test_handle_recording_forges_saves_draft_and_summarizes():
     # It was saved as a DRAFT in the per-account store.
     listed = est_api.estimate_store().list_estimates()
     assert len(listed) == 1
-    # The spoken TwiML reads back the total.
+    # The spoken TwiML reads back the total, then ASKS (conversational, not a hang-up).
     assert "<Say>" in result["twiml"]
     assert f"{result['estimate']['total']:.2f}" in result["twiml"]
-    # The caller was texted the PDF link.
-    assert sent["to"] == "+15551234567"
-    assert sent["media_url"].startswith("https://demo.example.com/api/estimate_pdf/")
+    assert "<Gather" in result["twiml"] and 'input="speech"' in result["twiml"]
+    assert "/api/voice/refine" in result["twiml"]
+    # It does NOT text yet — the PDF goes out when the caller says they're done.
+    assert sent == {}
+    # Call state is held so the refine turns can edit the same rows.
+    assert voice._call_state("CA_test") is not None
 
 
 def test_handle_recording_empty_transcript_is_graceful():
     result = voice.handle_recording(
         recording_url="https://api.twilio.com/rec/empty",
         from_number="+15551234567",
+        call_sid="CA_empty",
         download=lambda url: "/tmp/x.wav",
         transcribe=lambda path: {"transcript": ""},
         sms=lambda **kw: {"sid": "x"},
@@ -88,17 +95,66 @@ def test_handle_recording_empty_transcript_is_graceful():
     assert est_api.estimate_store().list_estimates() == []
 
 
-def test_handle_recording_skips_sms_when_no_from_number():
-    calls = []
+# --- conversational refine loop (Tier A) ---
+
+
+def _fresh_call(call_sid="CA_conv"):
+    """Forge an estimate on a call so a refine turn has state to edit. Returns the
+    captured SMS dict (populated only when the loop finishes)."""
+    sent = {}
     voice.handle_recording(
         recording_url="https://api.twilio.com/rec/abc",
-        from_number="",
+        from_number="+15551234567",
+        call_sid=call_sid,
         download=lambda url: "/tmp/x.wav",
-        transcribe=lambda path: {"transcript": "topped up refrigerant and labor"},
-        sms=lambda **kw: calls.append(kw),
+        transcribe=lambda path: {
+            "transcript": "replaced the capacitor and contactor, one hour labor"
+        },
+        sms=lambda **kw: sent.update(kw) or {"sid": "SM"},
         base_url="https://demo.example.com",
     )
-    assert calls == []  # nothing to text
+    return sent
+
+
+def test_refine_adds_an_item_and_reasks():
+    sent = _fresh_call("CA_add")
+    before = voice._call_state("CA_add")["rows"]
+    out = voice.handle_refine(
+        call_sid="CA_add",
+        speech_result="add a refrigerant",
+        base_url="https://demo.example.com",
+        sms=lambda **kw: sent.update(kw),
+    )
+    after = voice._call_state("CA_add")["rows"]
+    assert len(after) == len(before) + 1  # the refrigerant line was added (catalog-priced)
+    assert "<Gather" in out["twiml"] and "/api/voice/refine" in out["twiml"]  # still asking
+    assert sent == {}  # not done yet → no text
+
+
+def test_refine_done_texts_pdf_and_ends():
+    sent = _fresh_call("CA_done")
+    out = voice.handle_refine(
+        call_sid="CA_done",
+        speech_result="no that's it",
+        base_url="https://demo.example.com",
+        sms=lambda **kw: sent.update(kw),
+    )
+    # Finishing speaks a goodbye, texts the PDF, and does NOT <Gather> again.
+    assert "<Gather" not in out["twiml"]
+    assert sent["to"] == "+15551234567"
+    assert sent["media_url"].startswith("https://demo.example.com/api/estimate_pdf/")
+    # Call state is cleared once the conversation ends.
+    assert voice._call_state("CA_done") is None
+
+
+def test_refine_unknown_call_is_graceful():
+    out = voice.handle_refine(
+        call_sid="CA_nonexistent",
+        speech_result="add a contactor",
+        base_url="https://demo.example.com",
+        sms=lambda **kw: None,
+    )
+    assert "<Say>" in out["twiml"]  # a polite fallback, no crash
 
 
 def test_voice_endpoints_are_wired():
@@ -112,3 +168,7 @@ def test_voice_endpoints_are_wired():
     assert r.status_code == 200
     assert "<Record" in r.text
     assert "xml" in r.headers["content-type"]
+    # The refine webhook exists too.
+    r2 = client.post("/api/voice/refine", data={"CallSid": "CA_x", "SpeechResult": "done"})
+    assert r2.status_code == 200
+    assert "xml" in r2.headers["content-type"]
