@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>Capture | Quillwright</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700;800;900&family=Inter:wght@400;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap"
+    />
+    <style>
+      /* Purpose-built for phone — the single media-free, phone-only page in the app. */
+      :root {
+        --bg: #14110e;
+        --panel: #211c17;
+        --line: #3a322a;
+        --ink: #f3ede4;
+        --muted: #b3a796;
+        --orange: #ff7a1a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Inter", system-ui, sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
+      header {
+        padding: 20px 18px 8px;
+      }
+      header h1 {
+        font-family: "Hanken Grotesk", sans-serif;
+        font-weight: 900;
+        font-size: 22px;
+        margin: 0;
+      }
+      header p {
+        color: var(--muted);
+        margin: 4px 0 0;
+        font-size: 14px;
+      }
+      main {
+        padding: 12px 18px 120px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      .card h2 {
+        font-size: 15px;
+        margin: 0 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      label.shoot,
+      button.rec,
+      button.send {
+        width: 100%;
+        border: none;
+        border-radius: 14px;
+        padding: 16px;
+        font-size: 16px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+      label.shoot {
+        background: #2c2620;
+        color: var(--ink);
+        border: 1px dashed var(--line);
+      }
+      button.rec {
+        background: #2c2620;
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+      button.rec.recording {
+        background: #5a1f12;
+        border-color: var(--orange);
+        color: #ffd9c2;
+      }
+      .thumbs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .thumbs img {
+        width: 72px;
+        height: 72px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+      }
+      textarea {
+        width: 100%;
+        background: #1a1510;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        font: inherit;
+        min-height: 84px;
+        resize: vertical;
+      }
+      .dock {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+        background: linear-gradient(transparent, var(--bg) 28%);
+      }
+      button.send {
+        background: var(--orange);
+        color: #18120b;
+      }
+      button.send:disabled {
+        opacity: 0.5;
+      }
+      .status {
+        text-align: center;
+        color: var(--muted);
+        font-size: 14px;
+        min-height: 18px;
+        margin-top: 8px;
+      }
+      .done {
+        text-align: center;
+        padding: 40px 20px;
+      }
+      .done .material-symbols-outlined {
+        font-size: 64px;
+        color: var(--orange);
+      }
+      input[type="file"] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Quillwright capture</h1>
+      <p>Snap the job and add a voice note. It forges on the desktop screen.</p>
+    </header>
+    <main id="main">
+      <div class="card">
+        <h2><span class="material-symbols-outlined">photo_camera</span> Photo</h2>
+        <label class="shoot" for="cam">
+          <span class="material-symbols-outlined">add_a_photo</span> Take / choose a photo
+        </label>
+        <input id="cam" type="file" accept="image/*" capture="environment" multiple />
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="material-symbols-outlined">mic</span> Voice note</h2>
+        <button class="rec" id="rec" type="button">
+          <span class="material-symbols-outlined">mic</span> <span id="rec-label">Record</span>
+        </button>
+        <textarea id="note" placeholder="…or type the job here (parts + labor)"></textarea>
+      </div>
+    </main>
+
+    <div class="dock">
+      <button class="send" id="send" type="button" disabled>
+        Send to desktop <span class="material-symbols-outlined">send</span>
+      </button>
+      <div class="status" id="status"></div>
+    </div>
+
+    <script type="module">
+      // The pairing code is the last path segment (/m/<code>).
+      const CODE = location.pathname.split("/").pop();
+      const $ = (id) => document.getElementById(id);
+      const status = (t) => ($("status").textContent = t);
+      let imagePaths = [];
+
+      function refreshSend() {
+        $("send").disabled = !(imagePaths.length || $("note").value.trim());
+      }
+
+      function readAsDataURL(file) {
+        return new Promise((res) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result);
+          r.readAsDataURL(file);
+        });
+      }
+
+      $("cam").addEventListener("change", async (e) => {
+        for (const file of Array.from(e.target.files || [])) {
+          const dataUrl = await readAsDataURL(file);
+          const img = document.createElement("img");
+          img.src = dataUrl;
+          $("thumbs").appendChild(img);
+          status("Uploading photo…");
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data: dataUrl, filename: file.name }),
+          });
+          const out = await res.json();
+          if (out.path) imagePaths.push(out.path);
+          status("");
+          refreshSend();
+        }
+      });
+
+      $("note").addEventListener("input", refreshSend);
+
+      // Hold-to-record voice note → /api/transcribe → fills the note.
+      let recorder = null,
+        chunks = [];
+      $("rec").addEventListener("click", async () => {
+        const btn = $("rec");
+        if (recorder && recorder.state === "recording") {
+          recorder.stop();
+          return;
+        }
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch {
+          status("Mic permission denied — type the note instead.");
+          return;
+        }
+        chunks = [];
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+        recorder.onstop = async () => {
+          stream.getTracks().forEach((t) => t.stop());
+          btn.classList.remove("recording");
+          $("rec-label").textContent = "Transcribing…";
+          const blob = new Blob(chunks, { type: "audio/webm" });
+          const dataUrl = await readAsDataURL(blob);
+          const res = await fetch("/api/transcribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data: dataUrl, filename: "note.webm" }),
+          });
+          const out = await res.json();
+          if (out.transcript) $("note").value = out.transcript;
+          $("rec-label").textContent = "Record";
+          refreshSend();
+        };
+        recorder.start();
+        btn.classList.add("recording");
+        $("rec-label").textContent = "Stop";
+      });
+
+      $("send").addEventListener("click", async () => {
+        $("send").disabled = true;
+        status("Sending to desktop…");
+        const res = await fetch(`/api/pair/${CODE}/capture`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image_paths: imagePaths, transcript: $("note").value.trim() }),
+        });
+        if (!res.ok) {
+          status("This pairing expired — scan a fresh QR on the desktop.");
+          return;
+        }
+        $("main").innerHTML = `<div class="done">
+            <span class="material-symbols-outlined">check_circle</span>
+            <h2>Sent</h2>
+            <p>Watch the estimate forge on the desktop screen.</p>
+          </div>`;
+        document.querySelector(".dock").style.display = "none";
+      });
+    </script>
+  </body>
+</html>

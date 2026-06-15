@@ -15,6 +15,8 @@ import {
   saveEstimate,
   loadEstimate,
   deleteEstimate,
+  createPairing,
+  pollPairing,
 } from "./client.js";
 import { resetTrace, addStep } from "./trace.js";
 import { escapeHtml } from "./util.js";
@@ -562,6 +564,51 @@ function renderSendConfirm(out) {
   $("send-done").addEventListener("click", closeSendModal);
   $("send-done").focus();
 }
+
+// --- Phone-capture pairing (Tier 3): scan a QR, capture on the phone, forge here ---
+let pairPoll = null;
+
+function stopPairing() {
+  if (pairPoll) {
+    clearInterval(pairPoll);
+    pairPoll = null;
+  }
+}
+
+async function openPhoneCapture() {
+  const out = await createPairing();
+  $("phone-qr").innerHTML =
+    out.qr_svg || '<p class="send-note">QR unavailable — open the link below on your phone.</p>';
+  const link = $("phone-url");
+  link.textContent = out.capture_url;
+  link.href = out.capture_url;
+  $("phone-status").textContent = "Waiting for your phone…";
+  $("phone-overlay").hidden = false;
+  // Poll the pairing; when the phone sends a capture, close + forge it live.
+  stopPairing();
+  pairPoll = setInterval(async () => {
+    const capture = await pollPairing(out.code);
+    if (!capture) return;
+    stopPairing();
+    $("phone-overlay").hidden = true;
+    // Adopt the phone's capture into the workspace, then forge on screen.
+    imagePaths = capture.image_paths || [];
+    $("thumbs").innerHTML = "";
+    $("transcript").value = capture.transcript || $("transcript").value;
+    forge();
+  }, 1500);
+}
+
+function closePhoneCapture() {
+  stopPairing();
+  $("phone-overlay").hidden = true;
+}
+
+$("phone-btn").addEventListener("click", openPhoneCapture);
+$("phone-cancel").addEventListener("click", closePhoneCapture);
+$("phone-overlay").addEventListener("click", (e) => {
+  if (e.target === $("phone-overlay")) closePhoneCapture();
+});
 
 $("forge-btn").addEventListener("click", forge);
 $("new-estimate-btn").addEventListener("click", newEstimate);

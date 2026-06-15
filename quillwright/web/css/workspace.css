@@ -1075,3 +1075,26 @@ td.cell-pulse {
     box-shadow: 0 0 0 6px rgba(186, 26, 26, 0);
   }
 }
+
+/* Phone-capture pairing (Tier 3): QR + link inside the reused send-modal shell. */
+.phone-qr {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0;
+}
+.phone-qr svg {
+  width: 200px;
+  height: 200px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+}
+.phone-link {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted, #b3a796);
+  word-break: break-all;
+}
+.phone-link a {
+  color: var(--orange, #ff7a1a);
+}

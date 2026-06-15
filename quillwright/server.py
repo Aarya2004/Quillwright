@@ -256,6 +256,58 @@ def api_estimate_pdf(token: str):
     return Response(content=pdf_bytes, media_type="application/pdf")
 
 
+# --- QR phone-capture + desktop pairing (Tier 3). ---
+
+
+@app.post("/api/pair/create")
+def api_pair_create(request: Request) -> dict:
+    """Open a pairing for this desktop session: return the code, the mobile capture
+    URL (tunnel base + /m/<code>), and an inline SVG QR encoding that URL."""
+    from quillwright.api.qr import qr_svg
+    from quillwright.pairing import create
+
+    code = create()
+    base = os.environ.get("FF_PUBLIC_BASE_URL") or str(request.base_url).rstrip("/")
+    capture_url = f"{base.rstrip('/')}/m/{code}"
+    return {"code": code, "capture_url": capture_url, "qr_svg": qr_svg(capture_url)}
+
+
+@app.get("/api/pair/{code}")
+def api_pair_poll(code: str) -> dict:
+    """Desktop poll: the pending capture from the paired phone (once), or null."""
+    from quillwright.pairing import poll
+
+    return {"capture": poll(code)}
+
+
+@app.post("/api/pair/{code}/capture")
+def api_pair_capture(code: str, payload: dict = Body(...)):
+    """Phone side: hand a captured photo path(s) + transcript to the paired desktop."""
+    from quillwright.pairing import submit
+
+    ok = submit(
+        code,
+        {
+            "image_paths": payload.get("image_paths", []),
+            "transcript": payload.get("transcript", ""),
+        },
+    )
+    if not ok:
+        return HTMLResponse("unknown pairing", status_code=404)
+    return {"ok": True}
+
+
+@app.get("/m/{code}", response_class=HTMLResponse)
+def mobile_capture_page(code: str):
+    """The dedicated mobile capture page (purpose-built for phone — the one media query
+    in the app). 404 for an unknown/expired code so a stale QR fails honestly."""
+    from quillwright.pairing import is_valid
+
+    if not is_valid(code):
+        return HTMLResponse("This pairing has expired. Generate a new QR on the desktop.", 404)
+    return (WEB / "mobile.html").read_text()
+
+
 @app.post("/api/export_json")
 def api_export_json(payload: dict = Body(...)) -> dict:
     """Machine-readable JSON of the (edited) estimate — the 'no lock-in' export."""

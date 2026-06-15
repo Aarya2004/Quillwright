@@ -72,6 +72,14 @@
             <span class="material-symbols-outlined">document_scanner</span>
           </label>
           <input id="doc-input" type="file" accept="image/*" hidden />
+          <button
+            id="phone-btn"
+            class="btn"
+            type="button"
+            title="Capture from your phone (scan a QR)"
+          >
+            <span class="material-symbols-outlined">qr_code_2</span>
+          </button>
           <button id="forge-btn" class="btn btn--primary">
             <span class="material-symbols-outlined">bolt</span> Forge estimate
           </button>
@@ -234,6 +242,27 @@
 
         <!-- Confirmation view (populated by JS) -->
         <div id="send-confirm-view" hidden></div>
+      </div>
+    </div>
+
+    <!-- Phone-capture pairing (Tier 3): scan the QR, capture on your phone -->
+    <div class="send-overlay" id="phone-overlay" hidden>
+      <div class="send-modal" role="dialog" aria-modal="true" aria-labelledby="phone-title">
+        <header class="send-head">
+          <h2 id="phone-title">Capture from your phone</h2>
+          <button class="send-x" id="phone-cancel" type="button" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </header>
+        <p class="send-note">
+          Scan this with your phone camera, then take a photo and a voice note. It forges here, live
+          on this screen.
+        </p>
+        <div id="phone-qr" class="phone-qr"></div>
+        <p class="phone-link">
+          or open <a id="phone-url" href="#" target="_blank" rel="noopener"></a>
+        </p>
+        <p class="send-note" id="phone-status">Waiting for your phone…</p>
       </div>
     </div>
 

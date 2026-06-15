@@ -28,6 +28,10 @@ audio = ["transformers>=5.4", "torch", "accelerate", "soundfile", "librosa", "se
 # deliberately NOT in the Space requirements.txt (the Space drafts only; creds can't
 # live on a public Space — ADR-0005). Local/demo path only. Install: pip install -e ".[send]"
 send = ["twilio>=9.0", "sendgrid>=6.11"]
+# QR phone-capture (Tier 3): segno is a tiny pure-Python QR encoder, only needed on the
+# local/tunnel demo path (the Space has no tunnel to pair against). Opt-in, lazy-imported,
+# NOT in the Space requirements. Install with: pip install -e ".[capture]"
+capture = ["segno>=1.6"]
 
 # Flat layout with sibling dirs (data/, node_modules/) — scope discovery to the
 # quillwright package (and its subpackages) so setuptools auto-discovery doesn't

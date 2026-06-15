@@ -130,6 +130,21 @@ export async function deleteEstimate(id) {
   await fetch(`/api/estimate/${id}`, { method: "DELETE" });
 }
 
+// --- QR phone-capture pairing (Tier 3). ---
+
+// Open a pairing for this desktop session. Returns {code, capture_url, qr_svg}.
+export async function createPairing() {
+  const res = await fetch("/api/pair/create", { method: "POST" });
+  return res.json();
+}
+
+// Poll for the phone's capture (delivered once). Returns the capture or null.
+export async function pollPairing(code) {
+  const res = await fetch(`/api/pair/${code}`);
+  const out = await res.json();
+  return out.capture;
+}
+
 // Translate the customer-facing estimate copy into a language (Cohere Aya).
 export async function translateEstimate(rows, jobTitle, taxRate, language) {
   const res = await fetch("/api/translate", {
