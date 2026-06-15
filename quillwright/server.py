@@ -554,7 +554,9 @@ def api_inventory() -> dict:
 def static_files(path: str):
     target = (WEB / path).resolve()
     if WEB.resolve() in target.parents and target.is_file():
-        return FileResponse(target)
+        # `no-cache` = revalidate every load (cheap 304 if unchanged), so a JS/CSS edit is
+        # always picked up — never a stale-cached frontend after a code change.
+        return FileResponse(target, headers={"Cache-Control": "no-cache"})
     return HTMLResponse("not found", status_code=404)
 
 
