@@ -15,8 +15,20 @@
   border-right: 1px solid var(--outline-variant);
 }
 .sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 0 8px;
   margin-bottom: 40px;
+}
+.sidebar .brand-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex: none;
+}
+.sidebar .brand-text {
+  min-width: 0;
 }
 .sidebar .brand h2 {
   font-family: var(--font-head);
