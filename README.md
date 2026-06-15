@@ -6,6 +6,7 @@ colorTo: purple
 sdk: docker
 app_port: 7860
 pinned: false
+thumbnail: https://huggingface.co/spaces/build-small-hackathon/Quillwright/resolve/main/quillwright/web/img/quillwright-logo-trimmed.png
 short_description: Tell it about the job. It drafts the estimate.
 tags:
   - backyard-ai
@@ -25,6 +26,8 @@ tags:
 
 A human-supervised, small-model agent for tradespeople: snap a job photo + voice note → a team of **local** small models forges a finished, itemized **estimate**. No cloud, runs on your machine. Build Small Hackathon entry (Backyard AI track).
 
+**▶ [Demo video](https://youtu.be/KqTJc9vYlb0)** · **[Launch post on X](https://x.com/APrak2022/status/2066633276379255060)**
+
 > **⏳ Cold start (please wait ~30–60s on first load).** This Space scales to zero when idle,
 > so the **first** visit after a quiet period has to boot the container before the app
 > responds — you may see Hugging Face's "Building / Starting" screen, then a moment where
@@ -37,6 +40,32 @@ A human-supervised, small-model agent for tradespeople: snap a job photo + voice
 > **This hosted Space is wired live to Modal** (CPU container → Modal GPUs): the real small models run on hosted NVIDIA GPUs — brain on Nemotron-3-Nano-30B, vision/audio on Nemotron-Omni-30B, multilingual on Aya-Expanse-8B, Document Capture on the fine-tuned Parse extractor. The full local stack (MiniCPM-V, Nemotron, Aya via Ollama) is the Airplane-Mode story — see the demo video / Airplane-Mode Proof. The apps scale to zero when idle; to fall back to instant CPU stub mode, unset the `FF_BACKEND` Space secret.
 
 See `docs/superpowers/specs/` and `docs/adr/` for the design.
+
+## Built on NVIDIA Nemotron
+
+Quillwright's orchestra is **NVIDIA-first** — three of the model roles run NVIDIA
+Nemotron, and the whole agent is designed around the same family scaling from a laptop to
+a GPU:
+
+- **Brain** (the tool-calling agent loop) — **Nemotron-3-Nano**, local _and_ hosted. This is
+  the heart of the app: it decides which line items to add, the quantities, and when the
+  estimate is done.
+- **Perception** (reads the job photo) and **Audio** (the voice note) — on the hosted Best
+  Stack, both run **Nemotron-Omni**, one multimodal deployment serving vision and speech.
+  (Locally, perception runs MiniCPM-V from OpenBMB — see _Backend resolution_.)
+
+The point of the build is the **same family at two tiers**:
+
+- **Private Stack (local / Airplane-Mode)** — **Nemotron-3-Nano 4B** via Ollama, on your
+  machine, no cloud. Tuned to **~0.97 item-F1** on the eval set (`scripts/run_brain_eval.py`).
+- **Best Stack (hosted)** — **Nemotron-3-Nano 30B** + **Nemotron-Omni 30B** on Modal GPUs,
+  the same agent loop with more headroom. The hosted Space runs the Best Stack live (see
+  _Backend resolution_ below). Aya-Expanse (multilingual) and the fine-tuned Parse extractor
+  (Document Capture) round out the orchestra.
+
+One agent, one tool contract — flip `FF_BACKEND` and the **Nemotron brain** moves from a 4B
+on your laptop to a 30B on a GPU without touching the agent code. Facts-from-Tools holds at
+both tiers: the model never invents a price.
 
 ## What's real
 
