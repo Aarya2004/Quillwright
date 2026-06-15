@@ -49,6 +49,17 @@
       </aside>
 
       <div class="main">
+        <!-- Cold-start banner: this Space scales to zero, so the first load after an idle
+             period boots the container. The banner confirms the app is waking, not broken,
+             then flips to "ready" and fades once /api/model_info responds. -->
+        <div class="boot-banner" id="boot-banner" data-state="waking" hidden>
+          <span class="boot-spinner" aria-hidden="true"></span>
+          <span id="boot-text"
+            >Waking the demo up — this Space sleeps when idle, so the first load takes ~30–60s. It's
+            not broken; hang tight.</span
+          >
+        </div>
+
         <!-- Top bar: job title only -->
         <header class="topbar">
           <h1>Forge Estimate: AC Unit Repair — 123 Maple St</h1>

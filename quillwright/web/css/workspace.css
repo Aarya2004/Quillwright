@@ -1098,3 +1098,55 @@ td.cell-pulse {
 .phone-link a {
   color: var(--orange, #ff7a1a);
 }
+
+/* Cold-start banner (HF Space scale-to-zero): waking → ready → fade. Honest feedback
+   so a visitor on a cold load sees the app acknowledge itself, not a blank/hung page. */
+.boot-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  background: #2c2620;
+  border: 1px solid var(--line, #3a322a);
+  color: var(--muted, #b3a796);
+  transition: opacity 0.4s ease;
+}
+.boot-banner[data-state="ready"] {
+  background: #14361f;
+  border-color: #2e7d4f;
+  color: #b8e6c8;
+}
+.boot-banner[data-state="slow"] {
+  background: #3a2a14;
+  border-color: #8a6a2a;
+  color: #e6cfa0;
+}
+.boot-banner[hidden] {
+  display: none;
+}
+.boot-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--line, #3a322a);
+  border-top-color: var(--orange, #ff7a1a);
+  animation: boot-spin 0.8s linear infinite;
+  flex: none;
+}
+.boot-banner[data-state="ready"] .boot-spinner,
+.boot-banner[data-state="slow"] .boot-spinner {
+  display: none;
+}
+@keyframes boot-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-spinner {
+    animation: none;
+  }
+}

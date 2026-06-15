@@ -18,6 +18,13 @@ tags:
 
 A human-supervised, small-model agent for tradespeople: snap a job photo + voice note → a team of **local** small models forges a finished, itemized **estimate**. No cloud, runs on your machine. Build Small Hackathon entry (Backyard AI track).
 
+> **⏳ Cold start (please wait ~30–60s on first load).** This Space scales to zero when idle,
+> so the **first** visit after a quiet period has to boot the container before the app
+> responds — you may see Hugging Face's "Building / Starting" screen, then a moment where
+> the page is warming up. **The app is not broken — it's waking up.** Once it's up it's
+> instant (it runs in stub mode on CPU, so there's no model to load). Reload once if the
+> first paint hangs; the UI shows a "waking up → ready" banner when it reconnects.
+
 > **This hosted Space runs in stub mode** (CPU, no GPU): the agent flow, trace, editable estimate, and PDF all work, but the small models are stubbed. The real models (MiniCPM-V, Nemotron, Aya) run locally via Ollama — see the demo video / Airplane-Mode Proof for them in action. Live models reach the hosted Space via Modal (in progress).
 
 See `docs/superpowers/specs/` and `docs/adr/` for the design.

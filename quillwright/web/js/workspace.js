@@ -661,6 +661,34 @@ async function showModelBadge() {
 }
 showModelBadge();
 
+// Cold-start feedback: this Space scales to zero, so the first load after an idle period
+// boots the container. By the time this runs the container is up (HF served the page), but
+// we confirm the app is reachable and reassure the visitor it isn't broken — then fade out.
+// On the local run /api/model_info answers instantly, so the banner barely flashes.
+async function bootCheck() {
+  const banner = $("boot-banner");
+  if (!banner) return;
+  banner.hidden = false;
+  const ready = () => {
+    banner.dataset.state = "ready";
+    $("boot-text").textContent = "Ready.";
+    setTimeout(() => (banner.hidden = true), 1400);
+  };
+  for (let attempt = 0; attempt < 30; attempt++) {
+    try {
+      const res = await fetch("/api/model_info", { cache: "no-store" });
+      if (res.ok) return ready();
+    } catch {
+      /* container still warming — keep waiting */
+    }
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+  // Gave up waiting: leave a calm, honest message rather than a spinner forever.
+  banner.dataset.state = "slow";
+  $("boot-text").textContent = "Still waking up — try reloading the page in a moment.";
+}
+bootCheck();
+
 // First paint: show the empty-estimate state rather than a bare table header.
 renderRows();
 
