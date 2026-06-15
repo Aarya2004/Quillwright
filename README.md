@@ -1,8 +1,8 @@
 ---
 title: Quillwright
-emoji: ⚡
-colorFrom: purple
-colorTo: purple
+emoji: 🦺
+colorFrom: yellow
+colorTo: red
 sdk: docker
 app_port: 7860
 pinned: false
