@@ -291,6 +291,45 @@ async def api_voice_refine(request: Request):
     return Response(content=twiml, media_type="application/xml")
 
 
+# --- Voice-agent tools (ElevenLabs Conversational AI calls these; Quillwright stays the
+#     source of truth — every number is a tool response, never the agent's speech). ---
+
+
+@app.post("/api/tools/forge")
+def api_tool_forge(payload: dict = Body(...)) -> dict:
+    """Forge an estimate from a spoken job description (keyed by the agent's session_id)."""
+    from quillwright.api.tools_api import forge
+
+    return forge(payload.get("session_id", "default"), payload.get("description", ""))
+
+
+@app.post("/api/tools/edit")
+def api_tool_edit(payload: dict = Body(...)) -> dict:
+    """Add / remove / change a line on the session's estimate (catalog-priced)."""
+    from quillwright.api.tools_api import edit
+
+    return edit(payload.get("session_id", "default"), payload.get("request", ""))
+
+
+@app.post("/api/tools/lookup_price")
+def api_tool_lookup_price(payload: dict = Body(...)) -> dict:
+    """A single catalog price (read-only)."""
+    from quillwright.api.tools_api import lookup_price
+
+    return lookup_price(payload.get("item", ""))
+
+
+@app.post("/api/tools/text_estimate")
+def api_tool_text_estimate(request: Request, payload: dict = Body(...)) -> dict:
+    """SMS the session's estimate PDF to the caller."""
+    from quillwright.api.tools_api import text_estimate
+
+    base = os.environ.get("FF_PUBLIC_BASE_URL") or str(request.base_url).rstrip("/")
+    return text_estimate(
+        payload.get("session_id", "default"), to=payload.get("to", ""), base_url=base
+    )
+
+
 @app.get("/api/estimate_pdf/{token}")
 def api_estimate_pdf(token: str):
     """Serve a previously-rendered estimate PDF by token, so Twilio MMS can fetch
