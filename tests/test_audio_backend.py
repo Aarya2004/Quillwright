@@ -76,3 +76,49 @@ def test_resolve_audio_stays_none_without_modal_or_real_models(monkeypatch):
     monkeypatch.delenv("FF_BACKEND", raising=False)
     monkeypatch.delenv("FF_REAL_MODELS", raising=False)
     assert _resolve_audio() is None
+
+
+# --- webm → wav normalization (browser/phone record webm; ASR needs wav) ---
+
+
+def test_to_wav_passes_through_an_existing_wav():
+    from quillwright.backends.audio import to_wav_16k_mono
+
+    # A .wav input is returned unchanged — no transcode, no ffmpeg needed.
+    assert to_wav_16k_mono("/tmp/note.wav") == "/tmp/note.wav"
+
+
+def test_to_wav_transcodes_webm_with_ffmpeg(tmp_path):
+    import shutil
+    import subprocess
+
+    import pytest
+
+    if shutil.which("ffmpeg") is None:
+        pytest.skip("ffmpeg not installed")
+
+    from quillwright.backends.audio import to_wav_16k_mono
+
+    # Make a tiny real webm/opus clip with ffmpeg, then prove we can normalize it to wav.
+    webm = str(tmp_path / "note.webm")
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=440:duration=1",
+            "-c:a",
+            "libopus",
+            webm,
+        ],
+        check=True,
+        capture_output=True,
+    )
+    out = to_wav_16k_mono(webm)
+    assert out.endswith(".wav") and out != webm
+    import os
+
+    assert os.path.getsize(out) > 0
+    os.unlink(out)
