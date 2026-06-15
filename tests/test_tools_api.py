@@ -84,3 +84,16 @@ def test_tool_endpoints_are_wired():
     assert r2.status_code == 200 and r2.json()["found"] is True
     r3 = client.post("/api/tools/edit", json={"session_id": "H1", "request": "add a contactor"})
     assert r3.status_code == 200 and r3.json()["total"] > 0
+
+
+def test_tool_endpoint_accepts_body_without_json_content_type():
+    # ElevenLabs / webhook callers don't always send Content-Type: application/json.
+    # The tool must still parse the JSON body (not 422).
+    import json as _json
+
+    r = client.post(
+        "/api/tools/forge",
+        content=_json.dumps({"session_id": "H2", "description": "one hour labor"}),
+        headers={"Content-Type": "text/plain"},
+    )
+    assert r.status_code == 200 and r.json()["ok"] is True

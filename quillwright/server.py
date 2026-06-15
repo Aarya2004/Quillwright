@@ -295,35 +295,61 @@ async def api_voice_refine(request: Request):
 #     source of truth — every number is a tool response, never the agent's speech). ---
 
 
+async def _tool_payload(request: Request) -> dict:
+    """Parse a tool-call body tolerantly. ElevenLabs (and other webhook callers) don't
+    always set Content-Type: application/json, which makes FastAPI's Body(...) reject the
+    request with a 422. So we read the raw body and JSON-parse it ourselves, falling back
+    to form fields — the tool works regardless of how the caller labels the body."""
+    raw = await request.body()
+    if raw:
+        try:
+            data = json.loads(raw)
+            if isinstance(data, dict):
+                return data
+        except (json.JSONDecodeError, ValueError):
+            pass
+    try:
+        form = await request.form()
+        if form:
+            return dict(form)
+    except Exception:  # noqa: BLE001 — no parseable body; treat as empty
+        pass
+    return {}
+
+
 @app.post("/api/tools/forge")
-def api_tool_forge(payload: dict = Body(...)) -> dict:
+async def api_tool_forge(request: Request) -> dict:
     """Forge an estimate from a spoken job description (keyed by the agent's session_id)."""
     from quillwright.api.tools_api import forge
 
+    payload = await _tool_payload(request)
     return forge(payload.get("session_id", "default"), payload.get("description", ""))
 
 
 @app.post("/api/tools/edit")
-def api_tool_edit(payload: dict = Body(...)) -> dict:
+async def api_tool_edit(request: Request) -> dict:
     """Add / remove / change a line on the session's estimate (catalog-priced)."""
     from quillwright.api.tools_api import edit
 
+    payload = await _tool_payload(request)
     return edit(payload.get("session_id", "default"), payload.get("request", ""))
 
 
 @app.post("/api/tools/lookup_price")
-def api_tool_lookup_price(payload: dict = Body(...)) -> dict:
+async def api_tool_lookup_price(request: Request) -> dict:
     """A single catalog price (read-only)."""
     from quillwright.api.tools_api import lookup_price
 
+    payload = await _tool_payload(request)
     return lookup_price(payload.get("item", ""))
 
 
 @app.post("/api/tools/text_estimate")
-def api_tool_text_estimate(request: Request, payload: dict = Body(...)) -> dict:
+async def api_tool_text_estimate(request: Request) -> dict:
     """SMS the session's estimate PDF to the caller."""
     from quillwright.api.tools_api import text_estimate
 
+    payload = await _tool_payload(request)
     base = os.environ.get("FF_PUBLIC_BASE_URL") or str(request.base_url).rstrip("/")
     return text_estimate(
         payload.get("session_id", "default"), to=payload.get("to", ""), base_url=base
