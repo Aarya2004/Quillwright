@@ -129,15 +129,20 @@ honest, env-gated framing as the models:
   returns `{status: "drafted", transmitted: false}` and the UI shows a "Draft ready —
   nothing was transmitted from this hosted demo" card. It never claims a send it didn't do.
 
+**Email has two backends — whichever is configured wins, Gmail first.** Gmail SMTP is the
+simplest (stdlib `smtplib`, no extra dep, no sender-verification step — just a Google
+[App Password](https://myaccount.google.com/apppasswords)); SendGrid is the fallback.
+
 Env vars for the real path:
 
-| Var                                        | For   | Purpose                            |
-| ------------------------------------------ | ----- | ---------------------------------- |
-| `FF_SEND_ENABLED=1`                        | both  | master gate out of draft-only mode |
-| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` | SMS   | Twilio auth                        |
-| `FF_SEND_FROM`                             | SMS   | the Twilio sending number          |
-| `SENDGRID_API_KEY`                         | email | SendGrid auth                      |
-| `FF_SEND_FROM_EMAIL`                       | email | the verified sender address        |
+| Var                                        | For       | Purpose                                               |
+| ------------------------------------------ | --------- | ----------------------------------------------------- |
+| `FF_SEND_ENABLED=1`                        | both      | master gate out of draft-only mode                    |
+| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` | SMS       | Twilio auth                                           |
+| `FF_SEND_FROM`                             | SMS       | the Twilio sending number                             |
+| `GMAIL_ADDRESS` / `GMAIL_APP_PASSWORD`     | email (1) | Gmail SMTP — preferred; sends from your Gmail address |
+| `SENDGRID_API_KEY`                         | email (2) | SendGrid auth (fallback if no Gmail creds)            |
+| `FF_SEND_FROM_EMAIL`                       | email (2) | the SendGrid verified sender address                  |
 
 Facts-from-Tools holds: send introduces no numbers — the PDF and the summary line both go
 through `recalc_estimate`, the same server-authoritative totals the PDF/JSON already show.

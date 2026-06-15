@@ -217,3 +217,76 @@ def test_injected_provider_bypasses_cred_check(monkeypatch):
         email_provider=lambda **_: {"id": "EM_injected"},
     )
     assert out["status"] == "sent"
+
+
+# --- email backend resolution: Gmail SMTP preferred, SendGrid fallback ---
+
+
+def test_email_backend_picks_gmail_when_app_password_present(monkeypatch):
+    for k in ("SENDGRID_API_KEY", "FF_SEND_FROM_EMAIL"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("GMAIL_ADDRESS", "me@gmail.com")
+    monkeypatch.setenv("GMAIL_APP_PASSWORD", "abcd efgh ijkl mnop")
+    assert send_mod._email_backend() == "gmail"
+    assert send_mod._resolve_email_provider() is send_mod._gmail_email_provider
+
+
+def test_email_backend_falls_back_to_sendgrid(monkeypatch):
+    for k in ("GMAIL_ADDRESS", "GMAIL_APP_PASSWORD"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("SENDGRID_API_KEY", "SG.x")
+    monkeypatch.setenv("FF_SEND_FROM_EMAIL", "me@verified.com")
+    assert send_mod._email_backend() == "sendgrid"
+    assert send_mod._resolve_email_provider() is send_mod._default_email_provider
+
+
+def test_email_without_any_backend_errors_without_leaking_keys(monkeypatch):
+    for k in ("SENDGRID_API_KEY", "FF_SEND_FROM_EMAIL", "GMAIL_ADDRESS", "GMAIL_APP_PASSWORD"):
+        monkeypatch.delenv(k, raising=False)
+    with pytest.raises(SendError) as exc:
+        send_estimate(channel="email", recipient="jane@example.com", rows=ROWS, mode="real")
+    msg = str(exc.value)
+    assert "GMAIL_APP_PASSWORD" not in msg and "SENDGRID_API_KEY" not in msg
+    assert "not configured" in msg.lower()
+
+
+def test_gmail_provider_sends_via_smtp(monkeypatch):
+    # The Gmail provider must log in + send_message over SMTP_SSL, no network in tests.
+    sent = {}
+
+    class FakeSMTP:
+        def __init__(self, host, port):
+            sent["host"], sent["port"] = host, port
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def login(self, user, pw):
+            sent["user"], sent["pw"] = user, pw
+
+        def send_message(self, msg):
+            sent["to"], sent["from"] = msg["To"], msg["From"]
+            sent["has_pdf"] = any(
+                p.get_content_type() == "application/pdf" for p in msg.iter_attachments()
+            )
+
+    import smtplib
+
+    monkeypatch.setattr(smtplib, "SMTP_SSL", FakeSMTP)
+    monkeypatch.setenv("GMAIL_ADDRESS", "me@gmail.com")
+    monkeypatch.setenv("GMAIL_APP_PASSWORD", "app-pw")
+    out = send_mod._gmail_email_provider(
+        recipient="jane@example.com",
+        subject="Your estimate",
+        body="hi",
+        pdf_bytes=b"%PDF-1.4 fake",
+        filename="estimate.pdf",
+    )
+    assert sent["host"] == "smtp.gmail.com" and sent["port"] == 465
+    assert sent["user"] == "me@gmail.com" and sent["pw"] == "app-pw"
+    assert sent["to"] == "jane@example.com" and sent["from"] == "me@gmail.com"
+    assert sent["has_pdf"] is True
+    assert out["id"] == "gmail:me@gmail.com"

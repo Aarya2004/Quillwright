@@ -42,15 +42,35 @@ def resolve_send_mode() -> str:
 
 # Required creds per channel — checked up front in real mode so a missing var
 # fails loud with a clean message (never leaking the raw key name to the client).
+# Email has two backends; the first whose creds are fully present is used (Gmail SMTP
+# preferred — no sender-verification step, no extra dep — else SendGrid).
+_EMAIL_BACKENDS = {
+    "gmail": ("GMAIL_ADDRESS", "GMAIL_APP_PASSWORD"),
+    "sendgrid": ("SENDGRID_API_KEY", "FF_SEND_FROM_EMAIL"),
+}
 _REQUIRED_ENV = {
     "sms": ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "FF_SEND_FROM"),
-    "email": ("SENDGRID_API_KEY", "FF_SEND_FROM_EMAIL"),
 }
+
+
+def _email_backend() -> str | None:
+    """The first email backend whose creds are all present, or None if none configured."""
+    for name, keys in _EMAIL_BACKENDS.items():
+        if all(os.environ.get(k) for k in keys):
+            return name
+    return None
 
 
 def _require_provider_config(channel: str) -> None:
     """Raise a SendError naming the CHANNEL (not the missing env var) if real-mode
     creds are absent — so an HTTP 400 reply never discloses internal config keys."""
+    if channel == "email":
+        if _email_backend() is None:
+            raise SendError(
+                "email send is not configured on this machine. "
+                "Set FF_SEND_ENABLED + a Gmail or SendGrid email backend to enable it."
+            )
+        return
     missing = [k for k in _REQUIRED_ENV.get(channel, ()) if not os.environ.get(k)]
     if missing:
         raise SendError(
@@ -164,6 +184,34 @@ def _default_email_provider(
     return {"id": resp.headers.get("X-Message-Id", "sendgrid-accepted")}
 
 
+def _gmail_email_provider(
+    *, recipient: str, subject: str, body: str, pdf_bytes: bytes, filename: str
+) -> dict:
+    """Send an email with the PDF attached via Gmail SMTP. Uses only the stdlib
+    (``smtplib`` + ``email``) — no third-party dep, nothing in the Space requirements —
+    and an App Password (``GMAIL_APP_PASSWORD``), so there's no SendGrid sender-
+    verification step. The from-address is the Gmail account itself."""
+    import smtplib  # noqa: PLC0415 — stdlib, lazy to keep the import surface small
+    from email.message import EmailMessage  # noqa: PLC0415
+
+    sender = os.environ["GMAIL_ADDRESS"]
+    msg = EmailMessage()
+    msg["From"] = sender
+    msg["To"] = recipient
+    msg["Subject"] = subject
+    msg.set_content(body)
+    msg.add_attachment(pdf_bytes, maintype="application", subtype="pdf", filename=filename)
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender, os.environ["GMAIL_APP_PASSWORD"])
+        server.send_message(msg)
+    return {"id": f"gmail:{sender}"}
+
+
+def _resolve_email_provider() -> Callable:
+    """The real email provider for the configured backend (Gmail SMTP preferred)."""
+    return _gmail_email_provider if _email_backend() == "gmail" else _default_email_provider
+
+
 # --- the one entry point ---------------------------------------------------
 
 
@@ -219,7 +267,7 @@ def send_estimate(
         else:  # email
             if email_provider is None:
                 _require_provider_config("email")
-            provider = email_provider or _default_email_provider
+            provider = email_provider or _resolve_email_provider()
             pdf_bytes = _render_pdf_bytes(rows, job_title=job_title, tax_rate=tax_rate)
             result = provider(
                 recipient=recipient,
