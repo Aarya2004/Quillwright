@@ -16,6 +16,7 @@ tags:
   - track:backyard
   - sponsor:openbmb
   - sponsor:nvidia
+  - sponsor:cohere
   - sponsor:modal
   - achievement:welltuned
   - achievement:offbrand
@@ -54,6 +55,11 @@ a GPU:
   Stack, both run **Nemotron-Omni**, one multimodal deployment serving vision and speech.
   (Locally, perception runs MiniCPM-V from OpenBMB — see _Backend resolution_.)
 
+The rest of the orchestra is small models from the other sponsors: **Cohere** powers the
+multilingual role (**Aya / Aya-Expanse**, customer-facing copy in Spanish/French/Mandarin)
+and the on-device **Transcribe** for the voice note; **OpenBMB**'s **MiniCPM-V** reads the
+job photo on the local stack (and is the model we fine-tuned — see _Artifacts_).
+
 The point of the build is the **same family at two tiers**:
 
 - **Private Stack (local / Airplane-Mode)** — **Nemotron-3-Nano 4B** via Ollama, on your
@@ -66,6 +72,27 @@ The point of the build is the **same family at two tiers**:
 One agent, one tool contract — flip `FF_BACKEND` and the **Nemotron brain** moves from a 4B
 on your laptop to a 30B on a GPU without touching the agent code. Facts-from-Tools holds at
 both tiers: the model never invents a price.
+
+### The two stacks, side by side
+
+Same agent, same tools, same Facts-from-Tools guarantee — only the models behind each role
+change:
+
+| Role              | 🔒 Private Stack (local, Ollama / on-device) | ⚡ Best Stack (hosted, Modal GPUs) |
+| ----------------- | -------------------------------------------- | ---------------------------------- |
+| **Brain**         | Nemotron-3-Nano **4B** (NVIDIA)              | Nemotron-3-Nano **30B** (NVIDIA)   |
+| **Perception**    | MiniCPM-V (OpenBMB)                          | Nemotron-Omni **30B** (NVIDIA)     |
+| **Audio**         | Cohere Transcribe (on-device)                | Nemotron-Omni **30B** (NVIDIA)     |
+| **Multilingual**  | Aya (Cohere)                                 | Aya-Expanse **8B** (Cohere)        |
+| **Embedding**     | on-device (sentence-transformers)            | _same on-device path_              |
+| **Extraction**    | _no local path_                              | Parse extractor (fine-tuned)       |
+| **Runs offline?** | ✅ Yes — Airplane-Mode Proof                 | ❌ No — public HTTPS GPU endpoints |
+| **Cost / GPU**    | $0, your hardware                            | scales to zero when idle           |
+
+**Switch with env, not code:** the local stack is the default; set `FF_BACKEND=modal` (+ the
+`FF_MODAL_*_URL` secrets) to ride the Best Stack. Each role opts in independently — see
+_[Backend resolution](#backend-resolution--read-this-before-am-i-on-modal)_ for the full
+matrix (including the stub mode the public Space falls back to).
 
 ## What's real
 
